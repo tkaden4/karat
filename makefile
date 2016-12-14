@@ -4,8 +4,9 @@ CFLAGS=-Wall -Wextra -Werror -std=c11
 
 EXECUTABLE=karat
 
-ifeq ($(OS), Windows NT)
+ifeq ($(OS), Windows_NT)
 	EXECUTABLE = karat.exe
+	RM = del
 endif
 
 $(EXECUTABLE) : $(OBJECTS)
