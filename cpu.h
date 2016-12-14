@@ -4,8 +4,8 @@
 
 #include"karat.h"
 
-typedef uint32_t greg_t;	/* General register */
-typedef uint32_t areg_t;	/* Address register */
+typedef uint32_t greg_t;	/* general register datatype */
+typedef uint32_t areg_t;	/* address register datatype */
 typedef uint16_t addr_t;	/* address datatype */
 
 #define GENERAL_REGS 8	/* number of general registers */
@@ -32,19 +32,21 @@ struct cpu_state {
 			greg_t g4;
 			greg_t g5;
 			greg_t g6;
-			greg_t g7;	
+			greg_t g7;
 		};
 	};
 	/* address registers */
 	union {
 		areg_t aregs[ADDRESS_REGS];
 		struct {
+			/* general purpose address registers */
 			areg_t a0;
 			areg_t a1;
 			areg_t a2;
 			areg_t a3;
 			areg_t a4;
 			areg_t a5;
+			/* special registers */
 			areg_t sp;	/* stack pointer */
 			areg_t fp;	/* frame pointer */
 		};
