@@ -1,0 +1,6 @@
+*.swp
+*.o
+*.tmp
+
+# for ctags
+tags
