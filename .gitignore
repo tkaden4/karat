@@ -1,6 +1,8 @@
 *.swp
 *.o
 *.tmp
+karat
+karat.exe
 
 # for ctags
 tags
