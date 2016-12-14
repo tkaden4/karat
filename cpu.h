@@ -2,12 +2,11 @@
 
 #include<stdint.h>
 
-/* General register */
-typedef uint32_t greg_t;
-/* Address register */
-typedef uint32_t areg_t;
-/* address datatype */
-typedef uint16_t addr_t;
+#include"karat.h"
+
+typedef uint32_t greg_t;	/* General register */
+typedef uint32_t areg_t;	/* Address register */
+typedef uint16_t addr_t;	/* address datatype */
 
 #define GENERAL_REGS 8	/* number of general registers */
 #define ADDRESS_REGS 8	/* number of address registers */
@@ -59,3 +58,5 @@ struct cpu_state {
 		};
 	};
 };
+
+API void cpu_init(struct cpu_state *state);
