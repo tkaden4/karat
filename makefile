@@ -5,7 +5,7 @@ CFLAGS=-Wall -Wextra -Werror -std=c11
 EXECUTABLE=karat
 
 ifeq ($(OS), Windows NT)
-	EXECUTBLE = karat.exe
+	EXECUTABLE = karat.exe
 endif
 
 $(EXECUTABLE) : $(OBJECTS)
