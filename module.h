@@ -14,10 +14,8 @@
 
 #include"karat.h"
 #include"list.h"
+#include"types.h"
 
-typedef void (*read_f)(void *, uint32_t);
-typedef struct { read_f cb; void *data; } read_cb;
-#define CALL_CB(x, ...) x.cb(x.data, ##__VA_ARGS__)
 
 struct mod {
 	NODE(struct mod);

@@ -1,7 +1,8 @@
 #pragma once
 
-#define INTERNAL static inline
 
-#define IMPLEMENTATION static
-#define DEVELOPMENT extern
-#define API DEVELOPMENT
+#define PRIVATE static
+
+#define INTERNAL PRIVATE inline
+
+#define API extern

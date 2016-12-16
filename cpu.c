@@ -2,7 +2,14 @@
 
 #include<string.h>
 
-void cpu_init(struct cpu_state *state)
+API void cpu_init(struct cpu_state *state)
+{
+	if(state){
+		cpu_reset(state);
+	}
+}
+
+API void cpu_reset(struct cpu_state *state)
 {
 #if ADDRESS_REGS == GENERAL_REGS
 	for(size_t i = 0; i < ADDRESS_REGS; ++i){

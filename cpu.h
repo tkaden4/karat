@@ -3,10 +3,10 @@
 #include<stdint.h>
 
 #include"karat.h"
+#include"types.h"
 
 typedef uint32_t greg_t;	/* general register datatype */
 typedef uint32_t areg_t;	/* address register datatype */
-typedef uint16_t addr_t;	/* address datatype */
 
 #define GENERAL_REGS 8	/* number of general registers */
 #define ADDRESS_REGS 8	/* number of address registers */
@@ -62,3 +62,4 @@ struct cpu_state {
 };
 
 API void cpu_init(struct cpu_state *state);
+API void cpu_reset(struct cpu_state *state);
