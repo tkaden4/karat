@@ -3,6 +3,7 @@
 #include<string.h>
 
 #include"mem.h"
+#include"log.h"
 
 API void mem_init(struct mem *mem)
 {
@@ -15,17 +16,13 @@ API void mem_init(struct mem *mem)
 
 API void mem_write(struct mem *mem, addr_t addr, uint8_t data)
 {
-	if(!mem){
-		return;
-	}
+	err_on(!mem, "passing unallocated struct mem");
 	mem->memory[addr] = data;
 }
 
 API void add_mmapped_io(struct mem *mem, addr_t where, read_cb on_read)
 {
-	if(!mem){
-		return;
-	}
+	err_on(!mem, "passing unallocated struct mem");
 	struct mmap_io *add = s_malloc(sizeof(struct mmap_io));
 	add->addr = where;
 	add->on_read = on_read;
@@ -36,6 +33,7 @@ API void add_mmapped_io(struct mem *mem, addr_t where, read_cb on_read)
 	}else{
 		mem->mmio.tail->next = add;
 		mem->mmio.tail = mem->mmio.tail->next;
+		mem->mmio.tail->next = NULL;
 	}
 }
 
@@ -49,7 +47,7 @@ API void mmap_write(struct mem *mem, addr_t addr, uint8_t data)
 	if(found){
 		CALL_CB(found->on_read, data);
 	}else{
-		/* TODO write to log file */
+		
 	}
 }
 

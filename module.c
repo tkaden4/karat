@@ -40,7 +40,7 @@ API struct mod *load_internal_module(	struct modlist *list,
 	return NULL;
 }
 
-API void update_module(struct mod *m, uint32_t data)
+API void update_module(struct mod *m, uint8_t data)
 {
 	if(m){
 		CALL_CB(m->on_read, data);

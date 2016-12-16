@@ -30,3 +30,6 @@
 
 #define ferr(file, fmt, ...)  \
 	fprefix(file, "ERR", "[  " fmt "  ]", ##__VA_ARGS__); exit(1);
+#define err(fmt, ...) ferr(stdout, fmt, ##__VA_ARGS__)
+#define err_on(condition, fmt, ...) \
+	if(condition){ err(fmt, ##__VA_ARGS__); }

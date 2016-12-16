@@ -16,7 +16,6 @@
 #include"list.h"
 #include"types.h"
 
-
 struct mod {
 	NODE(struct mod);
 	/* name of the module */
@@ -40,7 +39,7 @@ API struct mod *load_internal_module(	struct modlist *list,
 										read_cb update_cb, 
 										const wchar_t *name	);
 /* call the update method of a module with the given data */
-API void update_module(struct mod *m, uint32_t data);
+API void update_module(struct mod *m, uint8_t data);
 /* remove a module, if it does not exist, no effect */
 API void unload_module(struct modlist *list, struct mod *m);
 API void modules_destroy(struct modlist *list);

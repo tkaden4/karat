@@ -15,7 +15,7 @@ struct mmap_io {
 
 #define MAX_PORTS 10
 
-#define MEM_SIZE (2 << 16)
+#define MEM_SIZE (1 << 16)
 
 struct mem {
 	uint8_t *memory;
