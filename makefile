@@ -1,6 +1,6 @@
 SOURCES=$(wildcard *.c)
 OBJECTS=$(SOURCES:.c=.o)
-CFLAGS=-Wall -Wextra -Werror -O3 -std=c11
+CFLAGS=-Wall -Wextra -Werror -O3 -std=c11 -DDEBUG
 
 EXECUTABLE=karat
 
