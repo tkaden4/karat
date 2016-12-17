@@ -24,18 +24,22 @@ int main()
 	cpu_init(&sys.cpu);
 	
 	struct mod *keyboard = load_internal_module(&modules, 
-												(read_cb)RAW_CB(read), 
+												(read_cb)RAW_CB(read),
+												0xFFFF,
 												L"sdl_keyboard");
+
 	struct mod *screen = load_internal_module(	&modules, 
-												(read_cb)RAW_CB(read), 
+												(read_cb)RAW_CB(read),
+												0xFFFF,
 												L"sdl_screen");
+
+	add_mmapped_io(&sys.ram, keyboard->addr, keyboard->on_read);	
+	add_mmapped_io(&sys.ram, screen->addr, screen->on_read);	
+
 	puts("loaded modules:");
 	LIST_FOREACH(struct mod, modules.head, each){
-		printf("\t%ls\n", each->name);
+		printf("\t0x%4X : %ls\n", each->addr, each->name);
 	}
-
-	add_mmapped_io(&sys.ram, 0xFF80, keyboard->on_read);	
-	add_mmapped_io(&sys.ram, 0xFF81, screen->on_read);	
 
 	goto cleanup;
 cleanup:

@@ -13,8 +13,6 @@ struct mmap_io {
 	read_cb on_read;
 };
 
-#define MAX_PORTS 10
-
 #define MEM_SIZE (1 << 16)
 
 struct mem {

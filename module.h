@@ -18,6 +18,8 @@
 
 struct mod {
 	NODE(struct mod);
+	/* what io port does this module request ? */
+	addr_t addr;
 	/* name of the module */
 	const wchar_t *name;
 	/* what to do when cpu writes to port */
@@ -35,9 +37,10 @@ API void modules_init(struct modlist *list);
 /* load a module from file */
 API struct mod *load_module(struct modlist *list, const wchar_t *file);
 /* create a raw module from callback (for builtin modules) */
-API struct mod *load_internal_module(	struct modlist *list, 	
-										read_cb update_cb, 
-										const wchar_t *name	);
+API struct mod *load_internal_module(	struct modlist *list,
+										read_cb update_cb,
+										addr_t addr,
+										const wchar_t *name);
 /* call the update method of a module with the given data */
 API void update_module(struct mod *m, uint8_t data);
 /* remove a module, if it does not exist, no effect */

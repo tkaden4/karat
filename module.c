@@ -2,10 +2,13 @@
 
 #include"mem.h"
 
-INTERNAL struct mod *create_module(read_cb update_cb, const wchar_t *name)
+INTERNAL struct mod *create_module( read_cb update_cb, 
+									addr_t addr, 
+								  	const wchar_t *name)
 {
 	struct mod *ret = s_malloc(sizeof(struct mod));
 	ret->name = name;
+	ret->addr = addr;
 	ret->on_read = update_cb;
 	ret->next = NULL;
 	return ret;
@@ -23,10 +26,11 @@ API void modules_init(struct modlist *list)
 
 API struct mod *load_internal_module(	struct modlist *list,
 										read_cb update_cb,
-										const wchar_t *name	)
+										addr_t addr,
+										const wchar_t *name)
 {
 	if(list){
-		struct mod *add_mod = create_module(update_cb, name);
+		struct mod *add_mod = create_module(update_cb, addr, name);
 		if(!list->head){
 			list->head = add_mod;
 			list->tail = list->head;
