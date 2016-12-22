@@ -14,12 +14,6 @@ typedef uint32_t areg_t;	/* address register datatype */
 #define SP_INDEX (ADDRESS_REGS - 2)
 #define FP_INDEX (ADDRESS_REGS - 1)
 
-enum {
-	NMI = 0,
-	IRQ, 
-	INTERRUPTS
-};
-
 struct cpu_state {
 	/* general registers */
 	union {
@@ -51,15 +45,9 @@ struct cpu_state {
 			areg_t fp;	/* frame pointer */
 		};
 	};
-	/* interrupts */
-	union {
-		addr_t interrupts[INTERRUPTS];
-		struct {
-			addr_t nmi;
-			addr_t irq;
-		};
-	};
+	/* program counter */
+	addr_t pc;
 };
 
-API void cpu_init(struct cpu_state *state);
-API void cpu_reset(struct cpu_state *state);
+void cpu_init(struct cpu_state *state);
+void cpu_reset(struct cpu_state *state);

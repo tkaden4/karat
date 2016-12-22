@@ -2,14 +2,14 @@
 
 #include<string.h>
 
-API void cpu_init(struct cpu_state *state)
+void cpu_init(struct cpu_state *state)
 {
 	if(state){
 		cpu_reset(state);
 	}
 }
 
-API void cpu_reset(struct cpu_state *state)
+void cpu_reset(struct cpu_state *state)
 {
 #if ADDRESS_REGS == GENERAL_REGS
 	for(size_t i = 0; i < ADDRESS_REGS; ++i){
@@ -20,5 +20,5 @@ API void cpu_reset(struct cpu_state *state)
 	memset(state->gregs, 0, GENERAL_REGS);
 	memset(state->aregs, 0, ADDRESS_REGS);
 #endif
-	memset(state->interrupts, 0, INTERRUPTS);
+	state->pc = 0;
 }

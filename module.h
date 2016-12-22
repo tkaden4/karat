@@ -13,36 +13,22 @@
 #include<wchar.h>
 
 #include"karat.h"
-#include"list.h"
 #include"types.h"
 
 struct mod {
-	NODE(struct mod);
-	/* what io port does this module request ? */
-	addr_t addr;
 	/* name of the module */
 	const wchar_t *name;
 	/* what to do when cpu writes to port */
 	read_cb on_read;
+	/* what to do when cpu reads from port */
+	write_cb on_request;
 };
 
-struct modlist {
-	size_t size;
-	struct mod *head;
-	struct mod *tail;
-};
+struct mod *load_internal_module(struct mod *module, 
+					read_cb on_read,
+					write_cb on_write,
+					const wchar_t *name);
+struct mod *load_external_module(struct mod *module, const wchar_t *file);
 
-/* initialize a module list with the maximum */
-API void modules_init(struct modlist *list);
-/* load a module from file */
-API struct mod *load_module(struct modlist *list, const wchar_t *file);
-/* create a raw module from callback (for builtin modules) */
-API struct mod *load_internal_module(	struct modlist *list,
-										read_cb update_cb,
-										addr_t addr,
-										const wchar_t *name);
-/* call the update method of a module with the given data */
-API void update_module(struct mod *m, uint8_t data);
-/* remove a module, if it does not exist, no effect */
-API void unload_module(struct modlist *list, struct mod *m);
-API void modules_destroy(struct modlist *list);
+void module_write(struct mod *module, uint8_t data);
+uint8_t module_read(struct mod *module);
