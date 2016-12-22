@@ -9,7 +9,7 @@
 #define fprefix(file, prefix, fmt, ...) \
 	fprintf(file, prefix "::" fmt "\n", ##__VA_ARGS__)
 
-#ifdef DEBUG 
+#ifdef KDEBUG 
 #define fdebug(file, fmt, ...) \
 	fprefix(file, "DEBUG", "[  " fmt "  ]", ##__VA_ARGS__)
 #else
