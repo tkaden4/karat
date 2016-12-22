@@ -11,8 +11,8 @@ int screen_init(struct screen_state *state)
 		return 1;
 	}
 	#define WPOS SDL_WINDOWPOS_UNDEFINED
-	const size_t scr_size = SCREEN_SIZE * PIXEL_SIZE;
-	SDL_Window *w = SDL_CreateWindow("", WPOS, WPOS, scr_size, scr_size, 0);
+	#define WINSIZE WINDOW_SIZE
+	SDL_Window *w = SDL_CreateWindow("", WPOS, WPOS, WINSIZE, WINSIZE, 0);
 	#undef WPOS
 	if(!w){
 		warn("window was unable to be created [%s]", SDL_GetError());
@@ -38,15 +38,25 @@ int screen_init(struct screen_state *state)
 	state->window = w;
 	state->renderer = r;
 	state->texture = t;
-	memset(state->gfx, 0x00000000, sizeof(rgba_t) * SCREEN_SIZE * SCREEN_SIZE);
+	memset(state->gfx, 0l, sizeof(rgba_t) * SCREEN_SIZE * SCREEN_SIZE);
 	return 0;
+}
+
+struct mod *screen_as_module(struct screen_state *state, struct mod *m)
+{
+	err_on(!m, "module not allocated");
+	err_on(!state, "screen not allocated");
+	SET_CB(m->on_read, NULL, state);
+	SET_CB(m->on_request, NULL, state);
+	SET_CB(m->on_destroy, (destroy_fp)screen_destroy, state);
+	return m;
 }
 
 void screen_draw(struct screen_state *state)
 {
 	err_on(!state, "screen state not allocated");
 	SDL_UpdateTexture(	state->texture, NULL, 
-						state->gfx, SCREEN_SIZE * sizeof(u32));
+						state->gfx, SCREEN_SIZE * sizeof(rgba_t));
 
 	SDL_RenderClear(state->renderer);
 	SDL_RenderCopy(state->renderer, state->texture, NULL, NULL);
@@ -55,16 +65,32 @@ void screen_draw(struct screen_state *state)
 
 void screen_clear(struct screen_state *state)
 {
+	screen_flood(state, BLACK);
+}
+
+void screen_flood(struct screen_state *state, rgba_t color)
+{
 	err_on(!state, "screen state not allocated");
 	warn_on(!state->gfx, "gfx buffer not initialized");
 	if(state->gfx){
-		memset(state->gfx, 0lu, GFX_SIZE);
+		for(size_t i = 0; i < GFX_SIZE; ++i){
+			state->gfx[i] = color;
+		}
 	}
+
 }
 
 void screen_set_pixel(struct screen_state *state, u32 x, u32 y, u32 color)
 {
 	err_on(!state, "screen state not allocated");
+	if(x >= SCREEN_SIZE){
+		warn("attempt to draw outside of screen");
+		return;
+	}
+	if(y >= SCREEN_SIZE){
+		warn("attempt to draw outside of screen");
+		return;
+	}
 	state->gfx[y * SCREEN_SIZE + x] = color;
 }
 

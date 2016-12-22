@@ -6,20 +6,26 @@ typedef uint8_t io_t;		/* io port datatype */
 #define CALLBACK(ret, ...) \
 struct { ret(*cb)(void *, ##__VA_ARGS__); void *data; }
 
-#define SET_CB(cb, fp, data) { cb->cb = fp; cb->data = data; }
+#define SET_CB(c, fp, d) { c.cb = fp; c.data = d; }
 #define MAKE_CB(type, fp, data) (type){ fp; data; }
 
 #define RAW_CB(func) { func, NULL }
+
 typedef CALLBACK(void, uint8_t) read_cb;
 typedef CALLBACK(uint8_t) write_cb;
+typedef CALLBACK(void) destroy_cb;
+typedef CALLBACK(void) init_cb;
+
+typedef void(*destroy_fp)(void *);
+typedef void(*init_fp)(void *);
+
+
 #define CALL_CB(x, ...) x.cb(x.data, ##__VA_ARGS__)
 
 #define U(size) \
 typedef uint ## size ## _t u ## size
-
 #define I(size) \
 typedef int ## size ## _t i ## size
-
 
 U(8);
 U(16);

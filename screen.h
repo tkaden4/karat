@@ -3,10 +3,14 @@
 #include<SDL2/SDL.h> /* this will have to be compiled with sdl2 */
 #include<stdbool.h>
 
+#include"module.h"
 #include"types.h"
 
 #define WINDOW_SIZE 640
-#define SCREEN_SIZE 8
+#define SCREEN_SIZE 2
+#if WINDOW_SIZE % SCREEN_SIZE != 0
+#error "Invalid window and screen sizes"
+#endif
 #define PIXEL_SIZE (WINDOW_SIZE/SCREEN_SIZE)
 #define GFX_SIZE (SCREEN_SIZE * SCREEN_SIZE)
 
@@ -15,9 +19,10 @@ enum {
 	RED = 	0xFF000000 | FLAT,
 	GREEN = 0x00FF0000 | FLAT,
 	BLUE = 	0x0000FF00 | FLAT,
-	CLEAR = 0x00000000
+	CLEAR = 0x00000000,
+	WHITE = RED | GREEN | BLUE,
+	BLACK = ~WHITE | FLAT
 };
-
 /* shift a number i bytes to the left */
 #define shl(b, i) (b << (8 * i))
 /* create a color from four integers */
@@ -42,8 +47,22 @@ struct screen_state {
 	SDL_Renderer *renderer;
 };
 
+static inline void screen_dimensions(
+	size_t *win_width, size_t *win_height,
+	size_t *scr_width, size_t *scr_height)
+{
+#define SETP(p, v) if(p){ *p = v; }
+	SETP(win_width, WINDOW_SIZE);
+	SETP(win_height, WINDOW_SIZE);
+	SETP(scr_width, SCREEN_SIZE);
+	SETP(scr_height, SCREEN_SIZE);
+#undef SETP
+}
+
 int screen_init(struct screen_state *state);
+struct mod *screen_as_module(struct screen_state *state, struct mod *m);
 void screen_draw(struct screen_state *state);
 void screen_clear(struct screen_state *state);
+void screen_flood(struct screen_state *state, rgba_t color);
 void screen_set_pixel(struct screen_state *state, u32 x, u32 y, u32 color);
 void screen_destroy(struct screen_state *state);

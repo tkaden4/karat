@@ -11,7 +11,7 @@ void system_init(struct system *sys)
 	memset(sys->ports, 0, IO_PORTS);
 }
 
-void set_port(struct system *sys, io_t which, struct mod *module)
+void system_set_port(struct system *sys, io_t which, struct mod *module)
 {
 	err_on(!sys, "uninitialized system");
 	warn_on(which >= IO_PORTS, "port outside of range");
@@ -22,7 +22,7 @@ void set_port(struct system *sys, io_t which, struct mod *module)
 	}
 }
 
-void reset_port(struct system *sys, io_t which)
+void system_reset_port(struct system *sys, io_t which)
 {
 	err_on(!sys, "uninitialized system");
 	warn_on(which >= IO_PORTS, "port outside of range");

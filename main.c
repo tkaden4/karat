@@ -1,18 +1,27 @@
 #include<stdio.h>
+#include<math.h>
 
+#include"log.h"
 #include"system.h"
+#include"module.h"
 #include"screen.h"
 
 int main()
 {
+	struct system sys;
+	system_init(&sys);
+
 	struct screen_state scr;
 	screen_init(&scr);
-	screen_clear(&scr);
 
-	screen_set_pixel(&scr, 0, 0, rgb(138, 43, 226));
+	struct mod screen;
+	screen_as_module(&scr, &screen);
 
-	screen_draw(&scr);
+	system_set_port(&sys, 0, &screen);
+
 	SDL_Delay(850);
-	screen_destroy(&scr);
+
+	module_destroy(&screen);
+	system_destroy(&sys);
 	return 0;
 }

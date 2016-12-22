@@ -22,13 +22,17 @@ struct mod {
 	read_cb on_read;
 	/* what to do when cpu reads from port */
 	write_cb on_request;
+	/* what to do when done with module */
+	destroy_cb on_destroy;
 };
 
 struct mod *load_internal_module(struct mod *module, 
 					read_cb on_read,
 					write_cb on_write,
+					destroy_cb on_deinit,
 					const wchar_t *name);
 struct mod *load_external_module(struct mod *module, const wchar_t *file);
 
 void module_write(struct mod *module, uint8_t data);
 uint8_t module_read(struct mod *module);
+void module_destroy(struct mod *module);
