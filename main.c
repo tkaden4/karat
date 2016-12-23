@@ -11,17 +11,11 @@ int main()
 	struct system sys;
 	system_init(&sys);
 
-	struct screen_state scr;
-	screen_init(&scr);
+	struct mod scrmod = BLANK_MOD;
+	system_set_port(&sys, 0, screen_module(&scrmod));
 
-	struct mod screen;
-	screen_as_module(&scr, &screen);
-
-	system_set_port(&sys, 0, &screen);
-
-	SDL_Delay(850);
-
-	module_destroy(&screen);
+	SDL_Delay(850ull);
+	
 	system_destroy(&sys);
 	return 0;
 }

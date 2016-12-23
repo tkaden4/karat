@@ -11,10 +11,6 @@
 
 void *s_malloc(size_t bytes)
 {
-#if TRACK_ALLOC
-	static int i = 0;
-	printf("%d bytes allocated\n", (i += bytes));
-#endif
     void *ret = malloc(bytes);
     CHECK_RET(ret);
 }
@@ -33,10 +29,6 @@ void *s_realloc(void *data, size_t size)
 
 void s_free(void *bytes)
 {
-#if TRACK_ALLOC
-	static int i = 0;
-	printf("%d frees\n", ++i);
-#endif
     if(!bytes){
         fprintf(stderr, "FATAL::> Attempt to free unallocated memory\n");
 		exit(1);

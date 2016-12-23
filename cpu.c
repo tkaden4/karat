@@ -12,7 +12,7 @@ void cpu_init(struct cpu_state *state)
 void cpu_reset(struct cpu_state *state)
 {
 #if ADDRESS_REGS == GENERAL_REGS
-	for(size_t i = 0; i < ADDRESS_REGS; ++i){
+	for(register size_t i = 0; i < ADDRESS_REGS; ++i){
 		state->gregs[i] = 0;
 		state->aregs[i] = 0;
 	}

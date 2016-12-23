@@ -38,15 +38,25 @@ int screen_init(struct screen_state *state)
 	state->window = w;
 	state->renderer = r;
 	state->texture = t;
-
-	register rgba_t *end = state->gfx + GFX_SIZE;
-	for(register rgba_t *s = state->gfx; s != end; ++s){
-		*s = 0;
-	}
-
+	memset(state->gfx, 0l, sizeof(rgba_t) * SCREEN_SIZE * SCREEN_SIZE);
 	return 0;
 }
 
+INTERNAL void destroy_screen(void *data)
+{
+	screen_destroy((struct screen_state *)data);
+	s_free(data);
+}
+
+struct mod *screen_module(struct mod *m)
+{
+	err_on(!m, "module not allocated");
+	struct screen_state *state = s_alloc(struct screen_state);
+	SET_CB(m->on_read, NULL, state);
+	SET_CB(m->on_request, NULL, state);
+	SET_CB(m->on_destroy, (destroy_fp)screen_destroy, state);
+	return m;
+}
 
 void screen_draw(struct screen_state *state)
 {

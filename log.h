@@ -7,7 +7,8 @@
 #include"karat.h"
 
 #define fprefix(file, prefix, fmt, ...) \
-	fprintf(file, prefix "::" fmt "\n", ##__VA_ARGS__)
+	fprintf(file,  prefix "::" fmt "\t[ %s : %s : %d]\n", \
+	##__VA_ARGS__, __FILE__, __func__, __LINE__ )
 
 #ifdef KDEBUG 
 #define fdebug(file, fmt, ...) \

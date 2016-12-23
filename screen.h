@@ -59,8 +59,9 @@ static inline void screen_dimensions(
 #undef SETP
 }
 
+struct mod *screen_module(struct mod *m);
+
 int screen_init(struct screen_state *state);
-struct mod *screen_as_module(struct screen_state *state, struct mod *m);
 void screen_draw(struct screen_state *state);
 void screen_clear(struct screen_state *state);
 void screen_flood(struct screen_state *state, rgba_t color);

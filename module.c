@@ -7,12 +7,14 @@
 #include"log.h"
 
 struct mod * load_internal_module(struct mod *module, 
+					init_cb on_init,
 					read_cb on_read,
 					write_cb on_write,
 					destroy_cb on_deinit,
 					const wchar_t *name)
 {
 	err_on(!module, "module not allocated");
+	module->on_init = on_init;
 	module->on_read = on_read;
 	module->on_request = on_write;
 	module->on_destroy = on_deinit;
@@ -25,6 +27,12 @@ struct mod *load_external_module(struct mod *module, const wchar_t *file)
 	err_on(!module, "module not allocated");
 	printf("loading module from file \"%ls\"\n", file);
 	return module;
+}
+
+void module_init(struct mod *module)
+{
+	err_on(!module, "module not allocated");
+	CALL_CB(module->on_init);
 }
 
 void module_write(struct mod *module, uint8_t data)

@@ -6,8 +6,11 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
 
-#define TRACK_ALLOC 0
+#define zstruct(x) memset((void *)(&(x)), 0, sizeof((x)))
+
+#define s_alloc(type) s_malloc(sizeof(type))
 
 void *s_malloc(size_t bytes);    
 void *s_calloc(size_t size, size_t bytes);

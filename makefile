@@ -1,7 +1,7 @@
 SOURCES=$(wildcard *.c)
 OBJECTS=$(SOURCES:.c=.o)
-CFLAGS=-Wall -Wextra -Werror -O3 -std=c11 -DDEBUG
-
+CFLAGS=-Wall -Wextra -Werror -O3 -std=c11 -DKDEBUG
+LIBS=-lSDL2 -lm
 EXECUTABLE=karat
 
 ifeq ($(OS), Windows_NT)
@@ -10,7 +10,7 @@ ifeq ($(OS), Windows_NT)
 endif
 
 $(EXECUTABLE) : $(OBJECTS)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBS)
 
 run:
 	./$(EXECUTABLE)
