@@ -8,7 +8,7 @@
 #include<stdlib.h>
 #include<string.h>
 
-#define zstruct(x) memset((void *)(&(x)), 0, sizeof((x)))
+#define zmem(x) memset((void *)(&(x)), 0, sizeof((x)))
 
 #define s_alloc(type) s_malloc(sizeof(type))
 

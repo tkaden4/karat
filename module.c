@@ -6,17 +6,17 @@
 #include"mem.h"
 #include"log.h"
 
-struct mod * load_internal_module(struct mod *module, 
+struct mod *load_internal_module(struct mod *module, 
 					init_cb on_init,
-					read_cb on_read,
 					write_cb on_write,
 					destroy_cb on_deinit,
+					struct io_table table,
 					const wchar_t *name)
 {
 	err_on(!module, "module not allocated");
 	module->on_init = on_init;
-	module->on_read = on_read;
-	module->on_request = on_write;
+	module->io = table;
+	module->on_write = on_write;
 	module->on_destroy = on_deinit;
 	module->name = name;
 	return module;
@@ -38,13 +38,13 @@ void module_init(struct mod *module)
 void module_write(struct mod *module, uint8_t data)
 {
 	err_on(!module, "module not allocated");
-	CALL_CB(module->on_read, data);
+	io_table_send(&module->io, data);
 }
 
 uint8_t module_read(struct mod *module)
 {
 	err_on(!module, "module not allocated");
-	return CALL_CB(module->on_request);
+	return CALL_CB(module->on_write);
 }
 
 void module_destroy(struct mod *module)
@@ -53,4 +53,5 @@ void module_destroy(struct mod *module)
 	if(module){
 		CALL_CB(module->on_destroy);
 	}
+	io_table_destroy(&module->io);
 }

@@ -6,8 +6,6 @@ typedef uint8_t io_t;		/* io port datatype */
 #define CALLBACK(ret, ...) \
 struct { ret(*cb)(void *, ##__VA_ARGS__); void *data; }
 
-#define BLANK_CB { NULL, NULL }
-
 #define SET_CB(c, fp, d) { c.cb = fp; c.data = d; }
 #define MAKE_CB(type, fp, d) (type){ fp, d }
 
