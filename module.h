@@ -6,7 +6,6 @@
  * to provide new functionality to the 
  * Karat system. Each module may use
  * io ports to communicate with the cpu.
- * code can use input to make decisions
  */
 
 #include<stdint.h>
@@ -25,6 +24,7 @@
 typedef CALLBACK(void, u8 *args, size_t nargs) io_cb;
 
 struct io_command {
+	/* ID */
 	u8 code;
 	/* how many arguments does it take? */
 	size_t nargs;
@@ -34,7 +34,7 @@ struct io_command {
 
 struct io_table {
 	struct io_command handles[MAX_HANDLES];
-	/* which are we currently attempting to handle */
+	/* current io command we are trying to handle */
 	struct io_command *current;
 	/* how many arguments we have read */
 	struct arg_vec {

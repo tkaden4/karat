@@ -35,8 +35,6 @@ INTERNAL size_t find_empty(struct io_table *table, u8 code)
 	for(register size_t i = 0; i < MAX_HANDLES; ++i){
 		if(!table->handles[i].code){
 			return i;
-		}else if(table->handles[i].code == code){
-			return i;
 		}
 	}
 	return MAX_HANDLES;
@@ -70,8 +68,9 @@ INTERNAL void arg_add(u8 **vec, size_t *size, size_t *cap, u8 val)
 void io_table_send(struct io_table *table, u8 byte)
 {
 	err_on(!table, "table not allocated");
-	err_on(table->current == NULL && byte == 0, "commands may not be 0x00");
-	if(!table->current){	/* start a new command */
+	err_on((table->current == NULL) && (byte == 0), "commands may not be 0x00");
+	/* start a new command */
+	if(!table->current){
 		size_t index = find_handle(table, byte);
 		warn_ret(index == MAX_HANDLES, "attempt to start non-existent command");
 		table->current = &table->handles[index];
@@ -85,7 +84,7 @@ void io_table_send(struct io_table *table, u8 byte)
 				table->cmdargs.args, table->cmdargs.size);
 		table->current = NULL;
 		if(table->cmdargs.args){
-			s_free(table->cmdargs.args);
+			table->cmdargs.size = 0;
 			zmem(table->cmdargs);
 		}
 	}

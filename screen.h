@@ -6,10 +6,10 @@
 #include"module.h"
 #include"types.h"
 
-#define WINDOW_SIZE 765
-#define SCREEN_SIZE 255
+#define WINDOW_SIZE 384
+#define SCREEN_SIZE 64
 #if WINDOW_SIZE % SCREEN_SIZE != 0
-#error "Invalid window and screen sizes"
+#error "Invalid window and screen sizes, window % screen"
 #endif
 #define PIXEL_SIZE (WINDOW_SIZE/SCREEN_SIZE)
 #define GFX_SIZE (SCREEN_SIZE * SCREEN_SIZE)
@@ -20,7 +20,7 @@ enum {
 	GREEN = 0x00FF0000 | FLAT,
 	BLUE = 	0x0000FF00 | FLAT,
 	CLEAR = 0x00000000,
-	WHITE = RED | GREEN | BLUE,
+	WHITE = RED | GREEN | BLUE | FLAT,
 	BLACK = ~WHITE | FLAT
 };
 /* shift a number i bytes to the left */
@@ -29,16 +29,16 @@ enum {
 #define I(f) ((u8)(f)) 
 #define rgba(r, g, b, a) ( shl(I(r), 3) | shl(I(g), 2)| shl(I(b), 1) | I(a))
 /* create a color from four floats */
-#define frgba(r, g, b, a) rgba(r * 0xFF, g * 0xFF, b * 0xFF, a * 0xFF)
+#define frgba(r, g, b, a) rgba((r) * 0xFF, (g) * 0xFF, (b) * 0xFF, (a) * 0xFF)
 
 #define rgb(r, g, b) rgba(r, g, b, 0xFF)
-#define frgb(r, g, b) frgba(r, g, b, 1.0f)
+#define frgb(r, g, b) frgba(r, g, b, 1.f)
 
 typedef u32 rgba_t;
 
 struct screen_state {
 	/* representation of pixels on screen */
-	rgba_t gfx[SCREEN_SIZE * SCREEN_SIZE];
+	rgba_t gfx[GFX_SIZE];
 	/* window to draw to */
 	SDL_Window *window;
 	/* texture to be drawn to screen */
@@ -48,8 +48,8 @@ struct screen_state {
 };
 
 static inline void screen_dims(
-	size_t *win_width, size_t *win_height,
-	size_t *scr_width, size_t *scr_height)
+	u16 *win_width, u16 *win_height,
+	u16 *scr_width, u16 *scr_height)
 {
 #define SETP(p, v) if(p){ *p = v; }
 	SETP(win_width, WINDOW_SIZE);

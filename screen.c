@@ -11,9 +11,11 @@ int screen_init(struct screen_state *state)
 		return 1;
 	}
 	#define WPOS SDL_WINDOWPOS_UNDEFINED
-	#define WINSIZE WINDOW_SIZE
-	SDL_Window *w = SDL_CreateWindow("", WPOS, WPOS, WINSIZE, WINSIZE, 0);
+	#define WSIZE WINDOW_SIZE
+	#define FLAGS SDL_WINDOW_BORDERLESS
+	SDL_Window *w = SDL_CreateWindow("", WPOS, WPOS, WSIZE, WSIZE, FLAGS);
 	#undef WPOS
+	#undef FLAGS
 	if(!w){
 		warn("window was unable to be created [%s]", SDL_GetError());
 		SDL_Quit();
@@ -26,24 +28,24 @@ int screen_init(struct screen_state *state)
 		SDL_Quit();
 		return 1;
 	}
-	SDL_Texture *t = SDL_CreateTexture(	r, SDL_PIXELFORMAT_RGBA8888, 
-										SDL_TEXTUREACCESS_STATIC, 
-										SCREEN_SIZE, SCREEN_SIZE);
-	if(!t){
+	SDL_Texture *tex = SDL_CreateTexture(	r, SDL_PIXELFORMAT_RGBA8888, 
+											SDL_TEXTUREACCESS_STATIC, 
+											SCREEN_SIZE, SCREEN_SIZE);
+	if(!tex){
 		warn("texture was unable to be created [%s]", SDL_GetError());
 		SDL_DestroyRenderer(r);
 		SDL_DestroyWindow(w);
 		SDL_Quit();
 	}
+
 	state->window = w;
 	state->renderer = r;
-	state->texture = t;
+	state->texture = tex;
 
 	register rgba_t *end = state->gfx + GFX_SIZE;
 	for(register rgba_t *s = state->gfx; s != end; ++s){
 		*s = 0;
 	}
-
 	return 0;
 }
 
@@ -53,15 +55,9 @@ void screen_draw(struct screen_state *state)
 	err_on(!state, "screen state not allocated");
 	SDL_UpdateTexture(	state->texture, NULL, 
 						state->gfx, SCREEN_SIZE * sizeof(rgba_t));
-
 	SDL_RenderClear(state->renderer);
 	SDL_RenderCopy(state->renderer, state->texture, NULL, NULL);
 	SDL_RenderPresent(state->renderer);
-}
-
-void screen_clear(struct screen_state *state)
-{
-	screen_flood(state, BLACK);
 }
 
 void screen_flood(struct screen_state *state, rgba_t color)
@@ -73,7 +69,11 @@ void screen_flood(struct screen_state *state, rgba_t color)
 			state->gfx[i] = color;
 		}
 	}
+}
 
+void screen_clear(struct screen_state *state)
+{
+	screen_flood(state, BLACK);
 }
 
 void screen_set_pixel(struct screen_state *state, u32 x, u32 y, u32 color)
