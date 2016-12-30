@@ -1,15 +1,15 @@
 #pragma once 
 #include"cpu.h"
-#include"ram.h"
 #include"module.h"
 #include"types.h"
 
+#define MEM_SIZE 8192
 #define IO_PORTS 10
 #define INTERNAL_IO_MAX 3
 
 struct system {
 	struct cpu_state cpu;
-	struct mem memory;
+	u8 *mem;
 	struct mod *ports[IO_PORTS];
 };
 

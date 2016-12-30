@@ -1,5 +1,4 @@
 #include<locale.h>
-#include<math.h>
 #include<time.h>
 
 #include"system.h"
@@ -9,18 +8,15 @@
 #define usage() \
 	printf("Usage: karat < file.kt >"); exit(0);
 
-int main(int argc, char **argv)
+int main()
 {
 	setlocale(LC_ALL, "");
-	if(argc == 2){
-		puts(argv[1]);
-	}else{
-		struct system s;
-		system_init(&s);
-		system_load_builtins(&s);
+	struct system s;
+	system_init(&s);
+	system_load_builtins(&s);
 
-		SDL_Delay(800);
-		system_destroy(&s);
-	}
+	SDL_Delay(800);
+
+	system_destroy(&s);
 	return 0;
 }

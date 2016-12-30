@@ -37,9 +37,7 @@ INTERNAL void mod_destroy(void *data)
 	warn_alloc(data);
 	struct smod_data *smod = FROM_VPTR(data);
 	warn_alloc(smod->state);
-
 	screen_destroy(smod->state);
-
 	s_free(smod->state);
 	s_free(smod);
 }

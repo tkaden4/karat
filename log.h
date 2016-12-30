@@ -20,7 +20,7 @@
 #define debug(fmt, ...) fdebug(stdout, fmt, ##__VA_ARGS__)
 
 #define fwarn(file, fmt, ...) \
-	fprefix(file, "WARN", "[  " fmt "  ]", ##__VA_ARGS__)
+	fprefix(file, "WARNING", "[  " fmt "  ]", ##__VA_ARGS__)
 #define warn(fmt, ...) fwarn(stdout, fmt, ##__VA_ARGS__)
 #define warn_on(condition, fmt, ...) \
 	if(condition){ warn(fmt, ##__VA_ARGS__); }

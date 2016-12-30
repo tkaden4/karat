@@ -2,14 +2,25 @@
 
 #include<string.h>
 
+#include"module.h"
 #include"screen.h"
 #include"mem.h"
 #include"log.h"
 
+typedef struct mod *(*get_mod_f)(struct mod *);
+
+/* so we don't need to deal with memory allocation */
+struct builtin { get_mod_f get; struct mod m; };
+
+static struct builtin builtins[] = {
+	{ .get = screen_module },
+	{ .get = NULL }
+};
+
 void system_init(struct system *sys)
 {
 	err_on(!sys, "attempt to initialize unallocated struct");
-	mem_init(&sys->memory);
+	sys->mem = s_calloc(1, MEM_SIZE);
 	cpu_init(&sys->cpu);
 	for(register size_t i = 0; i < IO_PORTS; ++i){
 		sys->ports[i] = NULL;
@@ -19,8 +30,15 @@ void system_init(struct system *sys)
 void system_load_builtins(struct system *sys)
 {
 	err_on(!sys, "uninitialized system");
-	struct mod m;
-	system_set_port(sys, 0, screen_module(&m));
+	for(register size_t i = 0; i < IO_PORTS; ++i){
+		struct builtin *b = &builtins[i];
+		if(!b->get){
+			break;
+		}
+		b->get(&b->m);
+		debug("setting port %lu to %ls", i, b->m.name);
+		system_set_port(sys, i, &b->m);
+	}
 }
 
 void system_io_write(struct system *sys, io_t which, u8 data)
@@ -38,10 +56,8 @@ void system_set_port(struct system *sys, io_t which, struct mod *module)
 	err_on(!module, "module in set_port not initialized");
 	warn_on(sys->ports[which], "port %d already initialized to \"%ls\"", 
 			which, sys->ports[which]->name);
-	struct mod *new = s_alloc(struct mod);
-	*new = *module;
-	module_init(new);
-	sys->ports[which] = new;
+	module_init(module);
+	sys->ports[which] = module;
 }
 
 void system_reset_port(struct system *sys, io_t which)
@@ -51,7 +67,6 @@ void system_reset_port(struct system *sys, io_t which)
 	if(which < IO_PORTS){
 		if(sys->ports[which]){
 			module_destroy(sys->ports[which]);
-			s_free(sys->ports[which]);
 		}
 		sys->ports[which] = NULL;
 	}
@@ -61,11 +76,13 @@ void system_destroy(struct system *sys)
 {
 	warn_on(!sys, "attempt to destroy unallocated struct");
 	if(sys){
-		mem_destroy(&sys->memory); 
+		warn_on(!sys->mem, "memory not allocated");
+		if(sys->mem){
+			s_free(sys->mem);
+		}
 		for(size_t i = 0; i < IO_PORTS; ++i){
 			if(sys->ports[i]){
 				module_destroy(sys->ports[i]);
-				s_free(sys->ports[i]);
 			}
 		}
 	}
