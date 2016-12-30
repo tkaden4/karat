@@ -47,7 +47,6 @@ struct io_table {
 void io_table_init(struct io_table *table);
 void io_table_add(struct io_table *table, u8 code, size_t args, io_cb cb);
 void io_table_send(struct io_table *table, u8 byte);
-/* unused until handles are growable */
 void io_table_destroy(struct io_table *table);
 
 struct mod {

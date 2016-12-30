@@ -1,21 +1,26 @@
-#include<stdio.h>
+#include<locale.h>
 #include<math.h>
+#include<time.h>
 
-#include"log.h"
 #include"system.h"
 #include"module.h"
 #include"screen.h"
 
-int main()
+#define usage() \
+	printf("Usage: karat < file.kt >"); exit(0);
+
+int main(int argc, char **argv)
 {
-	struct system sys;
-	system_init(&sys);
+	setlocale(LC_ALL, "");
+	if(argc == 2){
+		puts(argv[1]);
+	}else{
+		struct system s;
+		system_init(&s);
+		system_load_builtins(&s);
 
-	struct mod scrmod;
-	system_set_port(&sys, 0, screen_module(&scrmod));
-
-	SDL_Delay(850ull);
-
-	system_destroy(&sys);
+		SDL_Delay(800);
+		system_destroy(&s);
+	}
 	return 0;
 }

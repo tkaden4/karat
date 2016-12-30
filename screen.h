@@ -6,8 +6,8 @@
 #include"module.h"
 #include"types.h"
 
-#define WINDOW_SIZE 640
-#define SCREEN_SIZE 2
+#define WINDOW_SIZE 765
+#define SCREEN_SIZE 255
 #if WINDOW_SIZE % SCREEN_SIZE != 0
 #error "Invalid window and screen sizes"
 #endif
@@ -47,7 +47,7 @@ struct screen_state {
 	SDL_Renderer *renderer;
 };
 
-static inline void screen_dimensions(
+static inline void screen_dims(
 	size_t *win_width, size_t *win_height,
 	size_t *scr_width, size_t *scr_height)
 {
