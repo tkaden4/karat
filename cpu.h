@@ -31,7 +31,6 @@ struct cpu_state {
 	};
 	/* address registers */
 	union {
-		areg_t aregs[ADDRESS_REGS];
 		struct {
 			/* general purpose address registers */
 			areg_t a0;
@@ -44,6 +43,7 @@ struct cpu_state {
 			areg_t sp;	/* stack pointer */
 			areg_t fp;	/* frame pointer */
 		};
+		areg_t aregs[ADDRESS_REGS];
 	};
 	/* program counter */
 	addr_t pc;

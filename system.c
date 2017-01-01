@@ -8,23 +8,23 @@
 #include"log.h"
 
 typedef struct mod *(*get_mod_f)(struct mod *);
-
 /* so we don't need to deal with memory allocation */
 struct builtin { get_mod_f get; struct mod m; };
-
+#define BUILTIN(func) { .get = func }
+#define SENTINEL BUILTIN(NULL)
 static struct builtin builtins[] = {
-	{ .get = screen_module },
-	{ .get = NULL }
+	BUILTIN(screen_module),
+	SENTINEL
 };
+#undef BUILTIN
+#undef SENTINEL
 
 void system_init(struct system *sys)
 {
 	err_on(!sys, "attempt to initialize unallocated struct");
 	sys->mem = s_calloc(1, MEM_SIZE);
 	cpu_init(&sys->cpu);
-	for(register size_t i = 0; i < IO_PORTS; ++i){
-		sys->ports[i] = NULL;
-	}
+	memset(sys->ports, 0, sizeof(struct mod *) * IO_PORTS);
 }
 
 void system_load_builtins(struct system *sys)
@@ -41,12 +41,35 @@ void system_load_builtins(struct system *sys)
 	}
 }
 
+void system_write(struct system *sys, addr_t addr, u8 data)
+{
+	err_on(!sys, "uninitialized system");
+	err_on(addr >= MEM_SIZE, "address out of range");
+	sys->mem[addr] = data;
+}
+
+u8 system_read(struct system *sys, addr_t addr)
+{
+
+	err_on(!sys, "uninitialized system");
+	err_on(addr >= MEM_SIZE, "address out of range");
+	return sys->mem[addr];
+}
+
 void system_io_write(struct system *sys, u8 which, u8 data)
 {
 	err_on(!sys, "uninitialized system");
 	err_on(which >= IO_PORTS, "port outside of range");
 	warn_ret(!sys->ports[which], "port not initialized");
 	module_write(sys->ports[which], data);
+}
+
+u8 system_io_read(struct system *sys, u8 which)
+{
+	err_on(!sys, "uninitialized system");
+	err_on(which >= IO_PORTS, "port outside of range");
+	warn_ret(!sys->ports[which], "port not initialized") 0;
+	return module_read(sys->ports[which]);
 }
 
 void system_set_port(struct system *sys, u8 which, struct mod *module)
