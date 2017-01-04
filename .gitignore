@@ -4,5 +4,9 @@
 karat
 karat.exe
 
+# testing
+test/*
+test/
+
 # for ctags
 tags

@@ -3,36 +3,30 @@
 
 #include"log.h"
 #include"system.h"
+#include"util.h"
+#include"parse.h"
 #include"opcode.h"
 
 #define usage() \
 	printf("Usage: karat < file.kt >"); exit(0);
 
-/* turn the screen blue */
-static u8 commands[] = { 
-	0x81,				/* start flood */
-		0, 0, 0xff,  	/* use blue */
-	1					/* draw */ 
-};
-void do_commands(struct system *s, u8 port)
-{
-	for(register size_t i = 0; i < sizeof(commands); ++i){
-		system_io_write(s, port, commands[i]);
-	}
-}
-
 int main()
 {
 	setlocale(LC_ALL, "");
-	
-	struct system sys;
-	system_init(&sys);
-	system_load_builtins(&sys);
 
-	do_commands(&sys, 0);
+	FILE *test = fopen("test/asm.kt", "r");
+	err_on(!test, "could not open test/asm.kt");
 
-	SDL_Delay(800);
+	wchar_t buff[80];
+	while(fgetws(buff, 80, test)){
+		rmrn(buff);
+		struct direc next;
+		err_on(parse_line(buff, &next), "unable to parse %ls", buff);
+		debug("%ls", op_strings[next.in.op]);
+		debug("%u %u", next.in.args[0], next.in.args[1]);
+		debug("%x", next.in.mode);
+	}
 
-	system_destroy(&sys);
+	fclose(test);
 	return 0;
 }
