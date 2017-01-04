@@ -5,6 +5,7 @@
 
 #include"module.h"
 #include"types.h"
+#include"bits.h"
 
 #define WINDOW_SIZE 384
 #define SCREEN_SIZE 64
@@ -23,8 +24,6 @@ enum {
 	WHITE = RED | GREEN | BLUE | FLAT,
 	BLACK = ~WHITE | FLAT
 };
-/* shift a number i bytes to the left */
-#define shl(b, i) (b << (8 * i))
 /* create a color from four integers */
 #define I(f) ((u8)(f)) 
 #define rgba(r, g, b, a) ( shl(I(r), 3) | shl(I(g), 2)| shl(I(b), 1) | I(a))

@@ -8,7 +8,6 @@
 #define IO_PORTS 10
 
 struct system {
-	struct cpu_state cpu;
 	struct mod *ports[IO_PORTS];
 	u8 *mem;
 };

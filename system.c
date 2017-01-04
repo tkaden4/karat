@@ -23,7 +23,6 @@ void system_init(struct system *sys)
 {
 	err_on(!sys, "attempt to initialize unallocated struct");
 	sys->mem = s_calloc(1, MEM_SIZE);
-	cpu_init(&sys->cpu);
 	memset(sys->ports, 0, sizeof(struct mod *) * IO_PORTS);
 }
 

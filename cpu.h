@@ -5,48 +5,16 @@
 #include"karat.h"
 #include"types.h"
 
-typedef uint32_t greg_t;	/* general register datatype */
-typedef uint32_t areg_t;	/* address register datatype */
+typedef uint32_t reg_t;	/* general register datatype */
 
-#define GENERAL_REGS 8	/* number of general registers */
-#define ADDRESS_REGS 8	/* number of address registers */
-
-#define SP_INDEX (ADDRESS_REGS - 2)
-#define FP_INDEX (ADDRESS_REGS - 1)
+#define GENERAL_REGS 31
 
 struct cpu_state {
 	/* general registers */
 	union {
-		greg_t gregs[GENERAL_REGS];
-		struct {
-			greg_t g0;
-			greg_t g1;
-			greg_t g2;
-			greg_t g3;
-			greg_t g4;
-			greg_t g5;
-			greg_t g6;
-			greg_t g7;
-		};
+		reg_t regs[GENERAL_REGS];
+		reg_t sp;
 	};
-	/* address registers */
-	union {
-		struct {
-			/* general purpose address registers */
-			areg_t a0;
-			areg_t a1;
-			areg_t a2;
-			areg_t a3;
-			areg_t a4;
-			areg_t a5;
-			/* special registers */
-			areg_t sp;	/* stack pointer */
-			areg_t fp;	/* frame pointer */
-		};
-		areg_t aregs[ADDRESS_REGS];
-	};
-	/* program counter */
-	addr_t pc;
 };
 
 void cpu_init(struct cpu_state *state);

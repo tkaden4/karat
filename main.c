@@ -1,17 +1,22 @@
 #include<locale.h>
+#include<SDL2/SDL.h>
 
-#include"system.h"
-#include"module.h"
-#include"screen.h"
 #include"log.h"
+#include"system.h"
+#include"opcode.h"
 
 #define usage() \
 	printf("Usage: karat < file.kt >"); exit(0);
 
-static u8 commands[] = { 0x81, 0, 0, 0xff, 1 };
+/* turn the screen blue */
+static u8 commands[] = { 
+	0x81,				/* start flood */
+		0, 0, 0xff,  	/* use blue */
+	1					/* draw */ 
+};
 void do_commands(struct system *s, u8 port)
 {
-	for(size_t i = 0; i < sizeof(commands); ++i){
+	for(register size_t i = 0; i < sizeof(commands); ++i){
 		system_io_write(s, port, commands[i]);
 	}
 }
@@ -19,14 +24,15 @@ void do_commands(struct system *s, u8 port)
 int main()
 {
 	setlocale(LC_ALL, "");
+	
+	struct system sys;
+	system_init(&sys);
+	system_load_builtins(&sys);
 
-	struct system s;
-	system_init(&s);
-	system_load_builtins(&s);
+	do_commands(&sys, 0);
 
-	do_commands(&s, 0);
 	SDL_Delay(800);
 
-	system_destroy(&s);
+	system_destroy(&sys);
 	return 0;
 }
