@@ -1,111 +1,75 @@
 #pragma once
 
 #include<wchar.h>
+#include"karat.h"
 
 #include"bits.h"
+#include"system.h"
+#include"cpu.h"
 #include"log.h"
 #include"types.h"
 
-enum op_val {
+#define IMMEDIATE 0
+#define REG_REG 1
+#define DIRECT 2
+#define INDIRECT_REG 3
+#define INDIRECT_INDEXED 4
+
+#define ARG_MODE(f, s) (((0x0f & (f)) << 4) | (0x0f & (s)))
+#define GET_ARG_MODES(f, s, m) \
+	(f) = (0xf0 & (m)) >> 4; (s) = (0x0f & (m));
+#define GET_OP(o) (((o) & 0xff00) >> 8)
+
+/* opcode indices for table */
+enum {
 	LOAD = 0,
 	PUT,
 	SIN,
 	SOUT,
-	SWAP,
-	ADR,
-	MAX_OP
+	SWAP, 
+	MAXIMUM_OP,
 };
 
-static const wchar_t *const op_strings[MAX_OP] = {
-	L"load",
-	L"put",
-	L"sin",
-	L"sout",
-	L"swap",
-	L"adr",
+struct op_def {
+	u8 code;
+	const wchar_t *mnemonic;
 };
 
-enum op_mode {
-	RK 	= 	(1 << 1),
-	RA 	= 	(1 << 2),
-	K 	= 	(1 << 3),
-	A 	= 	(1 << 4),
-	AK 	= 	(1 << 5),
-	KK 	= 	(1 << 6),
-	RR 	= 	(1 << 7),
-	AA 	= 	(1 << 8),
-	AR 	= 	(1 << 9),
-	KA 	= 	(1 << 10),
-	R 	= 	(1 << 11),
-	N 	= 	(1 << 12),
-	KR 	= 	(1 << 13),
+#define LOAD_B 0x30
+#define PUT_B 0x31
+#define SOUT_B 0x11
+#define SIN_B 0x12
+#define SWAP_B 0x13
+
+static const struct op_def ops[MAXIMUM_OP] = {
+	[LOAD] = {LOAD_B, L"load"},
+	[PUT] = {PUT_B, L"put"},
+	[SIN] = {SIN_B, L"sin"},
+	[SOUT] = {SOUT_B, L"sout"},
+	[SWAP] = {SWAP_B, L"swap"},
 };
 
-static const u16 valid_opmodes[MAX_OP] = {
-	RK | RA | A | RR,				/* LOAD */
-	RA | KA | A,					/* PUT */
-	AK | RK,						/* SIN */
-	AK | RK | KK,					/* SOUT */
-	AA | RR | RA | AR,				/* SWAP */
-	RR | RA | RK | AK | AA | AR,	/* ADD */
-};
-
-static inline int mode_to_index(enum op_mode m)
+static inline void exec_op(struct cpu *cpu, struct system *sys)
 {
-	size_t bit = 0;
-	while(m){
-		++bit;
-		m >>= 1;
+	addr_t pc = cpu->pc;
+	u8 op = sys->mem[pc];
+
+	u16 setup_arg(u8 mode, addr_t pc)
+	{
+		u16 setup = 0;
+		switch(mode){
+		case REG_REG:
+			setup = cpu->regs[sys->mem[pc]];
+			break;
+		};
+		return setup;
 	}
-	return bit;
-}
 
-#define make_op(op, mode) lbits((((op) << 16) | (mode)), 32)
-#define get_opmode(n) lbits((n), 16)
-#define get_opval(n) lbits(((n) >> 16), 16)
-
-static inline enum op_mode combine_modes(enum op_mode first, enum op_mode sec)
-{
-	switch(first){
-	case A:
-		switch(sec){
-		case A:
-			return AA;
-		case R:
-			return AR;
-		case K:
-			return AK;
-		default:
-			err("enumeration not supported");
-			return N;
-		};
-	case R:
-		switch(sec){
-		case A:
-			return RA;
-		case R:
-			return RR;
-		case K:
-			return RK;
-		default:
-			err("enumeration not supported");
-			return N;
-		};
-	case K:
-		switch(sec){
-		case A:
-			return KA;
-		case R:
-			return KR;
-		case K:
-			return KK;
-		default:
-			err("enumeration not supported");
-			return N;
-		};
+	switch(op){
+	/* LOAD */
+	case LOAD_B:
+		break;
 	default:
-		err("enumeration not supported");
+		break;
 	};
-	err("enumeration not supported");
-	return N;
 }

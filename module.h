@@ -19,7 +19,7 @@
 	MAKE_CB(write_cb, w, wd), \
 	MAKE_CB(destroy_cb, d, dd) \
 
-#define MAX_HANDLES 10
+#define MAX_HANDLES 20
 
 typedef CALLBACK(void, u8 *args, size_t nargs) io_cb;
 

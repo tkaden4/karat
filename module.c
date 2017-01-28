@@ -3,7 +3,7 @@
 #include<stdio.h>
 #include<wchar.h>
 
-#include"mem.h"
+#include"alloc.h"
 #include"log.h"
 
 struct mod *load_internal_module(struct mod *module, 

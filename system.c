@@ -4,7 +4,7 @@
 
 #include"module.h"
 #include"screen.h"
-#include"mem.h"
+#include"alloc.h"
 #include"log.h"
 
 typedef struct mod *(*get_mod_f)(struct mod *);

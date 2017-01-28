@@ -1,7 +1,7 @@
 #include"module.h"
 
 #include"types.h"
-#include"mem.h"
+#include"alloc.h"
 #include"log.h"
 
 void io_table_init(struct io_table *table)
@@ -10,7 +10,7 @@ void io_table_init(struct io_table *table)
 	zmem(*table);
 }
 
-INTERNAL size_t find_handle(struct io_table *table, u8 code)
+static inline size_t find_handle(struct io_table *table, u8 code)
 {
 	err_on(!table, "table not allocated");
 	if(code == 0){
@@ -26,7 +26,7 @@ INTERNAL size_t find_handle(struct io_table *table, u8 code)
 	return MAX_HANDLES;
 }
 
-INTERNAL size_t find_empty(struct io_table *table, u8 code)
+static inline size_t find_empty(struct io_table *table, u8 code)
 {
 	err_on(!table, "table not allocated");
 	if(code == 0){
@@ -56,7 +56,7 @@ void io_table_add(struct io_table *table, u8 code, size_t args, io_cb cb)
 	};
 }
 
-INTERNAL void arg_add(u8 **vec, size_t *size, size_t *cap, u8 val)
+static inline void arg_add(u8 **vec, size_t *size, size_t *cap, u8 val)
 {
 	if(*cap >= *size){
 		*cap = (*cap) * 2 + 1;

@@ -13,6 +13,6 @@
 #define s_alloc(type) s_malloc(sizeof(type))
 
 void *s_malloc(size_t bytes);    
-void *s_calloc(size_t size, size_t bytes);
+void *s_calloc(size_t nitems, size_t member);
 void *s_realloc(void *data, size_t size);
 void s_free(void *data);    

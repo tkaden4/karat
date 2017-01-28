@@ -21,6 +21,7 @@ int screen_init(struct screen_state *state)
 		SDL_Quit();
 		return 1;
 	}
+	/* create renderer */
 	SDL_Renderer *r = SDL_CreateRenderer(w, -1, 0);
 	if(!r){
 		warn("renderer was unable to be created [%s]", SDL_GetError());
@@ -28,6 +29,7 @@ int screen_init(struct screen_state *state)
 		SDL_Quit();
 		return 1;
 	}
+	/* create texture */
 	SDL_Texture *tex = SDL_CreateTexture(	r, SDL_PIXELFORMAT_RGBA8888, 
 											SDL_TEXTUREACCESS_STATIC, 
 											SCREEN_SIZE, SCREEN_SIZE);
@@ -42,13 +44,10 @@ int screen_init(struct screen_state *state)
 	state->renderer = r;
 	state->texture = tex;
 
-	register rgba_t *end = state->gfx + GFX_SIZE;
-	for(register rgba_t *s = state->gfx; s != end; ++s){
-		*s = 0;
-	}
+	/* set screen data to zero */
+	memset(state->gfx, 0, sizeof(rgba_t) * GFX_SIZE);
 	return 0;
 }
-
 
 void screen_draw(struct screen_state *state)
 {
@@ -65,7 +64,7 @@ void screen_flood(struct screen_state *state, rgba_t color)
 	err_on(!state, "screen state not allocated");
 	warn_on(!state->gfx, "gfx buffer not initialized");
 	if(state->gfx){
-		for(size_t i = 0; i < GFX_SIZE; ++i){
+		for(register size_t i = 0; i < GFX_SIZE; ++i){
 			state->gfx[i] = color;
 		}
 	}
@@ -94,6 +93,7 @@ void screen_destroy(struct screen_state *state)
 {
 	warn_on(!state, "screen state not allocated");
 	if(state){
+		/* destroy all resources */
 		if(state->texture){
 			SDL_DestroyTexture(state->texture);
 		}

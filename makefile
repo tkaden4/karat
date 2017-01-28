@@ -1,6 +1,6 @@
 SOURCES=$(wildcard *.c)
 OBJECTS=$(SOURCES:.c=.o)
-CFLAGS=-Wall -Wextra -Werror -O3 -std=c99 -DKDEBUG \
+CFLAGS=-Wall -Wextra -Werror -O3 -std=gnu99 -DKDEBUG \
 		-I./include/ -L./libs
 LIBS=-lSDL2
 EXECUTABLE=karat

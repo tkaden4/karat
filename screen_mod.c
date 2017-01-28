@@ -1,6 +1,6 @@
 #include"screen.h"
 
-#include"mem.h"
+#include"alloc.h"
 #include"log.h"
 
 #define MODULE_NAME L"sdl_screen"
@@ -12,7 +12,7 @@ struct smod_data {
 
 #define FROM_VPTR(x) ((struct smod_data *)(x))
 
-INTERNAL void mod_init(void *data)
+static inline void mod_init(void *data)
 {
 	err_on(!data, "module data not initialized");
 	struct smod_data *smod = FROM_VPTR(data);
@@ -21,14 +21,14 @@ INTERNAL void mod_init(void *data)
 }
 
 /* TODO implement */
-INTERNAL uint8_t mod_write(void *data)
+static inline uint8_t mod_write(void *data)
 {
 	err_on(!data, "module not allocated");
 	struct smod_data *smod = FROM_VPTR(data);
 	return (u8)(intptr_t)smod;
 }
 
-INTERNAL void mod_destroy(void *data)
+static inline void mod_destroy(void *data)
 {
 	warn_alloc(data);
 	struct smod_data *smod = FROM_VPTR(data);
@@ -39,7 +39,7 @@ INTERNAL void mod_destroy(void *data)
 }
 
 #define IO_FUNC(name, d) \
-INTERNAL void name(void *data, u8 *args, size_t nargs) \
+static inline void name(void *data, u8 *args, size_t nargs) \
 { \
 	(void) args; \
 	(void) nargs; \
