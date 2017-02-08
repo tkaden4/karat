@@ -16,6 +16,9 @@ $(EXECUTABLE) : $(OBJECTS)
 run:
 	./$(EXECUTABLE)
 
+test:
+	valgrind ./$(EXECUTABLE) ./test/asm.kt
+
 clean:
 	$(RM) $(EXECUTABLE)
 	$(RM) *.o

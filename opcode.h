@@ -41,7 +41,7 @@ struct op_def {
 #define SIN_B 0x12
 #define SWAP_B 0x13
 
-static const struct op_def ops[MAXIMUM_OP] = {
+static const struct op_def op_defs[MAXIMUM_OP] = {
 	[LOAD] = {LOAD_B, L"load"},
 	[PUT] = {PUT_B, L"put"},
 	[SIN] = {SIN_B, L"sin"},
@@ -53,20 +53,7 @@ static inline void exec_op(struct cpu *cpu, struct system *sys)
 {
 	addr_t pc = cpu->pc;
 	u8 op = sys->mem[pc];
-
-	u16 setup_arg(u8 mode, addr_t pc)
-	{
-		u16 setup = 0;
-		switch(mode){
-		case REG_REG:
-			setup = cpu->regs[sys->mem[pc]];
-			break;
-		};
-		return setup;
-	}
-
 	switch(op){
-	/* LOAD */
 	case LOAD_B:
 		break;
 	default:

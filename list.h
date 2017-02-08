@@ -1,8 +1,8 @@
 #pragma once
 
 /* create a node for a linked list */
-#define SLINK(x) struct { x *next; }
-#define DLINK(x) struct { x * prev; x *next; }
+#define SLINK(type) struct { type *next; }
+#define DLINK(type) struct { type * prev; type *next; }
 
 /* the each_var must be defined before */
 #define LIST_FOREACH(type, head, each_var) \

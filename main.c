@@ -8,6 +8,7 @@
 #include"list.h"
 #include"parse.h"
 #include"opcode.h"
+#include"kprog.h"
 
 #define usage() \
 	printf("Usage: karat < file.kt >"); exit(0);
@@ -19,9 +20,9 @@
 #ifdef KDEBUG
 void CONSTRUCTOR __opcodes_init()
 {
-	printf("OPCODES : %d total %lu bytes\n", MAXIMUM_OP, sizeof(ops));
+	printf("OPCODES : %d total %lu bytes\n", MAXIMUM_OP, sizeof(op_defs));
 	for(size_t i = 0; i < MAXIMUM_OP; ++i){
-		printf("\t0x%x -> %ls\n", ops[i].code, ops[i].mnemonic);
+		printf("\t0x%x -> %ls\n", op_defs[i].code, op_defs[i].mnemonic);
 	}
 }
 #endif
@@ -33,12 +34,12 @@ int main()
 	FILE *test = fopen(TEST_FILE, "r");
 	err_on(!test, "could not open %s", TEST_FILE);
 
-	/* parse file into bytecode */
-	struct presult line_data;
-	wchar_t line[100];
-	while(fgetws(line, 100, test) && parse_line(line, &line_data)){
-
+	struct kprog *prog = kprog_create();
+	if(parse_file(test, prog)){
+		kprog_destroy(prog);
+		return 1;
 	}
+	kprog_destroy(prog);
 
 	fclose(test);
 	return 0;

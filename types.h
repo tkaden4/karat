@@ -1,6 +1,7 @@
 #pragma once
 
 #include<stdint.h>
+#include<stdlib.h>
 
 typedef uint16_t addr_t;	/* address datatype */
 

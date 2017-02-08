@@ -5,161 +5,247 @@
 #include<ctype.h>
 #include<wchar.h>
 
+#include"lex.h"
 #include"util.h"
 #include"alloc.h"
 #include"log.h"
 #include"cpu.h"
+#include"opcode.h"
 
 #define min(a, b) ((a) > (b)) ? (b) : (a)
 
 /* error handling */
-enum perr {
-	ARG_FMT = 0,
-	OP_FMT,
-	MAX_PERR,
-};
-
-static const wchar_t *const parse_errs[MAX_PERR] = {
-	L"arguments incorrectly formatted",
-	L"mnemonic incorrectly formatted",
-};
-
 static struct {
 	/* line number */
 	size_t line_no;
 	/* line itself */
 	const wchar_t *line;
-} err_info = {1, L""};
+	/* error data */
+	const wchar_t * perr_string;
+} err_info = {1, L"", L"No error"};
 
 #define parse_err(msg, ...) \
-	fprintf(stderr, "Parse error : " msg "\n", ##__VA_ARGS__);
+	do{ \
+		err("Parse error : " msg, ##__VA_ARGS__); \
+	}while(0);
 
-#define FATAL_ERR(e) \
-	printf("Fatal on line %lu \"%ls\": %ls\n", \
-		err_info.line_no, err_info.line, parse_errs[e]); \
-	exit(1);
+#define TRY(exp) \
+	do { \
+		int e = exp; \
+		if(e){ FATAL_ERR(e); } \
+	}while(0);
 
-#define TRY(exp) do { \
-	int e = exp; \
-	if(e){ FATAL_ERR(e); } \
-}while(0);
+struct presult;
+
+struct label_data {
+	struct presult *next;
+	#define MAX_LABEL 20
+	wchar_t label[MAX_LABEL];
+};
+
+struct opcode_data {
+	size_t mnemonic_num;
+	struct arg_data {
+		enum {
+			ARG_LABEL,
+			ARG_ADDRESS,
+			ARG_LONG,
+			ARG_REGISTER,
+			ARG_NONE,
+		} type;
+		union {
+			const wchar_t *lval;
+			/* constant values */
+			addr_t aval;
+			i32 ival;
+			unsigned rval;
+		};
+	} args[2];	/* arguments (0 for none) */
+};
 
 
-#define ISASCII(n) ((char)(n) == (n))
-#define ISNUM(n)	((n) >= L'0' && (n) <= L'9')
+/* parsed line data */
+struct presult {
+	enum {
+		RES_LABEL_DECL,
+		RES_OPCODE,
+	} type;
+	union {
+		struct label_data label;
+		struct opcode_data op;
+	} u;
+};
 
-#define MEM_PREFIX 	L"$"
-#define BIN_PREFIX 	L"%"
-#define HEX_PREFIX L"$"
-#define CONS_PREFIX L"#"
-#define REG_PREFIX  L"r"
-
-static inline int check_digits(const wchar_t *str)
+static inline void reset_presult(struct presult *res)
 {
-	/* make sure we have numbers to work with */
-	{
-		size_t amt = 0;
-		while(iswdigit(*str)){
-			++amt;
-			++str;
-		}
-		if(!amt){
-			return 0;
-		}
-	}
+	res->type = -1;
+	memset(&res->u, 0, sizeof(res->u));
+}
 
-	/* check if at end of string */
-	str = wcsig(str, L' ');
-	if(*str){
+struct parse_ctx {
+	struct token *toks;
+	size_t ntoks;
+	size_t index;
+};
+
+void parse_ctx_init(struct parse_ctx *ctx, struct token *toks, size_t ntoks)
+{
+	ctx->toks = toks;
+	ctx->ntoks = ntoks;
+	ctx->index = 0;
+}
+
+int parse_test(struct parse_ctx *ctx, unsigned tok_type)
+{
+	if(ctx->index == ctx->ntoks){
 		return 0;
 	}
-	/* exhausted all options */
-	return 1;
+	return ctx->toks[ctx->index].type == tok_type;
 }
 
-static inline int is_argument(	const wchar_t *str, 
-								const wchar_t *prefix, 
-								int(*end_test)(const wchar_t *))
+int parse_test_n(struct parse_ctx *ctx, size_t n, unsigned tok_type)
 {
-	err_on(!str, "str not allocated");
-	err_on(!prefix, "prefix not allocated");
-	const int has_prefix = starts_with(str, prefix);
-	str += wcslen(prefix);
-	return has_prefix ? end_test(str) : 0;
-}
-
-static inline int is_register(const wchar_t *str)
-{
-	err_on(!str, "str not allocated");
-	return is_argument(str, REG_PREFIX, check_digits);
-}
-
-static inline int is_memory(const wchar_t *str)
-{
-	err_on(!str, "str not allocated");
-	return is_argument(str, MEM_PREFIX, check_digits);
-}
-
-static inline int is_decimal(const wchar_t *str)
-{
-	err_on(!str, "str not allocated");
-	return is_argument(str, CONS_PREFIX, check_digits);
-}
-
-static inline int is_hex(const wchar_t *str)
-{
-	err_on(!str, "str not allocated");
-	return is_argument(str, CONS_PREFIX HEX_PREFIX, check_digits);
-}
-
-static inline int is_binary(const wchar_t *str)
-{
-	err_on(!str, "str not allocated");
-	return is_argument(str, CONS_PREFIX BIN_PREFIX, check_digits);
-}
-
-static inline int is_constant(const wchar_t *str)
-{
-	err_on(!str, "str not allocated");
-	return is_binary(str) || is_hex(str) || is_decimal(str);
-}
-
-int label_test(wint_t t)
-{
-	return iswalnum(t) || t == L'_';
-}
-
-int is_label(const wchar_t *buff)
-{
-	err_on(!buff, "buffer not allocated");
-	const char test = ISASCII(*buff) ? (char)*buff : '\0';
-	if(!label_test(test)){
-		debug("not alpha numeric");
+	if(ctx->index + n >= ctx->ntoks){
 		return 0;
 	}
-	buff = wcsig_f(buff, label_test);
-	if(*buff != L':'){
-		return 0;
+	return ctx->toks[ctx->index + n].type == tok_type;
+}
+
+void parse_advance(struct parse_ctx *ctx)
+{
+	if(ctx->index == ctx->ntoks){
+		err("not enough tokens in line");
 	}
-	++buff;
-	if(*wcsig(buff, L' ')){
+	++ctx->index;
+}
+
+int parse_has_next(struct parse_ctx *ctx)
+{
+	if(ctx->index == ctx->ntoks){
 		return 0;
 	}
 	return 1;
 }
 
-/* XXX todo fit to new opcode system */
-int is_mnemonic(const wchar_t *buff)
+const struct token *parse_get(struct parse_ctx *ctx)
 {
-	err_on(!buff, "buff not allocated");
-	//return !find_op_str(buff, &tmp);
+	return &ctx->toks[ctx->index];
+}
+
+int parse_arguments(struct parse_ctx *ctx, struct arg_data res[2])
+{
+	res[0].type = ARG_NONE;
+	res[1].type = ARG_NONE;
+	if(!parse_has_next(ctx)){
+		return 0;
+	}
+	struct arg_data *cur_arg = res;
+	/* TODO finish */
+eval_arg:
+	switch(parse_get(ctx)->type){
+	case TOK_ADDR:	/* address argument */
+		cur_arg->type = ARG_ADDRESS;
+		cur_arg->aval = parse_get(ctx)->data;
+		parse_advance(ctx);
+		break;
+	case TOK_NUM:	/* number argument */
+		cur_arg->type = ARG_LONG;
+		cur_arg->ival = parse_get(ctx)->data;
+		parse_advance(ctx);
+		break;
+	case TOK_ID:	/* label argument */
+		cur_arg->type = ARG_LABEL;
+		/* TODO duplicate this */
+		cur_arg->lval = parse_get(ctx)->lexeme;
+		parse_advance(ctx);
+		break;
+	case TOK_REG:
+		cur_arg->type = ARG_REGISTER;
+		cur_arg->rval = parse_get(ctx)->data;
+		parse_advance(ctx);
+		break;
+	default:
+		return 1;
+	};
+	if(parse_has_next(ctx)){
+		if(parse_test(ctx, TOK_COMMA)){
+			parse_advance(ctx);
+			if(cur_arg == &res[1]){
+				return 1;
+			}
+			cur_arg = &res[1];
+			goto eval_arg;
+		}else{
+			return 1;
+		}
+	}
 	return 0;
 }
 
-bool parse_line(const wchar_t *line, struct presult *res)
+/* returns 1 on a malformed line */
+int evaluate_tokens(struct token *toks, size_t ntoks, struct presult *res)
 {
-	(void) line;
-	(void) res;
-	++err_info.line_no;
-	return true;
+	if(ntoks == 0){
+		return 0;
+	}
+	struct parse_ctx ctx;
+	parse_ctx_init(&ctx, toks, ntoks);
+	if(!parse_test(&ctx, TOK_ID)){
+		return 1;
+	}
+	if(parse_test_n(&ctx, 1, TOK_COLON)){
+		const wchar_t *label = parse_get(&ctx)->lexeme;
+		printf("encountered label \"%ls:\"\n", label);
+		/* TODO ACTUALLY */
+		parse_advance(&ctx);
+		parse_advance(&ctx);
+	}else{
+		const wchar_t *opcode = parse_get(&ctx)->lexeme;
+		printf("encountered opcode \"%ls\"", opcode);
+		parse_advance(&ctx);
+		if(parse_arguments(&ctx, res->u.op.args)){
+			return 1;
+		}
+		printf(" with args");
+		#define parg(x) \
+			switch(x.type){\
+			case ARG_LONG: printf(" %d", x.ival); break;\
+			case ARG_ADDRESS: printf(" %d", x.aval); break;\
+			case ARG_REGISTER: printf(" %d", x.rval); break;\
+			case ARG_LABEL: printf(" %ls", x.lval); break;\
+			case ARG_NONE: printf(" none"); break;\
+			default: printf(" any");\
+			};
+		parg(res->u.op.args[0]);
+		printf(" and");
+		parg(res->u.op.args[1]);
+		printf("\n");
+	}
+	return 0;
+}
+
+int parse_file(FILE *f, struct kprog *res)
+{
+	err_on(!f, "input file not opened");
+	err_on(!res, "output program not allocated");
+	wchar_t buff[100] = {L'\0'};
+	while(fgetws(buff, 100, f)){
+		err_info.line = buff;
+		struct token *toks = NULL;
+		size_t res = 0;
+		tokenize_line(buff, &toks, &res);
+		if(res == 0){
+			/* ignore lines with nothing */
+		}else{
+			struct presult res_p;
+			evaluate_tokens(toks, res, &res_p);
+		}
+		++err_info.line_no;
+	}
+	return 0;
+}
+
+const wchar_t *get_perr()
+{
+	return err_info.perr_string;
 }

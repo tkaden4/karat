@@ -46,9 +46,10 @@ static inline wchar_t *wcstrim_f(wchar_t *wstr, int(*pred)(wint_t))
 	while(*wstr && pred(*wstr)){
 		++wstr;
 	}
-	size_t len = wcslen(wstr);
-	while(pred(wstr[len--])){
+	size_t len = wcslen(wstr) - 1;
+	while(pred(wstr[len])){
 		wstr[len] = L'\0';
+		--len;
 	}
 	return wstr;
 }
