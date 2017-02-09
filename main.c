@@ -32,16 +32,6 @@ int main()
 {
 	setlocale(LC_ALL, "");
 
-	struct smap *testm = smap_create(wcscmp);
-	printf("%ls\n", (wchar_t *)smap_lookup(testm, L"key"));
-
-	smap_insert(testm, L"key", wcsdup(L"value"));
-	smap_insert(testm, L"key", wcsdup(L"fuck"));
-
-	printf("%ls\n", (wchar_t *)smap_lookup(testm, L"key"));
-	smap_destroy(testm);
-	return 0;
-
 	FILE *test = fopen(TEST_FILE, "r");
 	err_on(!test, "could not open %s", TEST_FILE);
 

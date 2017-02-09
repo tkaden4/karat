@@ -58,6 +58,12 @@ static inline void reset_presult(struct presult *res)
 	memset(&res->u, 0, sizeof(res->u));
 }
 
+
+struct label_def {
+	int is_fwdef;
+	size_t pos;
+};
+
 #define MAX_LOOK 4
 
 struct parse_ctx {
@@ -70,14 +76,22 @@ struct parse_ctx {
 	size_t cur_insns;	/* current position in bytecode */
 
 	/* map of labels to addresses */ 
-	struct smap *map;
+	struct smap *label_defs;
 };
 
 void parse_ctx_init(struct parse_ctx *ctx, struct kprog *prog)
 {
 	memset(ctx->la_buff, 0, sizeof(struct token)*MAX_LOOK);
 	ctx->cur_size = 0;
+
 	ctx->prog = prog;
+	ctx->cur_insns = 0;
+	ctx->label_defs = smap_create();
+}
+
+void parse_ctx_destroy(struct parse_ctx *ctx)
+{
+	smap_destroy(ctx->label_defs);
 }
 
 int parse_test_n(struct parse_ctx *ctx, size_t n, unsigned tok_type)

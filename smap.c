@@ -28,10 +28,9 @@ static inline size_t get_index(const wchar_t *key)
 	return FNV_hash(key) % HASH_BUCKETS;
 }
 
-struct smap *smap_create(smap_cmp cmp)
+struct smap *smap_create()
 {
 	struct smap *map = s_calloc(1, sizeof(struct smap));
-	map->cmp = cmp;
 	return map;
 }
 
@@ -41,7 +40,7 @@ void *smap_lookup(struct smap *map, const wchar_t *key)
 	if(!head){
 		return NULL;
 	}else{
-		while(head && map->cmp(head->key, key) && (head = head->next));
+		while(head && wcscmp(head->key, key) && (head = head->next));
 		return head->value;
 	}
 }
@@ -58,7 +57,7 @@ static inline struct smap_node *make_node(const wchar_t *key, void *val)
 void smap_insert(struct smap *map, const wchar_t *key, void *val)
 {
 	struct smap_node **head = &map->map[get_index(key)];
-	while(*head && map->cmp((*head)->key, key) && (head = &(*head)->next));
+	while(*head && wcscmp((*head)->key, key) && (head = &(*head)->next));
 	if(!*head){
 		*head = make_node(key, val);
 	}else{
