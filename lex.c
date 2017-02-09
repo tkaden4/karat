@@ -6,17 +6,35 @@
 #include"lex.h"
 #include"log.h"
 
-static inline void add_until_f(
-	const wchar_t **buff, wchar_t *to, size_t max, int(*valid)(wint_t))
+struct lex_state {
+	FILE *file;
+	wchar_t la;
+	/* debugging info */
+	size_t line_no;
+	size_t col_no;
+} state;
+
+void lex_init(FILE *f)
 {
-	register size_t i = 0;
-	for(; i < max - 1; ++i){
-		if(valid(**buff)){
-			to[i] = **buff;
-			++*buff;
-		}
+	state.file = f;
+	state.la = fgetwc(f);
+	state.line_no = 0;
+	state.col_no = 0;
+}
+
+static wchar_t la()
+{
+	return state.la;
+}
+
+static void advance()
+{
+	wint_t la = fgetwc(state.file);
+	if(la == WEOF){
+		state.la = L'\0';
+	}else{
+		state.la = la;
 	}
-	to[i] = L'\0';
 }
 
 static int is_id_body(wint_t c)
@@ -24,119 +42,101 @@ static int is_id_body(wint_t c)
 	return iswalpha(c) || c == L'_';
 }
 
-static inline int lex_number(const wchar_t **line, struct token *res, size_t base)
+static inline int lex_number(struct token *res, size_t base)
 {
-	wchar_t *end = NULL;
-	long long val = wcstoll(*line, &end, base);
-	if(!end || end == *line){
-		return 1;
+	size_t i = 0;
+	wchar_t c = 0;
+	while(iswdigit((c = la()))){
+		if(i == MAX_LEXEME - 1){
+			break;
+		}
+		res->lexeme[i++] = c;
+		advance();
 	}
-	wchar_t *crawl = res->lexeme;
-	while(*line != end){
-		*crawl++ = **line;
-		++*line;
-	}
-	res->data = val;
+	res->data = wcstoll(res->lexeme, NULL, base);
 	return 0;
 }
 
-static int next_token(const wchar_t **line, struct token *res)
+int lex_next(struct token *res)
 {
 	err_on(!res, "Token not allocated");
-	err_on(!line || !*line, "Line not allocated");
-	while(iswspace(**line)){
-		++*line;
+	while(iswspace(la())){
+		advance();
 	}
 
-	if(**line == L';'){
-		while(**line && **line != L'\n'){
-			++*line;
+	if(la() == L';'){
+		while(la() && la() != L'\n'){
+			advance();
 		}
-		++*line;
-		return 1;
 	}
 
-	memset(res->lexeme, 0, sizeof(wchar_t) * MAX_LEXEME);
-	res->type = -1;
-	#define CTOK(l, t) \
-		++*line; \
-		res->type = t; \
-		res->lexeme[0] = l; \
-		res->lexeme[1] = L'\0'; \
-		break;
+	memset(res->lexeme, 0, sizeof(wchar_t)*MAX_LEXEME);
 
-	switch(**line){
-	case L'\0': return 1;
-	case L'#': 
-	{
+	#define CASEC(c, t)\
+		case c: advance(); res->lexeme[0] = c; res->type = t; break;
+
+	switch(la()){
+	case L'\n':
+		res->type = TOK_EOL;
+		wcsncpy(res->lexeme, L"EOL", MAX_LEXEME);
+		advance();
+		break;
+	case L'\0':
+		res->type = TOK_EOS;
+		wcsncpy(res->lexeme, L"EOS", MAX_LEXEME);
+		break;
+	case L'#':
 		res->type = TOK_NUM;
-		const wchar_t la = *++*line;
-		size_t base = 0;
-		if(la == L'$'){
-			base = 16;
-			++*line;
-		}else if(la == L'%'){
-			base = 2;
-			++*line;
-		}else if(iswdigit(la)){
-			base = 10;
-		}else{
-			return 1;
-		}
-		return lex_number(line, res, base);
-	}
-	case L'$': 
-		++*line;
-		if(lex_number(line, res, 16)){
-			return 1;
-		}else{
-			res->type = TOK_ADDR;
-		}
+		advance();
+		switch(la()){
+		case L'$': advance(); lex_number(res, 16); break;
+		case L'%': advance(); lex_number(res, 2); break;
+		default:
+			if(iswdigit(la())){
+				lex_number(res, 10);
+			}else{
+				return 1;
+			}
+		};
 		break;
-	case L':': CTOK(L':', TOK_COLON);
-	case L',': CTOK(L',', TOK_COMMA);
-	case L'r':	/* register */
-		++*line;
-		if(!iswdigit(**line)){
-			return 1;
-		}
-		res->lexeme[0] = L'r';
+	case L'$':
+		res->type = TOK_ADDR;
+		advance();
+		lex_number(res, 16);
+		break;
+	case L'r':
 		res->type = TOK_REG;
-		if(lex_number(line, res, 10)){
-			return 1;
+		res->lexeme[0] = L'r';
+		advance();
+		size_t i = 1;
+		wchar_t c = 0;
+		while(iswdigit((c = la()))){
+			if(i == MAX_LEXEME - 1){
+				break;
+			}
+			res->lexeme[i++] = c;
+			advance();
+		}
+		res->data = wcstoll(res->lexeme + 1, NULL, 10);
+		break;
+	CASEC(L':', TOK_COLON)
+	CASEC(L',', TOK_COMMA)
+	default:
+		if(is_id_body(la())){
+			res->type = TOK_ID;
+			wchar_t c = 0;
+			size_t index = 0;
+			while(is_id_body((c = la()))){
+				if(index == MAX_LEXEME - 2){
+					break;
+				}
+				res->lexeme[index++] = c;
+				advance();
+			}
+		}else{
+			err("couldn't match character %lc", la());
 		}
 		break;
-	default:
-		if(is_id_body(**line)){	/* ID */
-			res->type = TOK_ID;
-			add_until_f(line, res->lexeme, MAX_LEXEME, is_id_body); 
-		}else if(iswdigit(**line)){
-			res->type = TOK_NUM;
-			add_until_f(line, res->lexeme, MAX_LEXEME, iswdigit); 
-		}else{
-			return 1;
-		}
 	};
-	#undef CTOK
-	return 0;
-}
-
-int tokenize_line(const wchar_t *line, struct token **toks, size_t *res_size)
-{
-	#define MAX_TOKS 10
-	struct token ret[MAX_TOKS];
-	size_t i = 0;
-	while(!next_token(&line, &ret[i])){
-		++i;
-		if(i >= MAX_TOKS){
-			return 1;
-		}
-	}
-	if(!i){	/* it is ok if a line has no tokens */
-		return 0;
-	}
-	*toks = s_calloc(i, sizeof(struct token));
-	memcpy(*toks, ret, sizeof(struct token) * i);
-	*res_size = i;
 	return 0;
 }

@@ -14,9 +14,11 @@ struct token {
 		TOK_REG,
 		TOK_COLON,
 		TOK_COMMA,
+		TOK_EOL,
+		TOK_EOS,
 	} type;
 	long long data;	/* for num and reg */
-	addr_t addr;	/* for addr */
 };
 
-int tokenize_line(const wchar_t *line, struct token **toks, size_t *res_size);
+void lex_init(FILE *f);
+int lex_next(struct token *tok);
