@@ -20,5 +20,13 @@ struct token {
 	long long data;	/* for num and reg */
 };
 
-void lex_init(FILE *f);
-int lex_next(struct token *tok);
+struct lex_state {
+	FILE *file;
+	wchar_t la;
+	/* debugging info */
+	size_t line_no;
+	size_t col_no;
+};
+
+void lex_init(struct lex_state *state, FILE *f);
+int lex_next(struct lex_state *state, struct token *tok);

@@ -9,126 +9,165 @@
 #include"util.h"
 #include"alloc.h"
 #include"log.h"
-#include"opcode.h"
 #include"smap.h"
 
-struct presult;
+#define MAX_LOOK 10 
 
-struct label_data {
-	struct presult *next;
-	#define MAX_LABEL 20
-	wchar_t label[MAX_LABEL];
-};
-
-struct opcode_data {
-	size_t mnemonic_num;
-	struct arg_data {
-		enum {
-			ARG_LABEL,
-			ARG_ADDRESS,
-			ARG_LONG,
-			ARG_REGISTER,
-			ARG_NONE,
-		} type;
-		union {
-			const wchar_t *lval;
-			/* constant values */
-			addr_t aval;
-			i32 ival;
-			unsigned rval;
-		};
-	} args[2];	/* arguments (0 for none) */
-};
-
-/* parsed line data */
-struct presult {
-	enum {
-		RES_LABEL_DECL,
-		RES_OPCODE,
-	} type;
-	union {
-		struct label_data label;
-		struct opcode_data op;
-	} u;
-};
-
-static inline void reset_presult(struct presult *res)
-{
-	res->type = -1;
-	memset(&res->u, 0, sizeof(res->u));
-}
-
-
-struct label_def {
-	int is_fwdef;
-	size_t pos;
-};
-
-#define MAX_LOOK 4
-
-struct parse_ctx {
+struct parse_state {
 	/* parsing utils */
+	struct lex_state lstate;
+	/* MAX_LOOK tokens will always be in buffer */
 	struct token la_buff[MAX_LOOK];
 	size_t cur_size;
-
+	size_t index;
 	/* for generation */
 	struct kprog *prog;	/* output program */
 	size_t cur_insns;	/* current position in bytecode */
-
 	/* map of labels to addresses */ 
 	struct smap *label_defs;
 };
 
-void parse_ctx_init(struct parse_ctx *ctx, struct kprog *prog)
+/* get the actual index of the nth element in the buffer */
+static inline size_t rbuff_elem_index(struct parse_state *state, long long n)
 {
-	memset(ctx->la_buff, 0, sizeof(struct token)*MAX_LOOK);
-	ctx->cur_size = 0;
-
-	ctx->prog = prog;
-	ctx->cur_insns = 0;
-	ctx->label_defs = smap_create();
+	return (state->index + n) % MAX_LOOK;
 }
 
-void parse_ctx_destroy(struct parse_ctx *ctx)
+/* add an element to the end of the buffer */
+static inline void rbuff_push_back(struct parse_state *state)
+{
+	const size_t index = rbuff_elem_index(state, state->cur_size);
+	lex_next(&state->lstate, &state->la_buff[index]);
+	++state->cur_size;
+}
+
+/* remove an element from the end of the buffer */
+static inline void rbuff_pop_back(struct parse_state *state)
+{
+	--state->cur_size;
+}
+
+/* remove an element from the front of the buffer */
+static inline void rbuff_pop_front(struct parse_state *state)
+{
+	state->index = rbuff_elem_index(state, 1);
+	--state->cur_size;
+}
+
+static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
+{
+	memset(state->la_buff, 0, sizeof(struct token)*MAX_LOOK);
+	state->cur_size = 0;
+	state->index = 0;
+
+	lex_init(&state->lstate, f);
+
+	for(size_t i = 0; i < MAX_LOOK; ++i){
+		rbuff_push_back(state);
+	}
+
+	printf("rbuff: elems %lu index %lu\n", state->cur_size, state->index);
+
+	state->prog = prog;
+	state->cur_insns = 0;
+	state->label_defs = smap_create();
+}
+
+static void parse_destroy(struct parse_state *ctx)
 {
 	smap_destroy(ctx->label_defs);
 }
 
-int parse_test_n(struct parse_ctx *ctx, size_t n, unsigned tok_type)
+static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
 {
-	(void) ctx;
-	(void) n;
-	(void) tok_type;
-	return 0;
+	if(n >= MAX_LOOK){
+		return 0;
+	}
+	return state->la_buff[rbuff_elem_index(state, n)].type == tok_type;
 }
 
-int parse_test(struct parse_ctx *ctx, unsigned tok_type)
+static int parse_test(struct parse_state *state, unsigned tok_type)
 {
-	return parse_test_n(ctx, 0, tok_type);
+	return parse_test_n(state, 0, tok_type);
 }
 
-void parse_advance(struct parse_ctx *ctx)
+static void parse_advance(struct parse_state *state)
 {
-	(void) ctx;
+	/* delete front element from buffer */
+	rbuff_pop_front(state);
+	/* read new element into buffer */
+	rbuff_push_back(state);
 }
 
-int parse_has_next(struct parse_ctx *ctx)
+static const struct token *parse_la_n(struct parse_state *state, size_t n)
 {
-	(void) ctx;
-	return 0;
+	return &state->la_buff[rbuff_elem_index(state, n)];
 }
 
-const struct token *parse_get(struct parse_ctx *ctx)
+static const struct token *parse_la(struct parse_state *state)
 {
-	(void) ctx;
-	return NULL;
+	return parse_la_n(state, 0);
+}
+
+static int parse_has_next(struct parse_state *state)
+{
+	return state->cur_size && parse_la(state)->type != TOK_EOS;
+}
+
+static void parse_match(struct parse_state *state, unsigned tok_type)
+{
+	if(parse_la(state)->type != tok_type){
+		err("couldn't match target type");
+	}else{
+		parse_advance(state);
+	}
+}
+
+static int parse_label(struct parse_state *state)
+{
+	(void) state;
+	return 1;
+}
+
+static int parse_ins(struct parse_state *state)
+{
+	(void) state;
+	return 1;
+}
+
+static int parse_expr(struct parse_state *state)
+{
+	switch(parse_la(state)->type){
+	case TOK_ID:
+		if(parse_test_n(state, 1, TOK_COLON)){
+			parse_label(state);
+			return parse_expr(state);
+		}else{
+			parse_ins(state);
+			parse_match(state, TOK_EOL);
+			return 0;
+		}
+	case TOK_EOL: parse_advance(state); return 0;
+	case TOK_EOS: return 0;
+	default: return 1;
+	};
 }
 
 int parse_file(FILE *f, struct kprog *res)
 {
 	err_on(!f, "input file not opened");
 	err_on(!res, "output program not allocated");
-	struct parse_ctx ctx;
-	parse_ctx_init(&ctx, res);
-	return 0;
+	struct parse_state state;
+	parse_init(&state, res, f);
+
+	int ret = 0;
+
+	const struct token *la = parse_la(&state);
+	while(la->type != TOK_EOS){
+		ret = parse_expr(&state);
+
+		la = parse_la(&state);
+	}
+	parse_destroy(&state);
+	return ret;
 }

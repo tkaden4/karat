@@ -8,24 +8,22 @@
 #define FNV_OFFSET_BASIS 2166136261
 
 
-static inline uint32_t FNV_hash(const wchar_t *data)
+static inline uint32_t FNV1a_hash(register const wchar_t *data)
 {
-	#define hash_octet(o, h, p)\
-		h = h ^ o;\
-		h = h * p;
 	register uint32_t hash = FNV_OFFSET_BASIS;
 	while(*data){
-		hash_octet(*(char *)data, hash, FNV_PRIME);
-		hash_octet(*(char *)(data + 1), hash, FNV_PRIME);
+		#define hash_octet(h, o, p) h = (h ^ o) * p;
+		hash_octet(hash, *(char *)data, FNV_PRIME);
+		hash_octet(hash, *(char *)(data + 1), FNV_PRIME);
 		++data;
+		#undef hash_octet
 	}
-	#undef hash_octet
 	return hash;
 }
 
 static inline size_t get_index(const wchar_t *key)
 {
-	return FNV_hash(key) % HASH_BUCKETS;
+	return FNV1a_hash(key) % HASH_BUCKETS;
 }
 
 struct smap *smap_create()

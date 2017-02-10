@@ -6,34 +6,32 @@
 #include"lex.h"
 #include"log.h"
 
-struct lex_state {
-	FILE *file;
-	wchar_t la;
-	/* debugging info */
-	size_t line_no;
-	size_t col_no;
-} state;
 
-void lex_init(FILE *f)
+void lex_init(struct lex_state *state, FILE *f)
 {
-	state.file = f;
-	state.la = fgetwc(f);
-	state.line_no = 0;
-	state.col_no = 0;
+	state->file = f;
+	state->la = fgetwc(f);
+	state->line_no = 0;
+	state->col_no = 0;
 }
 
-static wchar_t la()
+static wchar_t la(struct lex_state *state)
 {
-	return state.la;
+	return state->la;
 }
 
-static void advance()
+static void advance(struct lex_state *state)
 {
-	wint_t la = fgetwc(state.file);
+	wint_t la = fgetwc(state->file);
 	if(la == WEOF){
-		state.la = L'\0';
+		state->la = L'\0';
 	}else{
-		state.la = la;
+		++state->col_no;
+		if(la == L'\n'){
+			++state->line_no;
+			state->col_no = 0;
+		}
+		state->la = la;
 	}
 }
 
@@ -42,44 +40,64 @@ static int is_id_body(wint_t c)
 	return iswalpha(c) || c == L'_';
 }
 
-static inline int lex_number(struct token *res, size_t base)
+static int iswbin(wint_t c)
 {
+	return c == L'1' || c == L'0';
+}
+
+static inline int lex_number(struct lex_state *state, struct token *res, size_t base)
+{
+	static int(*test)(wint_t) = NULL;
+	switch(base){
+	case 0:
+	case 10:
+		test = iswdigit;
+		break;
+	case 2:
+		test = iswbin;
+		break;
+	case 16:
+		test = iswxdigit;
+		break;
+	default:
+		return 1;
+	};
 	size_t i = 0;
 	wchar_t c = 0;
-	while(iswdigit((c = la()))){
+	while(test((c = la(state)))){
 		if(i == MAX_LEXEME - 1){
 			break;
 		}
 		res->lexeme[i++] = c;
-		advance();
+		advance(state);
 	}
 	res->data = wcstoll(res->lexeme, NULL, base);
 	return 0;
 }
 
-int lex_next(struct token *res)
+int lex_next(struct lex_state *state, struct token *res)
 {
 	err_on(!res, "Token not allocated");
-	while(iswspace(la())){
-		advance();
+	while(iswspace(la(state))){
+		advance(state);
 	}
 
-	if(la() == L';'){
-		while(la() && la() != L'\n'){
-			advance();
+	if(la(state) == L';'){
+		while(la(state) && la(state) != L'\n'){
+			advance(state);
 		}
 	}
 
 	memset(res->lexeme, 0, sizeof(wchar_t)*MAX_LEXEME);
 
 	#define CASEC(c, t)\
-		case c: advance(); res->lexeme[0] = c; res->type = t; break;
+		case c: advance(state); res->lexeme[0] = c; res->type = t; break;
 
-	switch(la()){
+	switch(la(state)){
 	case L'\n':
 		res->type = TOK_EOL;
 		wcsncpy(res->lexeme, L"EOL", MAX_LEXEME);
-		advance();
+		advance(state);
 		break;
 	case L'\0':
 		res->type = TOK_EOS;
@@ -87,13 +105,13 @@ int lex_next(struct token *res)
 		break;
 	case L'#':
 		res->type = TOK_NUM;
-		advance();
-		switch(la()){
-		case L'$': advance(); lex_number(res, 16); break;
-		case L'%': advance(); lex_number(res, 2); break;
+		advance(state);
+		switch(la(state)){
+		case L'$': advance(state); lex_number(state, res, 16); break;
+		case L'%': advance(state); lex_number(state, res, 2); break;
 		default:
-			if(iswdigit(la())){
-				lex_number(res, 10);
+			if(iswdigit(la(state))){
+				lex_number(state, res, 10);
 			}else{
 				return 1;
 			}
@@ -101,40 +119,40 @@ int lex_next(struct token *res)
 		break;
 	case L'$':
 		res->type = TOK_ADDR;
-		advance();
-		lex_number(res, 16);
+		advance(state);
+		lex_number(state, res, 16);
 		break;
 	case L'r':
 		res->type = TOK_REG;
 		res->lexeme[0] = L'r';
-		advance();
+		advance(state);
 		size_t i = 1;
 		wchar_t c = 0;
-		while(iswdigit((c = la()))){
+		while(iswdigit((c = la(state)))){
 			if(i == MAX_LEXEME - 1){
 				break;
 			}
 			res->lexeme[i++] = c;
-			advance();
+			advance(state);
 		}
 		res->data = wcstoll(res->lexeme + 1, NULL, 10);
 		break;
 	CASEC(L':', TOK_COLON)
 	CASEC(L',', TOK_COMMA)
 	default:
-		if(is_id_body(la())){
+		if(is_id_body(la(state))){
 			res->type = TOK_ID;
 			wchar_t c = 0;
 			size_t index = 0;
-			while(is_id_body((c = la()))){
+			while(is_id_body((c = la(state)))){
 				if(index == MAX_LEXEME - 2){
 					break;
 				}
 				res->lexeme[index++] = c;
-				advance();
+				advance(state);
 			}
 		}else{
-			err("couldn't match character %lc", la());
+			err("couldn't match character %lc", la(state));
 		}
 		break;
 	};
