@@ -78,7 +78,7 @@ static inline int lex_number(struct lex_state *state, struct token *res, size_t 
 int lex_next(struct lex_state *state, struct token *res)
 {
 	err_on(!res, "Token not allocated");
-	while(iswspace(la(state))){
+	while(la(state) == L'\t' || la(state) == L' '){
 		advance(state);
 	}
 

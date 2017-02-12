@@ -46,7 +46,7 @@ void *smap_lookup(struct smap *map, const wchar_t *key)
 		while(head && wcscmp(head->key, key) && (head = head->next));
 		return head->value;
 	}else{
-		return head;
+		return head->value;
 	}
 }
 

@@ -5,7 +5,7 @@
 #include"types.h"
 
 struct token {
-	#define MAX_LEXEME 50
+	#define MAX_LEXEME 20
 	wchar_t lexeme[MAX_LEXEME];
 	enum {
 		TOK_ID,
@@ -21,7 +21,6 @@ struct token {
 };
 
 struct lex_state {
-	/* TODO consider reading chunks into buffer */
 	FILE *file;
 	wchar_t la;
 	/* debugging info */
