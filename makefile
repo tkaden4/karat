@@ -1,7 +1,7 @@
-SOURCES=$(wildcard *.c)
+SOURCES=$(wildcard ./src/*.c)
 OBJECTS=$(SOURCES:.c=.o)
 CFLAGS=-Wall -Wextra -Werror -O3 -std=gnu99 -DKDEBUG \
-		-I./include/ -L./libs
+		-I./include/
 LIBS=-lSDL2
 EXECUTABLE=karat
 
@@ -21,4 +21,4 @@ test:
 
 clean:
 	$(RM) $(EXECUTABLE)
-	$(RM) *.o
+	$(RM) ./src/*.o

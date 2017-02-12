@@ -17,6 +17,7 @@ struct smap {
 };
 
 struct smap *smap_create(void(*destroy_node)(void *));
-struct smap *smap_create_d();	/* create with default destroy function */ void *smap_lookup(struct smap *map, const wchar_t *key);
+struct smap *smap_create_d();	/* create with default destroy function (free) */
+void *smap_lookup(struct smap *map, const wchar_t *key);
 void smap_insert(struct smap *map, const wchar_t *key, void *type);
 void smap_destroy(struct smap *map);

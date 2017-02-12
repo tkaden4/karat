@@ -7,7 +7,6 @@
 #define FNV_PRIME 16777619
 #define FNV_OFFSET_BASIS 2166136261
 
-
 static inline uint32_t FNV1a_hash(register const wchar_t *data)
 {
 	register uint32_t hash = FNV_OFFSET_BASIS;
@@ -21,7 +20,7 @@ static inline uint32_t FNV1a_hash(register const wchar_t *data)
 	return hash;
 }
 
-static inline size_t get_index(const wchar_t *key)
+static inline size_t hash_to_index(const wchar_t *key)
 {
 	return FNV1a_hash(key) % HASH_BUCKETS;
 }
@@ -40,7 +39,7 @@ struct smap *smap_create_d()
 
 void *smap_lookup(struct smap *map, const wchar_t *key)
 {
-	struct smap_node *head = map->map[get_index(key)];
+	struct smap_node *head = map->map[hash_to_index(key)];
 	if(!head){
 		return NULL;
 	}else if(head->next){
@@ -62,7 +61,7 @@ static inline struct smap_node *make_node(const wchar_t *key, void *val)
 
 void smap_insert(struct smap *map, const wchar_t *key, void *val)
 {
-	struct smap_node **head = &map->map[get_index(key)];
+	struct smap_node **head = &map->map[hash_to_index(key)];
 	while(*head && wcscmp((*head)->key, key) && (head = &(*head)->next));
 	if(!*head){
 		key = wcsdup(key);

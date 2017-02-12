@@ -25,19 +25,18 @@ struct label_def {
 
 static void destroy_def(void *ptr)
 {
-	struct label_def *def = ptr;
-	LIST_FREELOOP(struct fwdef, def->fwdefs, x){
-		s_free(x);
-	}
-	s_free(def);
+	s_free(ptr);
 }
 
 /* deal with all forward declarations */
 static void resolve_fwdefs(struct label_def *def)
 {
-	LIST_FOREACH(struct fwdef, def->fwdefs, x){
+	/* this will destroy the list */
+	LIST_FREELOOP(struct fwdef, def->fwdefs, x){
 		*(x->pos) = def->pos;
+		s_free(x);
 	}
+	def->fwdefs = NULL;
 }
 
 struct parse_state {
@@ -52,8 +51,6 @@ struct parse_state {
 	size_t cur_insns;	/* current position in bytecode */
 	/* map of labels to addresses */ 
 	struct smap *label_defs;
-	/* map of labels to forward declarations */
-	struct smap *fwdefs;
 };
 
 /* get the actual index of the nth element in the buffer */
@@ -148,34 +145,35 @@ static void parse_match(struct parse_state *state, unsigned tok_type)
 
 static int parse_label(struct parse_state *state)
 {
-	wchar_t *label = wcsdup(parse_la(state)->lexeme);
+	const wchar_t *tmp = parse_la(state)->lexeme;
+	wchar_t label[wcslen(tmp) + 1];
+	wcscpy(label, tmp);
+
 	parse_match(state, TOK_ID);
 	parse_match(state, TOK_COLON);
+	printf("encountered label %ls:\n", label);
 	if(!wcscmp(label, KPROG_ENTRY_POINT)){
 		if(state->prog->entry_point){
 			err("multiple definitions of entry point");
 			return 1;
 		}else{
-			puts("found entry point");
 			state->prog->entry_point = &state->prog->program[state->cur_insns];
 		}
 	}else{
-		printf("encountered label %ls:\n", label);
-		/* TODO resolve any forward declaration */
 		struct label_def *def = smap_lookup(state->label_defs, label);
 		if(def){
 			if(def->fwdefs){
 				resolve_fwdefs(def);
 			}else{
-				/* TODO error, label has now been redefined */
+				/* error, label redefined */
 				return 1;
 			}
 		}else{	/* no label yet */
 			struct label_def *def = s_alloc(struct label_def);
+			def->pos = state->cur_insns;
 			smap_insert(state->label_defs, label, def);
 		}
 	}
-	s_free(label);
 	return 0;
 }
 
@@ -185,6 +183,9 @@ static int parse_ins(struct parse_state *state)
 	const wchar_t *op_str = parse_la(state)->lexeme;
 	printf("opcode %ls\n", op_str);
 	parse_match(state, TOK_ID);
+
+	size_t num_args;		/* has to be 2 or less */
+	int addr_mode;
 
 	/* parse arguments */
 	const struct token *la = parse_la(state);
@@ -201,10 +202,19 @@ static int parse_ins(struct parse_state *state)
 	{
 		struct label_def *def = NULL;
 		if((def = smap_lookup(state->label_defs, la->lexeme))){
-			/* argument is address of label */
+			if(def->fwdefs){	/* check if not defined */
+				struct fwdef *fw = s_alloc(struct fwdef);
+				fw->pos = (addr_t *)&state->prog->program[state->cur_insns]; 
+				struct fwdef *head = def->fwdefs;
+				fw->next = head;
+				def->fwdefs = fw;
+			}else{				/* otherwise use position as argument */
+				addr_t pos = def->pos;
+				printf("label argument of value %d\n", pos);
+			}
 		}else{
-			/* TODO add as forward declaration */
-			printf("adding forward decl to %ls\n", la->lexeme);
+			struct label_def *def = s_alloc(struct label_def);
+			smap_insert(state->label_defs, la->lexeme, def);
 		}
 	}
 	case TOK_EOL:
@@ -229,8 +239,11 @@ static int parse_expr(struct parse_state *state)
 			parse_match(state, TOK_EOL);
 			return 0;
 		}
-	case TOK_EOL: parse_advance(state); return 0;
-	default: return 1;
+	case TOK_EOL:
+		parse_advance(state);
+		return 0;
+	default:
+		return 1;
 	};
 }
 
