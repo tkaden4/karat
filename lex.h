@@ -21,6 +21,7 @@ struct token {
 };
 
 struct lex_state {
+	/* TODO consider reading chunks into buffer */
 	FILE *file;
 	wchar_t la;
 	/* debugging info */

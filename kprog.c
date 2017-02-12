@@ -7,7 +7,6 @@
 struct kprog *kprog_create()
 {
 	struct kprog *ret = s_calloc(1, sizeof(struct kprog));
-	memset(ret, 0, sizeof(struct kprog));
 	return ret;
 }
 

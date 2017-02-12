@@ -8,9 +8,9 @@
 #define LIST_FOREACH(type, head, each_var) \
 for(type *each_var = NULL, *walk = head; (each_var = walk); walk = walk->next)
 
-#define LIST_FREELOOP(type, head, each_var, block) \
+#define LIST_FREELOOP(type, head, each_var) \
 for(type *walk = head, *each_var = NULL, *next = NULL; \
-	(each_var = walk); walk = next){ next = walk->next; block }
+	(each_var = walk) && (next = walk->next); walk = next)
 
 #define LIST_FIND(type, head, found, cmp) \
 for(type *walk = head; (found = walk) && !(cmp); walk = walk->next);

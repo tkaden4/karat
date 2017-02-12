@@ -2,8 +2,10 @@
 
 #include"types.h"
 
+#define KPROG_ENTRY_POINT L"__start"
+
 struct kprog {
-	size_t entry_point;
+	u8 *entry_point;
 	u8 *program;
 	size_t prog_size;
 };

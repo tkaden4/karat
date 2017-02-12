@@ -10,7 +10,7 @@
 
 #define zmem(x) memset((void *)(&(x)), 0, sizeof((x)))
 
-#define s_alloc(type) s_malloc(sizeof(type))
+#define s_alloc(type) s_calloc(1, sizeof(type))
 
 void *s_malloc(size_t bytes);    
 void *s_calloc(size_t nitems, size_t member);
