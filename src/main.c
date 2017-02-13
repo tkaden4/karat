@@ -4,7 +4,7 @@
 
 #include"log.h"
 #include"alloc.h"
-#include"parse.h"
+#include"parse/parse.h"
 #include"kprog.h"
 
 #define usage() \

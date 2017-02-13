@@ -2,8 +2,8 @@
 #include<ctype.h>
 #include<string.h>
 
+#include"parse/lex.h"
 #include"alloc.h"
-#include"lex.h"
 #include"log.h"
 
 

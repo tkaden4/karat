@@ -1,15 +1,22 @@
-#include"parse.h"
-
 #include<stdio.h>
 #include<wctype.h>
 #include<ctype.h>
 #include<wchar.h>
 
-#include"lex.h"
+#include"parse/parse.h"
+#include"parse/lex.h"
 #include"util.h"
 #include"alloc.h"
 #include"log.h"
 #include"smap.h"
+
+#define BYTE_SIZE 1
+#define WORD_SIZE 2
+#define DWORD_SIZE 4
+
+typedef i8 byte_t ;
+typedef i16 word_t;
+typedef i32 dword_t;
 
 #define MAX_LOOK 10 
 
@@ -47,6 +54,21 @@ struct parse_state {
 	/* map of labels to addresses */ 
 	struct smap *label_defs;
 };
+
+static inline void prog_write(struct parse_state *state, i32 data, size_t bytes)
+{
+	(void) state;
+	register const u8 *bp = (u8 *)&data;
+	for(size_t i = 1; i <= bytes; ++i){
+		printf("0x%X\n", bp[bytes - i]);
+	}
+}
+
+static void CONSTRUCTOR test_prog_write()
+{
+	long long data = 0xffeeaabb;
+	prog_write(NULL, data, 4);
+}
 
 /* get the actual index of the nth element in the buffer */
 static inline size_t rbuff_elem_index(struct parse_state *state, size_t n)
@@ -169,28 +191,16 @@ static int parse_label(struct parse_state *state)
 		}
 	}else{	/* no label yet */
 		struct label_def *ndef = s_calloc(1, sizeof(struct label_def));
-		printf("making at %lu\n", state->cur_insns);
 		ndef->pos = state->cur_insns;
 		ndef->fwdefs = NULL;
 		smap_insert(state->label_defs, label, ndef);
-		printf("found at %d\n", ndef->pos);
 		ndef = smap_lookup(state->label_defs, label);
-		printf("found at %d\n", ndef->pos);
 	}
 	return 0;
 }
 
-static int parse_ins(struct parse_state *state)
+static int parse_args(struct parse_state *state)
 {
-	/* I should probably duplicate this string */
-	const wchar_t *op_str = parse_la(state)->lexeme;
-	printf("opcode %ls\n", op_str);
-	parse_match(state, TOK_ID);
-
-	size_t num_args = 0;		/* has to be 2 or less */
-	int addr_mode = 0;
-	addr_mode = (num_args = addr_mode);
-
 	/* right now we write 4 bytes into memory for each argument */
 	/* TODO size of arguments (byte, word, dword, qword) */
 	long args[2] = {0};
@@ -202,6 +212,7 @@ get_arg:
 	case TOK_REG:	/* register argument */
 	case TOK_NUM:	/* number argument */
 	case TOK_ADDR:
+		state->cur_insns += 4;
 		args[i] = la->data;
 		parse_advance(state);
 		break;
@@ -212,7 +223,7 @@ get_arg:
 		if((def = smap_lookup(state->label_defs, la->lexeme))){
 			/* check if not defined */
 			if(def->fwdefs){
-				puts("forward decl");
+				puts("forward declaration");
 				/* add as a new location to resolve */
 				struct fwdef *fw = s_calloc(1, sizeof(struct fwdef));
 				fw->rpos = (addr_t *)(&state->prog->program[state->cur_insns]); 
@@ -220,7 +231,7 @@ get_arg:
 				def->fwdefs = fw;
 			}else{
 				addr_t pos = def->pos;
-				printf("label argument of value %lu, %d\n", state->cur_insns, pos);
+				printf("label argument %d\n", pos);
 			}
 		}else{
 			/* add to table */
@@ -228,6 +239,7 @@ get_arg:
 			def->pos = state->cur_insns;
 			smap_insert(state->label_defs, la->lexeme, ndef);
 		}
+		state->cur_insns += 4;
 		parse_advance(state);
 		break;
 	}
@@ -249,6 +261,16 @@ get_arg:
 	}
 	printf("arguments: %ld & %ld\n", args[0], args[1]);
 	return 0;
+}
+
+static int parse_ins(struct parse_state *state)
+{
+	/* I should probably duplicate this string */
+	const wchar_t *op_str = parse_la(state)->lexeme;
+	printf("opcode %ls\n", op_str);
+	parse_match(state, TOK_ID);
+	++state->cur_insns;
+	return parse_args(state);
 }
 
 static int parse_expr(struct parse_state *state)
@@ -280,11 +302,11 @@ int parse_file(FILE *f, struct kprog *res)
 {
 	err_on(!f, "input file not opened");
 	err_on(!res, "output program not allocated");
+
 	struct parse_state state;
 	parse_init(&state, res, f);
 
 	int ret = 0;
-
 	const struct token *la = parse_la(&state);
 	while(la->type != TOK_EOS){
 		ret = parse_expr(&state);

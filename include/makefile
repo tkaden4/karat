@@ -1,11 +1,9 @@
 SOURCES=$(wildcard ./src/*.c)
 OBJECTS=$(SOURCES:.c=.o)
-CFLAGS=-Wall -Wextra -Werror -O0 -std=gnu99 -DKDEBUG \
+CFLAGS=-Wall -Wextra -Werror -O3 -std=gnu99 -DKDEBUG \
 		-I./include/
 LIBS=-lSDL2
 EXECUTABLE=karat
-
-CC=ccache cc
 
 ifeq ($(OS), Windows_NT)
 	EXECUTABLE = karat.exe
