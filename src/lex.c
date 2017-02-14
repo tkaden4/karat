@@ -35,9 +35,14 @@ static void advance(struct lex_state *state)
 	}
 }
 
-static int is_id_body(wint_t c)
+static int is_id_start(wint_t c)
 {
 	return iswalpha(c) || c == L'_';
+}
+
+static int is_id_body(wint_t c)
+{
+	return iswalpha(c) || iswdigit(c) || c == '_';
 }
 
 static int iswbin(wint_t c)
@@ -140,7 +145,7 @@ int lex_next(struct lex_state *state, struct token *res)
 	CASEC(L':', TOK_COLON)
 	CASEC(L',', TOK_COMMA)
 	default:
-		if(is_id_body(la(state))){
+		if(is_id_start(la(state))){
 			res->type = TOK_ID;
 			wchar_t c = 0;
 			size_t index = 0;

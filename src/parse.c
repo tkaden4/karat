@@ -55,6 +55,11 @@ struct parse_state {
 	struct smap *label_defs;
 };
 
+static inline void *current_byte(struct parse_state *state)
+{
+	return &state->prog->program[state->cur_insns];
+}
+
 static inline void prog_write(struct parse_state *state, i32 data, size_t bytes)
 {
 	(void) state;
@@ -172,7 +177,8 @@ static inline void add_fwdef(struct label_def *def, addr_t *pos)
 	def->fwdefs = nfwdef;
 }
 
-static struct label_def *add_label_def(struct smap *smap, const wchar_t *lexeme, addr_t pos)
+static struct label_def *add_label_def(
+	struct smap *smap, const wchar_t *lexeme, addr_t pos)
 {
 	struct label_def *def = s_alloc(struct label_def);
 	def->fwdefs = NULL;
@@ -225,21 +231,18 @@ static int parse_arg(struct parse_state *state)
 	case TOK_ID:	/* label argument */
 	{
 		struct label_def *def = NULL;
-
 		/* check if there is already a symbol table entry */
 		if((def = smap_lookup(state->label_defs, la->lexeme))){
-			/* check if not defined */
 			if(def->fwdefs){
 				puts("forward declaration");
-				add_fwdef(def, (addr_t *)&state->prog->program[state->cur_insns]);
+				add_fwdef(def, current_byte(state));
 			}else{
 				addr_t pos = def->pos;
 				printf("label argument %d\n", pos);
 			}
 		}else{
-			/* add to table */
 			struct label_def *ndef = add_label_def(state->label_defs, la->lexeme, state->cur_insns);
-			add_fwdef(ndef, (addr_t *)&state->prog->program[state->cur_insns]);
+			add_fwdef(ndef, current_byte(state));
 		}
 		parse_advance(state);
 		break;
@@ -253,12 +256,8 @@ static int parse_arg(struct parse_state *state)
 
 static int parse_args(struct parse_state *state)
 {
-	while(!parse_arg(state)){
-		if(parse_test(state, TOK_COMMA)){
-			parse_match(state, TOK_COMMA);
-		}else{
-			break;
-		}
+	while(!parse_arg(state) && parse_test(state, TOK_COMMA)){
+		parse_match(state, TOK_COMMA);
 	}
 	return 0;
 }
