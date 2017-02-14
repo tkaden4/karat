@@ -27,7 +27,7 @@ static inline size_t hash_to_index(const wchar_t *key)
 
 struct smap *smap_create(void(*destroy_node)(void *))
 {
-	struct smap *ret = s_calloc(1, sizeof(struct smap));
+	struct smap *ret = s_alloc(struct smap);
 	ret->destroy_node_f = destroy_node;
 	return ret;
 }
@@ -64,7 +64,6 @@ void smap_insert(struct smap *map, const wchar_t *key, void *val)
 	struct smap_node **head = &map->map[hash_to_index(key)];
 	while(*head && wcscmp((*head)->key, key) && (head = &(*head)->next));
 	if(!*head){
-		key = wcsdup(key);
 		*head = make_node(key, val);
 	}else{
 		map->destroy_node_f((*head)->value);

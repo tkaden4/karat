@@ -34,9 +34,9 @@ struct label_def {
 static void resolve_fwdefs(struct label_def *def)
 {
 	/* this will destroy the list */
-	LIST_FREELOOP(struct fwdef, def->fwdefs, x){
-		*(x->rpos) = def->pos;
-		s_free(x);
+	for(struct fwdef *d = def->fwdefs, *next = NULL; d; d = next){
+		next = d->next;
+		s_free(d);
 	}
 	def->fwdefs = NULL;
 }
@@ -164,6 +164,23 @@ static void parse_match(struct parse_state *state, unsigned tok_type)
 	}
 }
 
+static inline void add_fwdef(struct label_def *def, addr_t *pos)
+{
+	struct fwdef *nfwdef = s_alloc(struct fwdef);
+	nfwdef->next = def->fwdefs;
+	nfwdef->rpos = pos;
+	def->fwdefs = nfwdef;
+}
+
+static struct label_def *add_label_def(struct smap *smap, const wchar_t *lexeme, addr_t pos)
+{
+	struct label_def *def = s_alloc(struct label_def);
+	def->fwdefs = NULL;
+	def->pos = pos;
+	smap_insert(smap, lexeme, def);
+	return def;
+}
+
 static int parse_label(struct parse_state *state)
 {
 	const wchar_t *tmp = parse_la(state)->lexeme;
@@ -184,82 +201,65 @@ static int parse_label(struct parse_state *state)
 	struct label_def *def = smap_lookup(state->label_defs, label);
 	if(def){
 		if(def->fwdefs){
+			puts("resolving forward definitions");
 			resolve_fwdefs(def);
 		}else{
 			printf("label %ls redefined at %lu\n", label, state->lstate.line_no);
 			return 1;
 		}
 	}else{	/* no label yet */
-		struct label_def *ndef = s_calloc(1, sizeof(struct label_def));
-		ndef->pos = state->cur_insns;
-		ndef->fwdefs = NULL;
-		smap_insert(state->label_defs, label, ndef);
-		ndef = smap_lookup(state->label_defs, label);
+		add_label_def(state->label_defs, label, state->cur_insns);
 	}
 	return 0;
 }
 
-static int parse_args(struct parse_state *state)
+static int parse_arg(struct parse_state *state)
 {
-	/* right now we write 4 bytes into memory for each argument */
-	/* TODO size of arguments (byte, word, dword, qword) */
-	long args[2] = {0};
-	size_t i = 0;
-	const struct token *la = NULL;
-get_arg:
-	la = parse_la(state);
-	switch(parse_la(state)->type){
+	const struct token *la = parse_la(state);
+	switch(la->type){
 	case TOK_REG:	/* register argument */
 	case TOK_NUM:	/* number argument */
 	case TOK_ADDR:
-		state->cur_insns += 4;
-		args[i] = la->data;
 		parse_advance(state);
 		break;
 	case TOK_ID:	/* label argument */
 	{
 		struct label_def *def = NULL;
+
 		/* check if there is already a symbol table entry */
 		if((def = smap_lookup(state->label_defs, la->lexeme))){
 			/* check if not defined */
 			if(def->fwdefs){
 				puts("forward declaration");
-				/* add as a new location to resolve */
-				struct fwdef *fw = s_calloc(1, sizeof(struct fwdef));
-				fw->rpos = (addr_t *)(&state->prog->program[state->cur_insns]); 
-				fw->next = def->fwdefs;
-				def->fwdefs = fw;
+				add_fwdef(def, (addr_t *)&state->prog->program[state->cur_insns]);
 			}else{
 				addr_t pos = def->pos;
 				printf("label argument %d\n", pos);
 			}
 		}else{
 			/* add to table */
-			struct label_def *ndef = s_calloc(1, sizeof(struct label_def));
-			def->pos = state->cur_insns;
-			smap_insert(state->label_defs, la->lexeme, ndef);
+			struct label_def *ndef = add_label_def(state->label_defs, la->lexeme, state->cur_insns);
+			add_fwdef(ndef, (addr_t *)&state->prog->program[state->cur_insns]);
 		}
-		state->cur_insns += 4;
 		parse_advance(state);
 		break;
 	}
 	case TOK_EOL:
-		return 0;
 	default:
 		return 1;
 	};
+	return 0;
+}
 
-	if(parse_test(state, TOK_COMMA)){
-		if(i == 1){
-			return 1;
+static int parse_args(struct parse_state *state)
+{
+	while(!parse_arg(state)){
+		if(parse_test(state, TOK_COMMA)){
+			parse_match(state, TOK_COMMA);
+		}else{
+			break;
 		}
-		parse_advance(state);
-		++i;
-		goto get_arg;
-	}else if(!parse_test(state, TOK_EOL)){
-		return 1;
 	}
-	printf("arguments: %ld & %ld\n", args[0], args[1]);
 	return 0;
 }
 
