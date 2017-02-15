@@ -5,6 +5,8 @@
 
 #define HASH_BUCKETS 229
 
+/* TODO generic keys */
+
 struct smap_node {
 	SLINK(struct smap_node);
 	wchar_t *key;

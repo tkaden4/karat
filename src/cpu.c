@@ -1,6 +1,5 @@
-#include"cpu.h"
-
 #include<string.h>
+#include<vm/cpu.h>
 
 void cpu_init(struct cpu *state)
 {

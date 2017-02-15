@@ -1,8 +1,9 @@
 #pragma once 
 
-#include"cpu.h"
-#include"module.h"
-#include"types.h"
+/* karat files */
+#include<vm/cpu.h>
+#include<module.h>
+#include<ktypes.h>
 
 #define MEM_SIZE 8192
 #define IO_PORTS 10

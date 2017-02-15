@@ -1,7 +1,6 @@
-#include"screen.h"
-
-#include"alloc.h"
-#include"log.h"
+#include<screen.h>
+#include<alloc.h>
+#include<log.h>
 
 #define MODULE_NAME L"sdl_screen"
 

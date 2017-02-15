@@ -4,7 +4,7 @@
 #include<stdbool.h>
 #include<stdio.h>
 
-#include"karat.h"
+#include"traits.h"
 
 #define fprefix(file, prefix, fmt, ...) \
 	fprintf(file,  prefix "::" fmt "{ %s : %s : %d }\n", \

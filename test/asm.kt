@@ -3,4 +3,4 @@ __start:
 	sout #$FF, L1
 L1:
 	sout r1, __start
-	sout #$1, #0
+	sout $1, #0

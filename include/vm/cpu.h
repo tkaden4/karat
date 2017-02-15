@@ -1,9 +1,9 @@
 #pragma once
-
+/* stdlib files */
 #include<stdint.h>
-
-#include"karat.h"
-#include"types.h"
+/* karat files */
+#include<traits.h>
+#include<ktypes.h>
 
 typedef uint32_t reg_t;	/* general register datatype */
 

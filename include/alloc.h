@@ -1,9 +1,6 @@
 #pragma once
 
-/*      mem.h 
- * defines methods for checked memory allocation 
- */
-
+/* stdlib files */
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>

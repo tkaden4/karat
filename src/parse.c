@@ -1,14 +1,17 @@
+/* stdlib files */
 #include<stdio.h>
 #include<wctype.h>
 #include<ctype.h>
 #include<wchar.h>
-
-#include"parse/parse.h"
-#include"parse/lex.h"
-#include"util.h"
-#include"alloc.h"
-#include"log.h"
-#include"smap.h"
+/* karat files */
+#include<parse/rbuff.h>
+#include<parse/parse.h>
+#include<parse/lex.h>
+#include<ktypes.h>
+#include<util.h>
+#include<alloc.h>
+#include<log.h>
+#include<smap.h>
 
 #define BYTE_SIZE 1
 #define WORD_SIZE 2
@@ -18,104 +21,71 @@ typedef i8 byte_t ;
 typedef i16 word_t;
 typedef i32 dword_t;
 
-#define MAX_LOOK 10 
+#define MAX_LOOK 2
 
-struct fwdef {
-	SLINK(struct fwdef);	/* next forward declaration in list */
-	addr_t *rpos;			/* location to resolve */
+struct token_entry {
+	struct rbuff_node *rnode;
+	struct token tok;
 };
 
 struct label_def {
-	struct fwdef *fwdefs;
-	addr_t pos;				/* what position it points to */
+	struct fwdef {
+		SLINK(struct fwdef);	/* next forward declaration in list */
+		addr_t *rpos;			/* location to resolve */
+	} *fwdefs;
+	addr_t pos;	/* what position it points to */
+};
+
+struct parse_state {
+	struct lex_state lstate;
+	/* MAX_LOOK tokens will always be in buffer */
+	struct rbuff la_tokens;
+	/* current position in bytecode */
+	size_t cur_insns;
+	/* output program */
+	struct kprog *prog;
+	/* label definitions */
+	struct smap *label_defs;
 };
 
 /* deal with all forward declarations */
 static void resolve_fwdefs(struct label_def *def)
 {
 	/* this will destroy the list */
-	for(struct fwdef *d = def->fwdefs, *next = NULL; d; d = next){
-		next = d->next;
+	LIST_FREELOOP(struct fwdef, def->fwdefs, d){
 		s_free(d);
 	}
 	def->fwdefs = NULL;
 }
-
-struct parse_state {
-	/* parsing utils */
-	struct lex_state lstate;
-	/* MAX_LOOK tokens will always be in buffer */
-	struct token la_buff[MAX_LOOK];
-	size_t cur_size;
-	size_t index;
-	/* for generation */
-	struct kprog *prog;	/* output program */
-	size_t cur_insns;	/* current position in bytecode */
-	/* map of labels to addresses */ 
-	struct smap *label_defs;
-};
 
 static inline void *current_byte(struct parse_state *state)
 {
 	return &state->prog->program[state->cur_insns];
 }
 
-static inline void prog_write(struct parse_state *state, i32 data, size_t bytes)
+static inline void prog_write(struct parse_state *state, u32 data, size_t bytes)
 {
 	(void) state;
 	register const u8 *bp = (u8 *)&data;
-	for(size_t i = 1; i <= bytes; ++i){
+	for(register size_t i = 1; i <= bytes; ++i){
 		printf("0x%X\n", bp[bytes - i]);
 	}
 }
 
 static void CONSTRUCTOR test_prog_write()
 {
-	long long data = 0xffeeaabb;
+	u32 data = 0xeeaabbcc;
+	printf("%X\n", data);
 	prog_write(NULL, data, 4);
-}
-
-/* get the actual index of the nth element in the buffer */
-static inline size_t rbuff_elem_index(struct parse_state *state, size_t n)
-{
-	return (state->index + n) % MAX_LOOK;
-}
-
-static struct token *rbuff_elem(struct parse_state *state, size_t n)
-{
-	return &state->la_buff[rbuff_elem_index(state, n)];
-}
-
-/* add an element to the end of the buffer */
-static inline void rbuff_push_back(struct parse_state *state)
-{
-	lex_next(&state->lstate, rbuff_elem(state, state->cur_size));
-	++state->cur_size;
-}
-
-/* remove an element from the end of the buffer */
-static inline void rbuff_pop_back(struct parse_state *state)
-{
-	--state->cur_size;
-}
-
-/* remove an element from the front of the buffer */
-static inline void rbuff_pop_front(struct parse_state *state)
-{
-	state->index = rbuff_elem_index(state, 1);
-	--state->cur_size;
 }
 
 static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 {
-	memset(state->la_buff, 0, sizeof(struct token)*MAX_LOOK);
-	state->cur_size = 0;
-	state->index = 0;
-
+	rbuff_init(&state->la_tokens, MAX_LOOK);
 	lex_init(&state->lstate, f);
 
 	for(size_t i = 0; i < MAX_LOOK; ++i){
-		rbuff_push_back(state);
+	//	rbuff_push_back(&state->la_tokens, tok);
 	}
 
 	state->prog = prog;
@@ -125,6 +95,7 @@ static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 
 static void parse_destroy(struct parse_state *ctx)
 {
+	/* TODO destroy rbuff */
 	smap_destroy(ctx->label_defs);
 }
 
@@ -133,7 +104,8 @@ static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
 	if(n >= MAX_LOOK){
 		return 0;
 	}
-	return rbuff_elem(state, n)->type == tok_type;
+	struct rbuff_node *entry = rbuff_elem(&state->la_tokens, n);
+	return rbuff_entry(entry, struct token_entry, rnode)->tok.type == tok_type;
 }
 
 static int parse_test(struct parse_state *state, unsigned tok_type)
@@ -144,15 +116,16 @@ static int parse_test(struct parse_state *state, unsigned tok_type)
 static void parse_advance(struct parse_state *state)
 {
 	/* delete front element from buffer */
-	rbuff_pop_front(state);
+	s_free(rbuff_entry(rbuff_pop_front(&state->la_tokens), struct token_entry, rnode));
 	/* read new element into buffer */
-	rbuff_push_back(state);
+	struct token_entry *entry = s_alloc(struct token_entry);
+	entry->rnode = s_alloc(struct rbuff_node);
+	rbuff_push_back(&state->la_tokens, entry->rnode);
 }
 
 static const struct token *parse_la_n(struct parse_state *state, size_t n)
 {
-	(void) parse_test;
-	return rbuff_elem(state, n);
+	return &rbuff_entry(rbuff_elem(&state->la_tokens, n), struct token_entry, rnode)->tok;
 }
 
 static const struct token *parse_la(struct parse_state *state)
@@ -241,7 +214,9 @@ static int parse_arg(struct parse_state *state)
 				printf("label argument %d\n", pos);
 			}
 		}else{
-			struct label_def *ndef = add_label_def(state->label_defs, la->lexeme, state->cur_insns);
+			struct label_def *ndef = add_label_def(	state->label_defs,
+													la->lexeme,
+													state->cur_insns);
 			add_fwdef(ndef, current_byte(state));
 		}
 		parse_advance(state);

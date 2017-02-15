@@ -1,8 +1,7 @@
 #include<stdio.h>
-
-#include"alloc.h"
-#include"smap.h"
-#include"types.h"
+#include<alloc.h>
+#include<smap.h>
+#include<ktypes.h>
 
 #define FNV_PRIME 16777619
 #define FNV_OFFSET_BASIS 2166136261

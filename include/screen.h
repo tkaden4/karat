@@ -1,11 +1,13 @@
 #pragma once
 
-#include<SDL2/SDL.h> /* this will have to be compiled with sdl2 */
+/* SDL2 files */
+#include<SDL2/SDL.h>
+/* stdlib files*/
 #include<stdbool.h>
-
-#include"module.h"
-#include"types.h"
-#include"bits.h"
+/* karat files */
+#include<module.h>
+#include<ktypes.h>
+#include<bits.h>
 
 #define WINDOW_SIZE 384
 #define SCREEN_SIZE 64

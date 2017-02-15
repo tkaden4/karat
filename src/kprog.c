@@ -1,8 +1,7 @@
-#include"kprog.h"
-
 #include<string.h>
-#include"alloc.h"
-#include"log.h"
+#include<vm/kprog.h>
+#include<alloc.h>
+#include<log.h>
 
 struct kprog *kprog_create()
 {

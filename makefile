@@ -5,7 +5,14 @@ CFLAGS=-Wall -Wextra -Werror -O0 -std=gnu99 -DKDEBUG \
 LIBS=-lSDL2
 EXECUTABLE=karat
 
-CC=ccache cc
+# check and see if we have ccache
+HAS_CCACHE := $(shell command -v ccache 2> /dev/null)
+ifdef HAS_CCACHE
+	CC=ccache cc
+else
+	CC=cc
+endif
+
 
 ifeq ($(OS), Windows_NT)
 	EXECUTABLE = karat.exe
@@ -16,10 +23,7 @@ $(EXECUTABLE) : $(OBJECTS)
 	$(CC) -o $@ $^ $(LIBS)
 
 run:
-	./$(EXECUTABLE)
-
-test:
-	valgrind ./$(EXECUTABLE) ./test/asm.kt
+	./$(EXECUTABLE) ./test/asm.kt
 
 clean:
 	$(RM) $(EXECUTABLE)

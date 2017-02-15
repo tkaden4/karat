@@ -8,11 +8,12 @@
  * io ports to communicate with the cpu.
  */
 
+/* stdlib files */
 #include<stdint.h>
 #include<wchar.h>
-
-#include"karat.h"
-#include"types.h"
+/* karat files */
+#include<traits.h>
+#include<ktypes.h>
 
 #define MODULE_FTABLE(i, id, w, wd, d, dd) \
 	MAKE_CB(init_cb, i, id), \

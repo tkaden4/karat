@@ -1,8 +1,7 @@
-#include"module.h"
-
-#include"types.h"
-#include"alloc.h"
-#include"log.h"
+#include<module.h>
+#include<ktypes.h>
+#include<alloc.h>
+#include<log.h>
 
 void io_table_init(struct io_table *table)
 {
@@ -56,19 +55,19 @@ void io_table_add(struct io_table *table, u8 code, size_t args, io_cb cb)
 	};
 }
 
-static inline void arg_add(u8 **vec, size_t *size, size_t *cap, u8 val)
+static inline void arg_add(struct arg_vec *vec, u8 val)
 {
-	if(*cap >= *size){
-		*cap = (*cap) * 2 + 1;
-		*vec = s_realloc(*vec, *cap);
+	if(vec->cap >= vec->size){
+		vec->cap = (vec->cap) * 2 + 1;
+		vec->args = s_realloc(vec->args, vec->cap);
 	}
-	(*vec)[(*size)++] = val;
+	vec->args[(vec->size)++] = val;
 }
 
 void io_table_send(struct io_table *table, u8 byte)
 {
 	err_on(!table, "table not allocated");
-	err_on((table->current == NULL) && (byte == 0), "commands may not be 0x00");
+	err_on((table->current == NULL) && !byte, "commands may not be 0x00");
 	/* start a new command */
 	if(!table->current){
 		size_t index = find_handle(table, byte);
@@ -76,7 +75,7 @@ void io_table_send(struct io_table *table, u8 byte)
 		table->current = &table->handles[index];
 	}else{
 		struct arg_vec *vec = &table->cmdargs;
-		arg_add(&vec->args, &vec->size, &vec->cap, byte);
+		arg_add(vec, byte);
 	}
 	/* check to see if we have the needed amount of arguments */
 	if(table->cmdargs.size == table->current->nargs){

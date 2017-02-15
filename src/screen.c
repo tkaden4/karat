@@ -1,6 +1,5 @@
-#include"screen.h"
-
-#include"log.h"
+#include<screen.h>
+#include<log.h>
 
 int screen_init(struct screen_state *state)
 {

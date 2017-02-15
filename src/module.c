@@ -1,17 +1,16 @@
-#include"module.h"
-
 #include<stdio.h>
 #include<wchar.h>
+#include<module.h>
+#include<alloc.h>
+#include<log.h>
 
-#include"alloc.h"
-#include"log.h"
-
-struct mod *load_internal_module(struct mod *module, 
-					init_cb on_init,
-					write_cb on_write,
-					destroy_cb on_deinit,
-					struct io_table table,
-					const wchar_t *name)
+struct mod *load_internal_module(
+	struct mod *module, 
+	init_cb on_init,
+	write_cb on_write,
+	destroy_cb on_deinit,
+	struct io_table table,
+	const wchar_t *name)
 {
 	err_on(!module, "module not allocated");
 	module->on_init = on_init;

@@ -10,7 +10,7 @@ for(type *each_var = NULL, *walk = head; (each_var = walk); walk = walk->next)
 
 #define LIST_FREELOOP(type, head, each_var) \
 for(type *walk = head, *each_var = NULL, *next = NULL; \
-	(each_var = walk) && (next = walk->next); walk = next)
+	(each_var = walk) && ((next = walk->next) || 1); walk = next)
 
 #define LIST_FIND(type, head, found, cmp) \
 for(type *walk = head; (found = walk) && !(cmp); walk = walk->next);

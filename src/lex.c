@@ -1,11 +1,9 @@
 #include<wctype.h>
 #include<ctype.h>
 #include<string.h>
-
-#include"parse/lex.h"
-#include"alloc.h"
-#include"log.h"
-
+#include<parse/lex.h>
+#include<alloc.h>
+#include<log.h>
 
 void lex_init(struct lex_state *state, FILE *f)
 {
@@ -50,7 +48,10 @@ static int iswbin(wint_t c)
 	return c == L'1' || c == L'0';
 }
 
-static inline int lex_number(struct lex_state *state, struct token *res, size_t base)
+static inline int lex_number(
+	struct lex_state *state,
+	struct token *res,
+	size_t base)
 {
 	static int(*test)(wint_t) = NULL;
 	switch(base){
@@ -93,7 +94,7 @@ int lex_next(struct lex_state *state, struct token *res)
 		}
 	}
 
-	memset(res->lexeme, 0, sizeof(wchar_t)*MAX_LEXEME);
+	memset(res, 0, sizeof(struct token));
 
 	#define CASEC(c, t)\
 		case c: advance(state); res->lexeme[0] = c; res->type = t; break;
@@ -107,6 +108,12 @@ int lex_next(struct lex_state *state, struct token *res)
 	case L'\0':
 		res->type = TOK_EOS;
 		wcsncpy(res->lexeme, L"EOS", MAX_LEXEME);
+		break;
+	case L'.':
+		advance(state);
+		if(iswalpha(la(state))){
+			advance(state);
+		}
 		break;
 	case L'#':
 		res->type = TOK_NUM;

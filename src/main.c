@@ -2,33 +2,38 @@
 #include<wchar.h>
 #include<SDL2/SDL.h>
 
-#include"log.h"
-#include"alloc.h"
-#include"parse/parse.h"
-#include"kprog.h"
+#include<log.h>
+#include<alloc.h>
+#include<parse/parse.h>
+#include<vm/kprog.h>
 
 #define usage() \
 	printf("Usage: karat < file.kt >"); exit(0);
 
-#define TEST_FILE "test/asm.kt"
-
-#define IGNORE(x)
-
-int main()
+int main(int argc, const char *argv[])
 {
 	setlocale(LC_ALL, "");
 
-	FILE *test = fopen(TEST_FILE, "r");
-	err_on(!test, "could not open %s", TEST_FILE);
+	const char *prog = NULL;
 
-	struct kprog *prog = kprog_create();
-	if(!parse_file(test, prog)){
+	switch(argc){
+	case 2:
+		prog = argv[1];
+		break;
+	default:
+		usage();
+	};
+
+	FILE *test = fopen(prog, "r");
+	err_on(!test, "could not open %s", prog);
+
+	struct kprog *rprog = kprog_create();
+	if(!parse_file(test, rprog)){
 		puts("succesfully parsed file");
 	}else{
 		puts("unable to parse file");
 	}
-
-	kprog_destroy(prog);
+	kprog_destroy(rprog);
 	fclose(test);
 	return 0;
 }

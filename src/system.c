@@ -1,11 +1,11 @@
-#include"system.h"
-
+/* standard library functions */
 #include<string.h>
-
-#include"module.h"
-#include"screen.h"
-#include"alloc.h"
-#include"log.h"
+/* karat files */
+#include<vm/system.h>
+#include<module.h>
+#include<screen.h>
+#include<alloc.h>
+#include<log.h>
 
 typedef struct mod *(*get_mod_f)(struct mod *);
 /* so we don't need to deal with memory allocation */

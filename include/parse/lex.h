@@ -1,23 +1,26 @@
 #pragma once
+/* stdlib files */
 #include<wchar.h>
 #include<stdlib.h>
-
-#include"types.h"
+/* karat files */
+#include<ktypes.h>
 
 struct token {
 	#define MAX_LEXEME 20
 	wchar_t lexeme[MAX_LEXEME];
+	size_t lsize;
 	enum {
 		TOK_ID,
 		TOK_NUM,
-		TOK_ADDR,
 		TOK_REG,
-		TOK_COLON,
+		TOK_ADDR,
 		TOK_COMMA,
+		TOK_COLON,
+		TOK_DOT_CHAR,	/* .l, .d, .w */
 		TOK_EOL,
 		TOK_EOS,
 	} type;
-	long long data;	/* for num and reg */
+	long long data;	/* for num and reg, as well as dot_char */
 };
 
 struct lex_state {
