@@ -21,20 +21,39 @@
 
 RBUFF_IMPL(tok_la_buff, struct token, MAX_LOOK);
 
-static inline void *current_byte(struct parse_state *state)
-{
-	return &state->prog->program[state->cur_insns];
+#define parse_err(state, fmt, ...) \
+{ \
+	struct lex_state *lstate = &state->lstate; \
+	printf("[ error ] on line %u, column %u :", lstate->line_no, lstate->col_no); \
+	printf(" " fmt "\n", ##__VA_ARGS__); \
+	longjmp(state->err_ex, 1); \
 }
 
-static void prog_write(struct parse_state *state, u32 data, size_t bytes)
-{
-	(void) state;
-	bytes = bytes > sizeof(data) ? sizeof(data) : bytes;
-	register const u8 *bp = (u8 *)&data;
-	for(register size_t i = 1; i <= bytes; ++i){
-		printf("0x%X\n", bp[bytes - i]);
-	}
+#define parse_warn(fmt, ...) \
+{ \
+	printf("[ warning ] :"); \
+	printf(" " fmt "\n", ##__VA_ARGS__); \
 }
+
+static size_t reserve_byte(struct parse_state *state)
+{
+	size_t ret = state->cur_insns;
+	kprog_append_bytes(state->prog, 0, 1);
+	return ret;
+}
+static size_t reserve_word(struct parse_state *state)
+{
+	size_t ret = state->cur_insns;
+	kprog_append_bytes(state->prog, 0, 2);
+	return ret;
+}
+static size_t reserve_long(struct parse_state *state)
+{
+	size_t ret = state->cur_insns;
+	kprog_append_bytes(state->prog, 0, 4);
+	return ret;
+}
+
 /* adds a label at the current position
  * returns 1 on redefinition of label */
 static int add_label_def(struct parse_state *state, const wchar_t *str, addr_t pos)
@@ -53,7 +72,7 @@ static int add_label_def(struct parse_state *state, const wchar_t *str, addr_t p
 static void add_label_arg(struct parse_state *state, const wchar_t *str)
 {
 	struct label_arg *arg = s_alloc(struct label_arg);
-	arg->rpos = current_byte(state);
+	arg->rpos = reserve_long(state);
 	arg->id = wcsdup(str);
 	/* add argument to beginning of list */
 	arg->next = state->label_args;
@@ -67,7 +86,7 @@ static int resolve_label_arguments(struct parse_state *state)
 		struct label_def *label = smap_lookup(state->label_defs, each->id);
 		if(!label){
 			err = 1;
-			printf("label %ls never defined in source\n", each->id);
+			parse_warn("label %ls never defined in source", each->id);
 		}
 		s_free(each->id);
 		s_free(each);
@@ -134,7 +153,8 @@ static const struct token *parse_la(struct parse_state *state)
 static void parse_match(struct parse_state *state, unsigned tok_type)
 {
 	if(parse_la(state)->type != tok_type){
-		err("couldn't match target type on \"%ls\"", parse_la(state)->lexeme);
+		parse_err(	state, "couldn't match target type on \"%ls\"",
+					parse_la(state)->lexeme);
 	}else{
 		parse_advance(state);
 	}
@@ -149,14 +169,13 @@ static int parse_label(struct parse_state *state)
 
 	if(!wcscmp(label, KPROG_ENTRY_POINT)){
 		if(state->prog->entry_point){
-			puts("multiple definitions of entry point");
-			return 1;
+			parse_err(state, "multiple definitions of entry point");
 		}else{
 			state->prog->entry_point = state->cur_insns;
 		}
 	}
 	if(add_label_def(state, label, state->cur_insns)){
-		printf("redefinition of label %ls\n", label);
+		parse_err(state, "redefinition of label %ls", label);
 	}
 	return 0;
 }
@@ -220,7 +239,7 @@ static int parse_ins(struct parse_state *state)
 	} else
 #include"vm/inc/opcodes.inc"
 	{
-		printf("opcode undefined: \"%ls\"\n", op_str);
+		parse_err(state, "opcode undefined: \"%ls\"\n", op_str);
 		return 1;
 	}
 #undef opcode
@@ -234,14 +253,12 @@ static int parse_ins(struct parse_state *state)
 		const wchar_t size_char = parse_la(state)->lexeme[1];
 		size_t arg_size = 0;
 		if(!(arg_size = get_arg_size(size_char))){
-			printf("no size \'%lc\'\n", size_char);
-			return 1;
+			parse_err(state, "no size \'%lc\'", size_char);
 		}
 		parse_advance(state);
 		return parse_args(state, arg_size);
 	}else{
-		puts("expected operand size");
-		return 1;
+		parse_err(state, "expected operand size");
 	}
 }
 
@@ -273,20 +290,29 @@ static int parse_expr(struct parse_state *state)
 	};
 }
 
-int parse_file(FILE *f, struct kprog *res)
+int parse_file(FILE *in_f, struct kprog *res_prog)
 {
-	err_on(!f, "input file not opened");
-	err_on(!res, "output program not allocated");
+	err_on(!in_f, "input file not opened");
+	err_on(!res_prog, "output program not allocated");
 
 	struct parse_state state;
-	parse_init(&state, res, f);
+	parse_init(&state, res_prog, in_f);
 
 	int ret = 0;
-	const struct token *la = NULL;
-	while(!ret && (la = parse_la(&state))->type != TOK_EOS){
-		ret = parse_expr(&state);
+	/* set up error handling */
+	if(!setjmp(state.err_ex)){
+		const struct token *la = NULL;
+		while(!ret && (la = parse_la(&state))->type != TOK_EOS){
+			ret = parse_expr(&state);
+		}
+		resolve_label_arguments(&state);
+	}else{	/* error specific code */
+		ret = 1;
+		LIST_FREELOOP(struct label_arg, state.label_args, each){
+			s_free(each->id);
+			s_free(each);
+		}
 	}
-	resolve_label_arguments(&state);
 	parse_destroy(&state);
 	return ret;
 }

@@ -2,6 +2,7 @@
 
 /* stdlib files */
 #include<stdio.h>
+#include<setjmp.h>
 /* karat files */
 #include<vm/kprog.h>
 #include<list.h>
@@ -13,11 +14,11 @@
 struct label_arg {
 	SLINK(struct label_arg);
 	wchar_t *id;
-	addr_t *rpos;	/* location to resolve */
+	size_t rpos;	/* location to resolve */
 };
 
 struct label_def {
-	addr_t pos;	/* what position it points to */
+	size_t pos;	/* what position it points to */
 };
 
 struct parse_state {
@@ -32,6 +33,8 @@ struct parse_state {
 	struct label_arg *label_args;
 	/* label definitions */
 	struct smap *label_defs;
+	/* error handling point */
+	jmp_buf err_ex;
 };
 
 /* parse file into program */

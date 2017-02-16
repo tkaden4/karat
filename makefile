@@ -1,4 +1,5 @@
 SOURCES=$(wildcard ./src/*.c)
+SOURCES+=main.c
 OBJECTS=$(SOURCES:.c=.o)
 CFLAGS=-Wall -Wextra -Werror -Wno-unused-function -O0 -std=gnu99 -DKDEBUG -I./include/
 LIBS=-lSDL2
@@ -25,4 +26,4 @@ run:
 
 clean:
 	$(RM) $(EXECUTABLE)
-	$(RM) ./src/*.o
+	$(RM) $(OBJECTS)
