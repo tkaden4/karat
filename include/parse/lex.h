@@ -3,6 +3,7 @@
 #include<wchar.h>
 #include<stdlib.h>
 /* karat files */
+#include<parse/srbuff.h>
 #include<ktypes.h>
 
 struct token {
@@ -10,7 +11,7 @@ struct token {
 	wchar_t lexeme[MAX_LEXEME];
 	size_t lsize;
 	enum {
-		TOK_ID,
+		TOK_ID = 1,
 		TOK_NUM,
 		TOK_REG,
 		TOK_ADDR,
@@ -25,11 +26,13 @@ struct token {
 
 struct lex_state {
 	FILE *file;
-	wchar_t la;
+	#define MAX_LEX_LOOK 10
+	RBUFF_DECL(lex_la_buff, wchar_t, MAX_LEX_LOOK) la_chars;
 	/* debugging info */
-	size_t line_no;
-	size_t col_no;
+	unsigned line_no;
+	unsigned col_no;
 };
 
 void lex_init(struct lex_state *state, FILE *f);
 int lex_next(struct lex_state *state, struct token *tok);
+void lex_destroy(struct lex_state *state);

@@ -4,7 +4,7 @@
 #include<ctype.h>
 #include<wchar.h>
 /* karat files */
-#include<parse/rbuff.h>
+#include<parse/srbuff.h>
 #include<parse/parse.h>
 #include<parse/lex.h>
 #include<ktypes.h>
@@ -13,20 +13,7 @@
 #include<log.h>
 #include<smap.h>
 
-#define BYTE_SIZE 1
-#define WORD_SIZE 2
-#define DWORD_SIZE 4
-
-typedef i8 byte_t ;
-typedef i16 word_t;
-typedef i32 dword_t;
-
 #define MAX_LOOK 2
-
-struct token_entry {
-	struct rbuff_node *rnode;
-	struct token tok;
-};
 
 struct label_def {
 	struct fwdef {
@@ -39,7 +26,7 @@ struct label_def {
 struct parse_state {
 	struct lex_state lstate;
 	/* MAX_LOOK tokens will always be in buffer */
-	struct rbuff la_tokens;
+	RBUFF_DECL(tok_la_buff, struct token, MAX_LOOK) la_buff;
 	/* current position in bytecode */
 	size_t cur_insns;
 	/* output program */
@@ -48,11 +35,14 @@ struct parse_state {
 	struct smap *label_defs;
 };
 
+RBUFF_IMPL(tok_la_buff, struct token, MAX_LOOK);
+
 /* deal with all forward declarations */
 static void resolve_fwdefs(struct label_def *def)
 {
 	/* this will destroy the list */
-	LIST_FREELOOP(struct fwdef, def->fwdefs, d){
+	for(struct fwdef *d = def->fwdefs, *next = NULL; d; d = next){
+		next = d->next;
 		s_free(d);
 	}
 	def->fwdefs = NULL;
@@ -81,11 +71,12 @@ static void CONSTRUCTOR test_prog_write()
 
 static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 {
-	rbuff_init(&state->la_tokens, MAX_LOOK);
+	tok_la_buff_init(&state->la_buff);
 	lex_init(&state->lstate, f);
 
 	for(size_t i = 0; i < MAX_LOOK; ++i){
-	//	rbuff_push_back(&state->la_tokens, tok);
+		struct token *t = tok_la_buff_push_back(&state->la_buff);
+		lex_next(&state->lstate, t);
 	}
 
 	state->prog = prog;
@@ -93,19 +84,22 @@ static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 	state->label_defs = smap_create_d();
 }
 
-static void parse_destroy(struct parse_state *ctx)
+static void parse_destroy(struct parse_state *state)
 {
 	/* TODO destroy rbuff */
-	smap_destroy(ctx->label_defs);
+	smap_destroy(state->label_defs);
+	lex_destroy(&state->lstate);
 }
+
+
+static const struct token *parse_la(struct parse_state *state);
 
 static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
 {
 	if(n >= MAX_LOOK){
 		return 0;
 	}
-	struct rbuff_node *entry = rbuff_elem(&state->la_tokens, n);
-	return rbuff_entry(entry, struct token_entry, rnode)->tok.type == tok_type;
+	return tok_la_buff_elem_n(&state->la_buff, n)->type == tok_type;
 }
 
 static int parse_test(struct parse_state *state, unsigned tok_type)
@@ -116,16 +110,14 @@ static int parse_test(struct parse_state *state, unsigned tok_type)
 static void parse_advance(struct parse_state *state)
 {
 	/* delete front element from buffer */
-	s_free(rbuff_entry(rbuff_pop_front(&state->la_tokens), struct token_entry, rnode));
-	/* read new element into buffer */
-	struct token_entry *entry = s_alloc(struct token_entry);
-	entry->rnode = s_alloc(struct rbuff_node);
-	rbuff_push_back(&state->la_tokens, entry->rnode);
+	tok_la_buff_pop_front(&state->la_buff);
+	lex_next(&state->lstate, tok_la_buff_push_back(&state->la_buff));
 }
 
 static const struct token *parse_la_n(struct parse_state *state, size_t n)
 {
-	return &rbuff_entry(rbuff_elem(&state->la_tokens, n), struct token_entry, rnode)->tok;
+	struct token *ret = tok_la_buff_elem_n(&state->la_buff, n);
+	return ret;
 }
 
 static const struct token *parse_la(struct parse_state *state)
@@ -168,6 +160,7 @@ static int parse_label(struct parse_state *state)
 
 	parse_match(state, TOK_ID);
 	parse_match(state, TOK_COLON);
+
 	printf("encountered label %ls:\n", label);
 	if(!wcscmp(label, KPROG_ENTRY_POINT)){
 		if(state->prog->entry_point){
@@ -183,7 +176,7 @@ static int parse_label(struct parse_state *state)
 			puts("resolving forward definitions");
 			resolve_fwdefs(def);
 		}else{
-			printf("label %ls redefined at %lu\n", label, state->lstate.line_no);
+			printf("label %ls redefined at %u\n", label, state->lstate.line_no);
 			return 1;
 		}
 	}else{	/* no label yet */
@@ -214,6 +207,7 @@ static int parse_arg(struct parse_state *state)
 				printf("label argument %d\n", pos);
 			}
 		}else{
+			printf("couldn't find label %ls\n", la->lexeme);
 			struct label_def *ndef = add_label_def(	state->label_defs,
 													la->lexeme,
 													state->cur_insns);

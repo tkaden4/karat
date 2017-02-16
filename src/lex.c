@@ -2,48 +2,66 @@
 #include<ctype.h>
 #include<string.h>
 #include<parse/lex.h>
+#include<parse/srbuff.h>
 #include<alloc.h>
 #include<log.h>
+
+RBUFF_IMPL(lex_la_buff, wchar_t, MAX_LEX_LOOK)
+
+static void advance(struct lex_state *);
+static wchar_t la(struct lex_state *);
+
+static inline wchar_t readwc(FILE *f)
+{
+	wint_t c = fgetwc(f);
+	return c == WEOF ? L'\0' : (wchar_t)c;
+}
 
 void lex_init(struct lex_state *state, FILE *f)
 {
 	state->file = f;
-	state->la = fgetwc(f);
 	state->line_no = 0;
 	state->col_no = 0;
+	lex_la_buff_init(&state->la_chars);
+	for(size_t i = 0; i < MAX_LEX_LOOK; ++i){
+		*lex_la_buff_push_back(&state->la_chars) = readwc(state->file);
+	}
+}
+
+void lex_destroy(struct lex_state *state)
+{
+	(void) state;
 }
 
 static wchar_t la(struct lex_state *state)
 {
-	return state->la;
+	const wchar_t la = *lex_la_buff_front(&state->la_chars);
+	return la;
 }
 
 static void advance(struct lex_state *state)
 {
-	wint_t la = fgetwc(state->file);
-	if(la == WEOF){
-		state->la = L'\0';
-	}else{
-		++state->col_no;
-		if(la == L'\n'){
-			++state->line_no;
-			state->col_no = 0;
-		}
-		state->la = la;
+	++state->col_no;
+	wint_t la = readwc(state->file);
+	if(la == L'\n'){
+		++state->line_no;
+		state->col_no = 0;
 	}
+	lex_la_buff_pop_front(&state->la_chars);
+	*lex_la_buff_push_back(&state->la_chars) = la;
 }
 
-static int is_id_start(wint_t c)
+static inline int is_id_start(wint_t c)
 {
 	return iswalpha(c) || c == L'_';
 }
 
-static int is_id_body(wint_t c)
+static inline int is_id_body(wint_t c)
 {
 	return iswalpha(c) || iswdigit(c) || c == '_';
 }
 
-static int iswbin(wint_t c)
+static inline int iswbin(wint_t c)
 {
 	return c == L'1' || c == L'0';
 }
@@ -108,12 +126,6 @@ int lex_next(struct lex_state *state, struct token *res)
 	case L'\0':
 		res->type = TOK_EOS;
 		wcsncpy(res->lexeme, L"EOS", MAX_LEXEME);
-		break;
-	case L'.':
-		advance(state);
-		if(iswalpha(la(state))){
-			advance(state);
-		}
 		break;
 	case L'#':
 		res->type = TOK_NUM;

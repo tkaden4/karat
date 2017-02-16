@@ -1,7 +1,6 @@
 SOURCES=$(wildcard ./src/*.c)
 OBJECTS=$(SOURCES:.c=.o)
-CFLAGS=-Wall -Wextra -Werror -O0 -std=gnu99 -DKDEBUG \
-		-I./include/
+CFLAGS=-Wall -Wextra -Werror -Wno-unused-function -O0 -std=gnu99 -DKDEBUG -I./include/
 LIBS=-lSDL2
 EXECUTABLE=karat
 
@@ -12,7 +11,6 @@ ifdef HAS_CCACHE
 else
 	CC=cc
 endif
-
 
 ifeq ($(OS), Windows_NT)
 	EXECUTABLE = karat.exe
