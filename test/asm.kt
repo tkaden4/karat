@@ -1,3 +1,7 @@
 __start:
-	load #$5F, $0
-	sout r1, __start
+	load.b #$5F, L2
+	sout.l r1, L1
+L2:
+	sout.l #0, L1
+L1:
+	halt

@@ -4,69 +4,76 @@
 #include<ctype.h>
 #include<wchar.h>
 /* karat files */
-#include<parse/srbuff.h>
+#include<parse/rbuff.h>
 #include<parse/parse.h>
 #include<parse/lex.h>
+#include<list.h>
 #include<ktypes.h>
 #include<util.h>
 #include<alloc.h>
 #include<log.h>
 #include<smap.h>
 
-#define MAX_LOOK 2
-
-struct label_def {
-	struct fwdef {
-		SLINK(struct fwdef);	/* next forward declaration in list */
-		addr_t *rpos;			/* location to resolve */
-	} *fwdefs;
-	addr_t pos;	/* what position it points to */
-};
-
-struct parse_state {
-	struct lex_state lstate;
-	/* MAX_LOOK tokens will always be in buffer */
-	RBUFF_DECL(tok_la_buff, struct token, MAX_LOOK) la_buff;
-	/* current position in bytecode */
-	size_t cur_insns;
-	/* output program */
-	struct kprog *prog;
-	/* label definitions */
-	struct smap *label_defs;
-};
+/* create a stack copy of a string */
+#define STACK_WCSDUP(str, from) \
+	wchar_t str[wcslen(from) + 1]; \
+	wcscpy(str, from);
 
 RBUFF_IMPL(tok_la_buff, struct token, MAX_LOOK);
-
-/* deal with all forward declarations */
-static void resolve_fwdefs(struct label_def *def)
-{
-	/* this will destroy the list */
-	for(struct fwdef *d = def->fwdefs, *next = NULL; d; d = next){
-		next = d->next;
-		s_free(d);
-	}
-	def->fwdefs = NULL;
-}
 
 static inline void *current_byte(struct parse_state *state)
 {
 	return &state->prog->program[state->cur_insns];
 }
 
-static inline void prog_write(struct parse_state *state, u32 data, size_t bytes)
+static void prog_write(struct parse_state *state, u32 data, size_t bytes)
 {
 	(void) state;
+	bytes = bytes > sizeof(data) ? sizeof(data) : bytes;
 	register const u8 *bp = (u8 *)&data;
 	for(register size_t i = 1; i <= bytes; ++i){
 		printf("0x%X\n", bp[bytes - i]);
 	}
 }
-
-static void CONSTRUCTOR test_prog_write()
+/* adds a label at the current position
+ * returns 1 on redefinition of label */
+static int add_label_def(struct parse_state *state, const wchar_t *str, addr_t pos)
 {
-	u32 data = 0xeeaabbcc;
-	printf("%X\n", data);
-	prog_write(NULL, data, 4);
+	if(smap_lookup(state->label_defs, str)){
+		return 1;
+	}
+	struct label_def *def = s_alloc(struct label_def);
+	def->pos = pos;
+	smap_insert(state->label_defs, str, def);
+	return 0;
+}
+
+/* adds a label argument to the label argument list
+ * at the current position, with argument size asize */
+static void add_label_arg(struct parse_state *state, const wchar_t *str)
+{
+	struct label_arg *arg = s_alloc(struct label_arg);
+	arg->rpos = current_byte(state);
+	arg->id = wcsdup(str);
+	/* add argument to beginning of list */
+	arg->next = state->label_args;
+	state->label_args = arg;
+}
+
+static int resolve_label_arguments(struct parse_state *state)
+{
+	int err = 0;
+	LIST_FREELOOP(struct label_arg, state->label_args, each){
+		struct label_def *label = smap_lookup(state->label_defs, each->id);
+		if(!label){
+			err = 1;
+			printf("label %ls never defined in source\n", each->id);
+		}
+		s_free(each->id);
+		s_free(each);
+	}
+	state->label_args = NULL;
+	return err;
 }
 
 static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
@@ -81,16 +88,16 @@ static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 
 	state->prog = prog;
 	state->cur_insns = 0;
+	state->label_args = NULL;
 	state->label_defs = smap_create_d();
 }
 
 static void parse_destroy(struct parse_state *state)
 {
-	/* TODO destroy rbuff */
+	/* deal with unhandled forward definitions */
 	smap_destroy(state->label_defs);
 	lex_destroy(&state->lstate);
 }
-
 
 static const struct token *parse_la(struct parse_state *state);
 
@@ -116,8 +123,7 @@ static void parse_advance(struct parse_state *state)
 
 static const struct token *parse_la_n(struct parse_state *state, size_t n)
 {
-	struct token *ret = tok_la_buff_elem_n(&state->la_buff, n);
-	return ret;
+	return tok_la_buff_elem_n(&state->la_buff, n);
 }
 
 static const struct token *parse_la(struct parse_state *state)
@@ -134,88 +140,44 @@ static void parse_match(struct parse_state *state, unsigned tok_type)
 	}
 }
 
-static inline void add_fwdef(struct label_def *def, addr_t *pos)
-{
-	struct fwdef *nfwdef = s_alloc(struct fwdef);
-	nfwdef->next = def->fwdefs;
-	nfwdef->rpos = pos;
-	def->fwdefs = nfwdef;
-}
-
-static struct label_def *add_label_def(
-	struct smap *smap, const wchar_t *lexeme, addr_t pos)
-{
-	struct label_def *def = s_alloc(struct label_def);
-	def->fwdefs = NULL;
-	def->pos = pos;
-	smap_insert(smap, lexeme, def);
-	return def;
-}
 
 static int parse_label(struct parse_state *state)
 {
-	const wchar_t *tmp = parse_la(state)->lexeme;
-	wchar_t label[wcslen(tmp) + 1];
-	wcscpy(label, tmp);
-
+	STACK_WCSDUP(label, parse_la(state)->lexeme);
 	parse_match(state, TOK_ID);
 	parse_match(state, TOK_COLON);
 
-	printf("encountered label %ls:\n", label);
 	if(!wcscmp(label, KPROG_ENTRY_POINT)){
 		if(state->prog->entry_point){
-			err("multiple definitions of entry point");
+			puts("multiple definitions of entry point");
 			return 1;
 		}else{
 			state->prog->entry_point = state->cur_insns;
 		}
 	}
-	struct label_def *def = smap_lookup(state->label_defs, label);
-	if(def){
-		if(def->fwdefs){
-			puts("resolving forward definitions");
-			resolve_fwdefs(def);
-		}else{
-			printf("label %ls redefined at %u\n", label, state->lstate.line_no);
-			return 1;
-		}
-	}else{	/* no label yet */
-		add_label_def(state->label_defs, label, state->cur_insns);
+	if(add_label_def(state, label, state->cur_insns)){
+		printf("redefinition of label %ls\n", label);
 	}
 	return 0;
 }
 
-static int parse_arg(struct parse_state *state)
+/* TODO deal with preprocessing */
+/* TODO how to embed argument types into bytecode */
+static int parse_arg(struct parse_state *state, size_t op_size)
 {
 	const struct token *la = parse_la(state);
 	switch(la->type){
 	case TOK_REG:	/* register argument */
 	case TOK_NUM:	/* number argument */
 	case TOK_ADDR:
+		/* XXX */
+		state->cur_insns += op_size;
 		parse_advance(state);
 		break;
 	case TOK_ID:	/* label argument */
-	{
-		struct label_def *def = NULL;
-		/* check if there is already a symbol table entry */
-		if((def = smap_lookup(state->label_defs, la->lexeme))){
-			if(def->fwdefs){
-				puts("forward declaration");
-				add_fwdef(def, current_byte(state));
-			}else{
-				addr_t pos = def->pos;
-				printf("label argument %d\n", pos);
-			}
-		}else{
-			printf("couldn't find label %ls\n", la->lexeme);
-			struct label_def *ndef = add_label_def(	state->label_defs,
-													la->lexeme,
-													state->cur_insns);
-			add_fwdef(ndef, current_byte(state));
-		}
+		add_label_arg(state, la->lexeme);
 		parse_advance(state);
 		break;
-	}
 	case TOK_EOL:
 	default:
 		return 1;
@@ -223,24 +185,67 @@ static int parse_arg(struct parse_state *state)
 	return 0;
 }
 
-static int parse_args(struct parse_state *state)
+static int parse_args(struct parse_state *state, size_t op_size)
 {
-	while(!parse_arg(state) && parse_test(state, TOK_COMMA)){
+	while(!parse_arg(state, op_size) && parse_test(state, TOK_COMMA)){
 		parse_match(state, TOK_COMMA);
 	}
 	return 0;
 }
 
-static int parse_ins(struct parse_state *state)
+static size_t get_arg_size(wchar_t c)
 {
-	/* I should probably duplicate this string */
-	const wchar_t *op_str = parse_la(state)->lexeme;
-	printf("opcode %ls\n", op_str);
-	parse_match(state, TOK_ID);
-	++state->cur_insns;
-	return parse_args(state);
+	switch(c){
+	case L'l': return 4;
+	case L'w': return 2;
+	case L'b': return 1;
+	default: return 0;
+	};
 }
 
+
+static int parse_ins(struct parse_state *state)
+{
+	STACK_WCSDUP(op_str, parse_la(state)->lexeme);
+	parse_match(state, TOK_ID);
+
+	unsigned num_args = 0;
+	u8 arg_byte = 0;
+	/* TODO move into genscript */
+
+#define opcode(mn, b, nargs) \
+	if(!wcscmp(mn, op_str)){ \
+		arg_byte = b; \
+		num_args = nargs; \
+	} else
+#include"vm/inc/opcodes.inc"
+	{
+		printf("opcode undefined: \"%ls\"\n", op_str);
+		return 1;
+	}
+#undef opcode
+
+	debug("found opcode \"%ls\" with %u args, byte 0x%02X",
+			op_str, num_args, arg_byte);
+
+	if(num_args == 0){
+		return 0;
+	}else if(parse_test(state, TOK_DOT_CHAR)){
+		const wchar_t size_char = parse_la(state)->lexeme[1];
+		size_t arg_size = 0;
+		if(!(arg_size = get_arg_size(size_char))){
+			printf("no size \'%lc\'\n", size_char);
+			return 1;
+		}
+		parse_advance(state);
+		return parse_args(state, arg_size);
+	}else{
+		puts("expected operand size");
+		return 1;
+	}
+}
+
+/* parse a single valid line of assembly */
 static int parse_expr(struct parse_state *state)
 {
 	switch(parse_la(state)->type){
@@ -249,12 +254,14 @@ static int parse_expr(struct parse_state *state)
 			if(parse_label(state)){
 				return 1;
 			}else{
+				/* labels may be followed by more labels and one opcode */
 				return parse_expr(state);
 			}
 		}else{
 			if(parse_ins(state)){
 				return 1;
 			}
+			/* only one instruction allowed per line */
 			parse_match(state, TOK_EOL);
 			return 0;
 		}
@@ -275,15 +282,11 @@ int parse_file(FILE *f, struct kprog *res)
 	parse_init(&state, res, f);
 
 	int ret = 0;
-	const struct token *la = parse_la(&state);
-	while(la->type != TOK_EOS){
+	const struct token *la = NULL;
+	while(!ret && (la = parse_la(&state))->type != TOK_EOS){
 		ret = parse_expr(&state);
-		if(ret){
-			break;
-		}
-		la = parse_la(&state);
 	}
-	/* TODO check_fwdefs(state) */
+	resolve_label_arguments(&state);
 	parse_destroy(&state);
 	return ret;
 }

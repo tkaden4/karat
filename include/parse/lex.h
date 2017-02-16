@@ -3,7 +3,7 @@
 #include<wchar.h>
 #include<stdlib.h>
 /* karat files */
-#include<parse/srbuff.h>
+#include<parse/rbuff.h>
 #include<ktypes.h>
 
 struct token {
@@ -11,7 +11,7 @@ struct token {
 	wchar_t lexeme[MAX_LEXEME];
 	size_t lsize;
 	enum {
-		TOK_ID = 1,
+		TOK_ID,
 		TOK_NUM,
 		TOK_REG,
 		TOK_ADDR,

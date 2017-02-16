@@ -2,7 +2,7 @@
 #include<ctype.h>
 #include<string.h>
 #include<parse/lex.h>
-#include<parse/srbuff.h>
+#include<parse/rbuff.h>
 #include<alloc.h>
 #include<log.h>
 
@@ -126,6 +126,18 @@ int lex_next(struct lex_state *state, struct token *res)
 	case L'\0':
 		res->type = TOK_EOS;
 		wcsncpy(res->lexeme, L"EOS", MAX_LEXEME);
+		break;
+	case L'.':
+		advance(state);
+		if(iswalpha(la(state))){
+			res->type = TOK_DOT_CHAR;
+			res->lexeme[0] = L'.';
+			res->lexeme[1] = la(state);
+			advance(state);
+			return 0;
+		}else{
+			return 1;
+		}
 		break;
 	case L'#':
 		res->type = TOK_NUM;
