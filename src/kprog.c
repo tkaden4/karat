@@ -29,12 +29,11 @@ void kprog_append_bytes(struct kprog *prog, u32 data, size_t bytes)
 	}
 }
 
-const struct kprog *kprog_finalize(struct kprog *prog)
+void kprog_finalize(struct kprog *prog)
 {
 	prog->prog_size = prog->__size;
 	prog->program = s_realloc(prog->program, prog->__size);
 	prog->__cap = prog->__size;
-	return prog;
 }
 
 void kprog_destroy(struct kprog *prog)

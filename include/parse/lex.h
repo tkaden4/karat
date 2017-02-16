@@ -21,6 +21,8 @@ struct token {
 		TOK_EOL,
 		TOK_EOS,
 	} type;
+	unsigned line_no;
+	unsigned col_no;
 	long long data;	/* for num and reg, as well as dot_char */
 };
 

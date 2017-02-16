@@ -18,5 +18,5 @@ struct kprog *kprog_create();
 /* append bytes to buffer */
 void kprog_append_bytes(struct kprog *prog, u32 data, size_t bytes);
 /* no longer able to append. This frees extra memory */
-const struct kprog *kprog_finalize(struct kprog *prog);
+void kprog_finalize(struct kprog *prog);
 void kprog_destroy(struct kprog *prog);

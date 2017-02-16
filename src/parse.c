@@ -23,8 +23,9 @@ RBUFF_IMPL(tok_la_buff, struct token, MAX_LOOK);
 
 #define parse_err(state, fmt, ...) \
 { \
-	struct lex_state *lstate = &state->lstate; \
-	printf("[ error ] on line %u, column %u :", lstate->line_no, lstate->col_no); \
+	const struct token *tok = parse_la(state); \
+	printf("[ error on line %u, column %u, with token \"%ls\" ] :", \
+			tok->line_no, tok->col_no, tok->lexeme); \
 	printf(" " fmt "\n", ##__VA_ARGS__); \
 	longjmp(state->err_ex, 1); \
 }
@@ -38,20 +39,41 @@ RBUFF_IMPL(tok_la_buff, struct token, MAX_LOOK);
 static size_t reserve_byte(struct parse_state *state)
 {
 	size_t ret = state->cur_insns;
-	kprog_append_bytes(state->prog, 0, 1);
+	kprog_append_bytes(state->prog, 0, sizeof(u8));
+	++state->cur_insns;
 	return ret;
 }
 static size_t reserve_word(struct parse_state *state)
 {
 	size_t ret = state->cur_insns;
-	kprog_append_bytes(state->prog, 0, 2);
+	kprog_append_bytes(state->prog, 0, sizeof(u16));
+	state->cur_insns += sizeof(u16);
 	return ret;
 }
 static size_t reserve_long(struct parse_state *state)
 {
 	size_t ret = state->cur_insns;
-	kprog_append_bytes(state->prog, 0, 4);
+	kprog_append_bytes(state->prog, 0, sizeof(u32));
+	state->cur_insns += sizeof(u32);
 	return ret;
+}
+
+static void write_byte(struct parse_state *state, u8 byte, size_t at)
+{
+	/* TODO unsafe, defer to kprog -> insert_bytes */
+	state->prog->program[at] = byte;
+}
+
+static void write_word(struct parse_state *state, u16 word, size_t at)
+{
+	/* TODO unsafe, defer to kprog -> insert_bytes */
+	memcpy(state->prog->program + at, &word, sizeof(word));
+}
+
+static void write_long(struct parse_state *state, u32 dword, size_t at)
+{
+	/* TODO unsafe, defer to kprog -> insert_bytes */
+	memcpy(state->prog->program + at, &dword, sizeof(dword));
 }
 
 /* adds a label at the current position
@@ -84,6 +106,7 @@ static int resolve_label_arguments(struct parse_state *state)
 	int err = 0;
 	LIST_FREELOOP(struct label_arg, state->label_args, each){
 		struct label_def *label = smap_lookup(state->label_defs, each->id);
+		write_long(state, 0xdeadbeef, each->rpos);
 		if(!label){
 			err = 1;
 			parse_warn("label %ls never defined in source", each->id);
@@ -133,6 +156,11 @@ static int parse_test(struct parse_state *state, unsigned tok_type)
 	return parse_test_n(state, 0, tok_type);
 }
 
+static int parse_test_2(struct parse_state *state, unsigned tok_1, unsigned tok_2)
+{
+	return parse_test(state, tok_1) && parse_test_n(state, 1, tok_2);
+}
+
 static void parse_advance(struct parse_state *state)
 {
 	/* delete front element from buffer */
@@ -163,10 +191,10 @@ static void parse_match(struct parse_state *state, unsigned tok_type)
 
 static int parse_label(struct parse_state *state)
 {
+	if(!parse_test_2(state, TOK_ID, TOK_COLON)){
+		parse_err(state, "mangled label");
+	}
 	STACK_WCSDUP(label, parse_la(state)->lexeme);
-	parse_match(state, TOK_ID);
-	parse_match(state, TOK_COLON);
-
 	if(!wcscmp(label, KPROG_ENTRY_POINT)){
 		if(state->prog->entry_point){
 			parse_err(state, "multiple definitions of entry point");
@@ -177,6 +205,8 @@ static int parse_label(struct parse_state *state)
 	if(add_label_def(state, label, state->cur_insns)){
 		parse_err(state, "redefinition of label %ls", label);
 	}
+	parse_match(state, TOK_ID);
+	parse_match(state, TOK_COLON);
 	return 0;
 }
 
@@ -188,9 +218,9 @@ static int parse_arg(struct parse_state *state, size_t op_size)
 	switch(la->type){
 	case TOK_REG:	/* register argument */
 	case TOK_NUM:	/* number argument */
-	case TOK_ADDR:
-		/* XXX */
-		state->cur_insns += op_size;
+	case TOK_ADDR:	/* address argument */
+		(void) op_size;
+		write_long(state, 0xffeeaabb, reserve_long(state));
 		parse_advance(state);
 		break;
 	case TOK_ID:	/* label argument */
@@ -230,8 +260,7 @@ static int parse_ins(struct parse_state *state)
 
 	unsigned num_args = 0;
 	u8 arg_byte = 0;
-	/* TODO move into genscript */
-
+	/* TODO move into gscript */
 #define opcode(mn, b, nargs) \
 	if(!wcscmp(mn, op_str)){ \
 		arg_byte = b; \
@@ -240,7 +269,6 @@ static int parse_ins(struct parse_state *state)
 #include"vm/inc/opcodes.inc"
 	{
 		parse_err(state, "opcode undefined: \"%ls\"\n", op_str);
-		return 1;
 	}
 #undef opcode
 
@@ -282,6 +310,7 @@ static int parse_expr(struct parse_state *state)
 			parse_match(state, TOK_EOL);
 			return 0;
 		}
+	/* handles a blank line */
 	case TOK_EOL:
 		parse_advance(state);
 		return 0;
@@ -306,6 +335,7 @@ int parse_file(FILE *in_f, struct kprog *res_prog)
 			ret = parse_expr(&state);
 		}
 		resolve_label_arguments(&state);
+		kprog_finalize(res_prog);
 	}else{	/* error specific code */
 		ret = 1;
 		LIST_FREELOOP(struct label_arg, state.label_args, each){
