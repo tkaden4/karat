@@ -29,10 +29,6 @@ int main(int argc, const char *argv[])
 
 	struct kprog *rprog = kprog_create();
 	if(!parse_file(test, rprog)){
-
-		puts("parsed file, press enter to run");
-		fgetc(stdin);
-
 		struct cpu cpu;
 		cpu_init(&cpu);
 		while(cpu.pc < rprog->prog_size){
