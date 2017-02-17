@@ -14,11 +14,11 @@
 struct label_arg {
 	SLINK(struct label_arg);
 	wchar_t *id;
-	size_t rpos;	/* location to resolve */
+	addr_t rpos;	/* location to resolve */
 };
 
 struct label_def {
-	size_t pos;	/* what position it points to */
+	addr_t pos;	/* what position it points to */
 };
 
 struct parse_state {

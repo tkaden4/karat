@@ -5,6 +5,7 @@
 #include<log.h>
 #include<alloc.h>
 #include<vm/kprog.h>
+#include<vm/cpu.h>
 #include<parse/parse.h>
 
 #define usage() \
@@ -28,11 +29,16 @@ int main(int argc, const char *argv[])
 
 	struct kprog *rprog = kprog_create();
 	if(!parse_file(test, rprog)){
-		debug("Result program: %lu bytes used", rprog->__size);
-#define ITER_TYPE u16
-		for(size_t i = 0; i <= rprog->prog_size - sizeof(ITER_TYPE); i += sizeof(ITER_TYPE)){
-			printf("0x%lX\n", (u64)*(ITER_TYPE *)&rprog->program[i]);
+
+		puts("parsed file, press enter to run");
+		fgetc(stdin);
+
+		struct cpu cpu;
+		cpu_init(&cpu);
+		while(cpu.pc < rprog->prog_size){
+			cpu_step(&cpu, rprog);
 		}
+
 		kprog_destroy(rprog);
 	}else{
 		puts("unable to parse file");

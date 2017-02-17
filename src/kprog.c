@@ -6,7 +6,7 @@
 struct kprog *kprog_create()
 {
 	struct kprog *ret = s_calloc(1, sizeof(struct kprog));
-	ret->entry_point = 0;
+	ret->entry_point = -1;
 	ret->prog_size = 0;
 	ret->__size = 0;
 	ret->__cap = 0;

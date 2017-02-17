@@ -7,7 +7,7 @@
 
 struct kprog {
 	u8 *program;
-	size_t entry_point;
+	i32 entry_point;
 	size_t prog_size;
 	/* for growth of program vector */
 	size_t __size;

@@ -7,9 +7,9 @@
 #include<parse/rbuff.h>
 #include<parse/parse.h>
 #include<parse/lex.h>
+#include<vm/cpu.h>
 #include<list.h>
 #include<ktypes.h>
-#include<util.h>
 #include<alloc.h>
 #include<log.h>
 #include<smap.h>
@@ -19,62 +19,55 @@
 	wchar_t str[wcslen(from) + 1]; \
 	wcscpy(str, from);
 
-RBUFF_IMPL(tok_la_buff, struct token, MAX_LOOK);
+static const struct token *parse_la(struct parse_state *state);
 
+/* inform user of fatal error
+ * and jump to exception handler */
 #define parse_err(state, fmt, ...) \
 { \
-	const struct token *tok = parse_la(state); \
-	printf("[ error on line %u, column %u, with token \"%ls\" ] :", \
-			tok->line_no, tok->col_no, tok->lexeme); \
+	printf("[  error  ] :"); \
 	printf(" " fmt "\n", ##__VA_ARGS__); \
-	longjmp(state->err_ex, 1); \
+	longjmp((state)->err_ex, 1); \
 }
 
+/* warn user of something non-fatal */
 #define parse_warn(fmt, ...) \
 { \
 	printf("[ warning ] :"); \
 	printf(" " fmt "\n", ##__VA_ARGS__); \
 }
 
-static size_t reserve_byte(struct parse_state *state)
-{
-	size_t ret = state->cur_insns;
-	kprog_append_bytes(state->prog, 0, sizeof(u8));
-	++state->cur_insns;
-	return ret;
-}
-static size_t reserve_word(struct parse_state *state)
-{
-	size_t ret = state->cur_insns;
-	kprog_append_bytes(state->prog, 0, sizeof(u16));
-	state->cur_insns += sizeof(u16);
-	return ret;
-}
-static size_t reserve_long(struct parse_state *state)
-{
-	size_t ret = state->cur_insns;
-	kprog_append_bytes(state->prog, 0, sizeof(u32));
-	state->cur_insns += sizeof(u32);
-	return ret;
+/* reserve bytes in memory, returning
+ * the location where it was reserved */
+#define RESERVE_FUNC(name, type) \
+static size_t reserve_ ## name(struct parse_state *state) \
+{ \
+	size_t ret = state->cur_insns; \
+	kprog_append_bytes(state->prog, 0, sizeof(type)); \
+	state->cur_insns += sizeof(type); \
+	return ret; \
 }
 
-static void write_byte(struct parse_state *state, u8 byte, size_t at)
-{
-	/* TODO unsafe, defer to kprog -> insert_bytes */
-	state->prog->program[at] = byte;
+/* write bytes to the program memory */
+#define WRITE_FUNC(name, type) \
+static void write_ ## name(struct parse_state *state, type b, size_t at) \
+{ \
+	/* TODO unsafe, defer to kprog -> insert_bytes */ \
+	memcpy(state->prog->program + at, &b, sizeof(type)); \
 }
 
-static void write_word(struct parse_state *state, u16 word, size_t at)
-{
-	/* TODO unsafe, defer to kprog -> insert_bytes */
-	memcpy(state->prog->program + at, &word, sizeof(word));
-}
+/* create implementation of token lookahead buffer */
+RBUFF_IMPL(tok_la_buff, struct token, MAX_LOOK);
 
-static void write_long(struct parse_state *state, u32 dword, size_t at)
-{
-	/* TODO unsafe, defer to kprog -> insert_bytes */
-	memcpy(state->prog->program + at, &dword, sizeof(dword));
-}
+/* create memory-reserving functions */
+RESERVE_FUNC(byte, u8);
+RESERVE_FUNC(word, u16);
+RESERVE_FUNC(long, u32);
+
+/* create writing functions */
+WRITE_FUNC(byte, u8);
+WRITE_FUNC(word, u16);
+WRITE_FUNC(long, u32);
 
 /* adds a label at the current position
  * returns 1 on redefinition of label */
@@ -101,12 +94,14 @@ static void add_label_arg(struct parse_state *state, const wchar_t *str)
 	state->label_args = arg;
 }
 
-static int resolve_label_arguments(struct parse_state *state)
+/* calculates label offets
+ * and places them where arguments are needed */
+static void resolve_label_arguments(struct parse_state *state)
 {
 	int err = 0;
 	LIST_FREELOOP(struct label_arg, state->label_args, each){
 		struct label_def *label = smap_lookup(state->label_defs, each->id);
-		write_long(state, 0xdeadbeef, each->rpos);
+		write_long(state, label->pos, each->rpos);
 		if(!label){
 			err = 1;
 			parse_warn("label %ls never defined in source", each->id);
@@ -114,8 +109,10 @@ static int resolve_label_arguments(struct parse_state *state)
 		s_free(each->id);
 		s_free(each);
 	}
+	if(err){
+		parse_err(state, "undefined labels in program");
+	}
 	state->label_args = NULL;
-	return err;
 }
 
 static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
@@ -140,8 +137,6 @@ static void parse_destroy(struct parse_state *state)
 	smap_destroy(state->label_defs);
 	lex_destroy(&state->lstate);
 }
-
-static const struct token *parse_la(struct parse_state *state);
 
 static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
 {
@@ -188,7 +183,6 @@ static void parse_match(struct parse_state *state, unsigned tok_type)
 	}
 }
 
-
 static int parse_label(struct parse_state *state)
 {
 	if(!parse_test_2(state, TOK_ID, TOK_COLON)){
@@ -196,7 +190,7 @@ static int parse_label(struct parse_state *state)
 	}
 	STACK_WCSDUP(label, parse_la(state)->lexeme);
 	if(!wcscmp(label, KPROG_ENTRY_POINT)){
-		if(state->prog->entry_point){
+		if(state->prog->entry_point >= 0){
 			parse_err(state, "multiple definitions of entry point");
 		}else{
 			state->prog->entry_point = state->cur_insns;
@@ -212,33 +206,32 @@ static int parse_label(struct parse_state *state)
 
 /* TODO deal with preprocessing */
 /* TODO how to embed argument types into bytecode */
-static int parse_arg(struct parse_state *state, size_t op_size)
+static int parse_arg(struct parse_state *state, long *data, u8 *spec)
 {
 	const struct token *la = parse_la(state);
 	switch(la->type){
 	case TOK_REG:	/* register argument */
+		if(la->data >= GENERAL_REGS){
+			parse_err(state, "no register named \"%ls\"\n", la->lexeme);
+		}
+		*spec = 0;
+		break;
 	case TOK_NUM:	/* number argument */
+		*spec = 1;
+		break;
 	case TOK_ADDR:	/* address argument */
-		(void) op_size;
-		write_long(state, 0xffeeaabb, reserve_long(state));
-		parse_advance(state);
+		*spec = 2;
 		break;
 	case TOK_ID:	/* label argument */
+		*spec = 1;
 		add_label_arg(state, la->lexeme);
-		parse_advance(state);
 		break;
 	case TOK_EOL:
 	default:
 		return 1;
 	};
-	return 0;
-}
-
-static int parse_args(struct parse_state *state, size_t op_size)
-{
-	while(!parse_arg(state, op_size) && parse_test(state, TOK_COMMA)){
-		parse_match(state, TOK_COMMA);
-	}
+	*data = la->data;
+	parse_advance(state);
 	return 0;
 }
 
@@ -252,7 +245,6 @@ static size_t get_arg_size(wchar_t c)
 	};
 }
 
-
 static int parse_ins(struct parse_state *state)
 {
 	STACK_WCSDUP(op_str, parse_la(state)->lexeme);
@@ -260,6 +252,7 @@ static int parse_ins(struct parse_state *state)
 
 	unsigned num_args = 0;
 	u8 arg_byte = 0;
+
 	/* TODO move into gscript */
 #define opcode(mn, b, nargs) \
 	if(!wcscmp(mn, op_str)){ \
@@ -271,9 +264,11 @@ static int parse_ins(struct parse_state *state)
 		parse_err(state, "opcode undefined: \"%ls\"\n", op_str);
 	}
 #undef opcode
-
 	debug("found opcode \"%ls\" with %u args, byte 0x%02X",
 			op_str, num_args, arg_byte);
+
+	u8 out_byte = arg_byte | (num_args << 6);
+	write_byte(state, out_byte, reserve_byte(state));
 
 	if(num_args == 0){
 		return 0;
@@ -284,10 +279,32 @@ static int parse_ins(struct parse_state *state)
 			parse_err(state, "no size \'%lc\'", size_char);
 		}
 		parse_advance(state);
-		return parse_args(state, arg_size);
+
+		(void) arg_size;
+
+		if(num_args == 1){
+			long data;
+			u8 spec;
+			parse_arg(state, &data, &spec);
+			write_byte(state, spec, reserve_byte(state));
+			/* TODO defer arguments to parse_arg */
+			write_long(state, data, reserve_long(state));
+		}else if(num_args == 2){
+			long data[2];
+			u8 spec[2];
+			parse_arg(state, data, spec);
+			parse_match(state, TOK_COMMA);
+			parse_arg(state, data + 1, spec + 1);
+			write_byte(state, (spec[0] << 4) | (spec[1] & 0x0f), reserve_byte(state));
+			write_long(state, data[0], reserve_long(state));
+			write_long(state, data[1], reserve_long(state));
+		}else{
+			parse_err(state, "invalid operand nargs: %u", num_args);
+		}
 	}else{
 		parse_err(state, "expected operand size");
 	}
+	return 0;
 }
 
 /* parse a single valid line of assembly */
@@ -335,6 +352,9 @@ int parse_file(FILE *in_f, struct kprog *res_prog)
 			ret = parse_expr(&state);
 		}
 		resolve_label_arguments(&state);
+		if(res_prog->entry_point < 0){
+			parse_err(&state, "entry point not defined");
+		}
 		kprog_finalize(res_prog);
 	}else{	/* error specific code */
 		ret = 1;

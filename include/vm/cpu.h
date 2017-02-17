@@ -1,7 +1,9 @@
 #pragma once
 /* stdlib files */
 #include<stdint.h>
+#include<stdio.h>
 /* karat files */
+#include<vm/kprog.h>
 #include<traits.h>
 #include<ktypes.h>
 
@@ -13,11 +15,10 @@ struct cpu {
 	/* general registers */
 	union {
 		reg_t regs[GENERAL_REGS];
-		reg_t __pad[GENERAL_REGS - 1];
-		reg_t sp;
 	};
 	addr_t pc;
 };
 
 void cpu_init(struct cpu *state);
 void cpu_reset(struct cpu *state);
+void cpu_step(struct cpu *state, struct kprog *prog);

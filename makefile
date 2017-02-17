@@ -4,7 +4,6 @@ OBJECTS=$(SOURCES:.c=.o)
 CFLAGS=-Wall -Wextra -Werror -Wno-unused-function -O0 -std=gnu99 -DKDEBUG -I./include/
 LIBS=-lSDL2
 EXECUTABLE=karat
-
 # check and see if we have ccache
 HAS_CCACHE := $(shell command -v ccache 2> /dev/null)
 ifdef HAS_CCACHE

@@ -2,6 +2,9 @@
 
 #include<string.h>
 
+/* "Templated" ring buffer implementation.
+ * used primarily in parser/lexer for lookahead */
+
 #define RBUFF_ELEM_INDEX(start, size, n) (((start) + (n)) % (size))
 
 #define RBUFF_DECL(name, type, size) \
@@ -15,6 +18,7 @@ static void name ## _init(struct name *__buff) \
 	__buff->len = 0; \
 } \
 \
+/* get last element of buffer */ \
 static type *name ## _back(struct name *__buff) \
 { \
 	return &__buff->buff[RBUFF_ELEM_INDEX(__buff->start, size, __buff->len - 1)]; \
