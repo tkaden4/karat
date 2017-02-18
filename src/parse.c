@@ -7,6 +7,7 @@
 #include<parse/rbuff.h>
 #include<parse/parse.h>
 #include<parse/lex.h>
+#include<vm/opcode.h>
 #include<vm/cpu.h>
 #include<list.h>
 #include<ktypes.h>
@@ -87,7 +88,7 @@ static int add_label_def(struct parse_state *state, const wchar_t *str, addr_t p
 static void add_label_arg(struct parse_state *state, const wchar_t *str)
 {
 	struct label_arg *arg = s_alloc(struct label_arg);
-	arg->rpos = reserve_word(state);
+	arg->rpos = reserve_long(state);
 	arg->id = wcsdup(str);
 	/* add argument to beginning of list */
 	arg->next = state->label_args;
@@ -101,7 +102,7 @@ static void resolve_label_arguments(struct parse_state *state)
 	int err = 0;
 	LIST_FREELOOP(struct label_arg, state->label_args, each){
 		struct label_def *label = smap_lookup(state->label_defs, each->id);
-		write_word(state, label->pos, each->rpos);
+		write_long(state, label->pos, each->rpos);
 		if(!label){
 			err = 1;
 			parse_warn("label %ls never defined in source", each->id);
@@ -215,15 +216,15 @@ static int parse_arg(struct parse_state *state, u8 *spec)
 			parse_err(state, "no register named \"%ls\"\n", la->lexeme);
 		}
 		*spec = 0;
-		write_word(state, la->data, reserve_word(state));
+		write_long(state, la->data, reserve_long(state));
 		break;
 	case TOK_NUM:	/* number argument */
 		*spec = 1;
-		write_word(state, la->data, reserve_word(state));
+		write_long(state, la->data, reserve_long(state));
 		break;
 	case TOK_ADDR:	/* address argument */
 		*spec = 2;
-		write_word(state, la->data, reserve_word(state));
+		write_long(state, la->data, reserve_long(state));
 		break;
 	case TOK_ID:	/* label argument */
 		*spec = 1;
@@ -237,58 +238,26 @@ static int parse_arg(struct parse_state *state, u8 *spec)
 	return 0;
 }
 
-/*
-static size_t get_arg_size(wchar_t c)
+static const struct op_def *find_def(const wchar_t *wcs)
 {
-	switch(c){
-	case L'l': return 4;
-	case L'w': return 2;
-	case L'b': return 1;
-	default: return 0;
-	};
+	for(size_t i = 0; i < sizeof(op_defs)/sizeof(op_defs[0]); ++i){
+		if(!wcscmp(op_defs[i].mnemonic, wcs)){
+			return (op_defs + i);
+		}
+	}
+	return NULL;
 }
-*/
 
 static int parse_ins(struct parse_state *state)
 {
 	STACK_WCSDUP(op_str, parse_la(state)->lexeme);
 	parse_match(state, TOK_ID);
-
-	unsigned num_args = 0;
-	u8 arg_byte = 0;
-
-	/* TODO move into gscript */
-#define opcode(mn, b, nargs) \
-	if(!wcscmp(mn, op_str)){ \
-		arg_byte = b; \
-		num_args = nargs; \
-	} else
-#include"vm/inc/opcodes.inc"
-	{
-		parse_err(state, "opcode undefined: \"%ls\"\n", op_str);
-	}
-#undef opcode
-	u8 out_byte = arg_byte | (num_args << 6);
-	write_byte(state, out_byte, reserve_byte(state));
-
-	if(num_args == 0){
-		return 0;
-	}else if(num_args == 1){
-		u8 spec;
-		size_t spec_byte_pos = reserve_byte(state);
-		parse_arg(state, &spec);
-		write_byte(state, spec, spec_byte_pos);
-	}else if(num_args == 2){
-		u8 spec[2];
-		size_t spec_byte_pos = reserve_byte(state);
-
-		parse_arg(state, spec);
-		parse_match(state, TOK_COMMA);
-		parse_arg(state, spec + 1);
-
-		write_byte(state, (spec[0] << 4) | (spec[1] & 0x0f), spec_byte_pos);
+	/* TODO re-implement opcode parsing */
+	const struct op_def *op = find_def(op_str);
+	if(op){
+	
 	}else{
-		parse_err(state, "invalid operand nargs: %u", num_args);
+		parse_err(state, "unrecognized opcode \"%ls\"", op_str);
 	}
 	return 0;
 }

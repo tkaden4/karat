@@ -1,8 +1,7 @@
 __start:
-	load r0, #0
+	xor r0, r0
+	loadk r1, #20
 loop:
+	addu r0, r0, #1
 	prnt r0
-	inc r0
-	cmp r0, #20
-	cmp r0, #20
-	bne loop
+	beq r0, r1, loop

@@ -31,10 +31,10 @@ int main(int argc, const char *argv[])
 	if(!parse_file(test, rprog)){
 		struct cpu cpu;
 		cpu_init(&cpu);
+		cpu.pc = rprog->entry_point;
 		while(cpu.pc < rprog->prog_size){
 			cpu_step(&cpu, rprog);
 		}
-
 		kprog_destroy(rprog);
 	}else{
 		puts("unable to parse file");
