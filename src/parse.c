@@ -88,7 +88,7 @@ static int add_label_def(struct parse_state *state, const wchar_t *str, addr_t p
 static void add_label_arg(struct parse_state *state, const wchar_t *str)
 {
 	struct label_arg *arg = s_alloc(struct label_arg);
-	arg->rpos = reserve_long(state);
+	arg->rpos = state->cur_insns + sizeof(u16);
 	arg->id = wcsdup(str);
 	/* add argument to beginning of list */
 	arg->next = state->label_args;
@@ -102,7 +102,7 @@ static void resolve_label_arguments(struct parse_state *state)
 	int err = 0;
 	LIST_FREELOOP(struct label_arg, state->label_args, each){
 		struct label_def *label = smap_lookup(state->label_defs, each->id);
-		write_long(state, label->pos, each->rpos);
+		write_word(state, label->pos, each->rpos);
 		if(!label){
 			err = 1;
 			parse_warn("label %ls never defined in source", each->id);
@@ -205,39 +205,6 @@ static int parse_label(struct parse_state *state)
 	return 0;
 }
 
-/* TODO deal with preprocessing */
-/* TODO how to embed argument types into bytecode */
-static int parse_arg(struct parse_state *state, u8 *spec)
-{
-	const struct token *la = parse_la(state);
-	switch(la->type){
-	case TOK_REG:	/* register argument */
-		if(la->data >= GENERAL_REGS){
-			parse_err(state, "no register named \"%ls\"\n", la->lexeme);
-		}
-		*spec = 0;
-		write_long(state, la->data, reserve_long(state));
-		break;
-	case TOK_NUM:	/* number argument */
-		*spec = 1;
-		write_long(state, la->data, reserve_long(state));
-		break;
-	case TOK_ADDR:	/* address argument */
-		*spec = 2;
-		write_long(state, la->data, reserve_long(state));
-		break;
-	case TOK_ID:	/* label argument */
-		*spec = 1;
-		add_label_arg(state, la->lexeme);
-		break;
-	case TOK_EOL:
-	default:
-		return 1;
-	};
-	parse_advance(state);
-	return 0;
-}
-
 static const struct op_def *find_def(const wchar_t *wcs)
 {
 	for(size_t i = 0; i < sizeof(op_defs)/sizeof(op_defs[0]); ++i){
@@ -248,6 +215,33 @@ static const struct op_def *find_def(const wchar_t *wcs)
 	return NULL;
 }
 
+static long parse_arg(struct parse_state *state, u8 argmode, u8 which)
+{
+	const struct token *tok = parse_la(state);
+	if(!HAS_ARG(argmode, which)){
+		return 0;
+	}
+	long ret = 0;
+	switch(tok->type){
+	case TOK_REG:
+	case TOK_ADDR:
+	case TOK_NUM:
+		ret = tok->data;
+		break;
+	case TOK_ID:
+		add_label_arg(state, tok->lexeme);
+		break;
+	default:
+		parse_err(state, "expected arg, got \"%ls\"", tok->lexeme);
+		break;
+	};
+	parse_advance(state);
+	if(parse_test(state, TOK_COMMA)){
+		parse_advance(state);
+	}
+	return ret;
+}
+
 static int parse_ins(struct parse_state *state)
 {
 	STACK_WCSDUP(op_str, parse_la(state)->lexeme);
@@ -255,7 +249,28 @@ static int parse_ins(struct parse_state *state)
 	/* TODO re-implement opcode parsing */
 	const struct op_def *op = find_def(op_str);
 	if(op){
-	
+		u32 code = op->code;
+		union opcode out_op;
+		out_op.I = code;
+		u8 argmode = op->argmode;
+		u8 mode = getmode(argmode);
+		//size_t nargs = NUM_ARGS(op->argmode);
+		switch(mode){
+		case iNNNN:	/* no arguments */
+			break;
+		case iABCDF:
+			parse_err(state, "full args unhandled");
+			break;
+		case iABCx:
+			out_op.i.A = parse_arg(state, argmode, A_ARG);
+			out_op.i.B = parse_arg(state, argmode, B_ARG);
+			out_op.i.Cx = parse_arg(state, argmode, Cx_ARG);
+			break;
+		case iAx:
+			parse_err(state, "iAx not handled");
+			break;
+		};
+		write_long(state, *(u32 *)&out_op, reserve_long(state));
 	}else{
 		parse_err(state, "unrecognized opcode \"%ls\"", op_str);
 	}

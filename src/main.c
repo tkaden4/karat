@@ -29,6 +29,11 @@ int main(int argc, const char *argv[])
 
 	struct kprog *rprog = kprog_create();
 	if(!parse_file(test, rprog)){
+		puts("compiled program:");
+		for(size_t i = 0; i < rprog->prog_size; i += 4){
+			printf("0x%08X\n", *(u32 *)&rprog->program[i]);
+		}
+
 		struct cpu cpu;
 		cpu_init(&cpu);
 		cpu.pc = rprog->entry_point;
