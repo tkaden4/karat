@@ -242,6 +242,7 @@ static long parse_arg(struct parse_state *state, u8 argmode, u8 which)
 	return ret;
 }
 
+
 static int parse_ins(struct parse_state *state)
 {
 	STACK_WCSDUP(op_str, parse_la(state)->lexeme);
@@ -249,9 +250,9 @@ static int parse_ins(struct parse_state *state)
 	/* TODO re-implement opcode parsing */
 	const struct op_def *op = find_def(op_str);
 	if(op){
-		u32 code = op->code;
 		union opcode out_op;
-		out_op.I = code;
+		memset(&out_op, 0, sizeof(out_op));
+		out_op.I = op->code;
 		u8 argmode = op->argmode;
 		u8 mode = getmode(argmode);
 		//size_t nargs = NUM_ARGS(op->argmode);
@@ -259,7 +260,11 @@ static int parse_ins(struct parse_state *state)
 		case iNNNN:	/* no arguments */
 			break;
 		case iABCDF:
-			parse_err(state, "full args unhandled");
+			out_op.r.A = parse_arg(state, argmode, A_ARG);
+			out_op.r.B = parse_arg(state, argmode, B_ARG);
+			out_op.r.C = parse_arg(state, argmode, C_ARG);
+			out_op.r.D = parse_arg(state, argmode, D_ARG);
+			out_op.r.F = parse_arg(state, argmode, F_ARG);
 			break;
 		case iABCx:
 			out_op.i.A = parse_arg(state, argmode, A_ARG);
@@ -267,7 +272,7 @@ static int parse_ins(struct parse_state *state)
 			out_op.i.Cx = parse_arg(state, argmode, Cx_ARG);
 			break;
 		case iAx:
-			parse_err(state, "iAx not handled");
+			out_op.b.Ax = parse_arg(state, argmode, Ax_ARG);
 			break;
 		};
 		write_long(state, *(u32 *)&out_op, reserve_long(state));

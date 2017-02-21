@@ -44,14 +44,17 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 	case 0x1F:
 		cpu->pc = prog->prog_size;
 		break;
+	case 0x21:
+		cpu->regs[op.i.A] = cpu->regs[op.i.B] + op.i.Cx;
+		break;
 	case 0x22:
 		cpu->regs[op.i.A] = op.i.Cx;
 		break;
-	case 0x2A:
-		printf("%d\n", op.i.Cx);
-		break;
 	case 0x29:
 		printf("%d\n", cpu->regs[op.i.A]);
+		break;
+	case 0x2A:
+		printf("%d\n", op.i.Cx);
 		break;
 	case 0x2C:
 		if(cpu->regs[op.i.A] != cpu->regs[op.i.B]){
