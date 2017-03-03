@@ -6,14 +6,15 @@
 #define bmode(ax) argmode(ax, 0, 0, 0, 0, iAx)
 #define imode(a, b, cx) argmode(a, b, cx, 0, 0, iABCx)
 #define rmode(a, b, c, d, f) argmode(a, b, c, d, f, iABCDF)
+#define NO_MODE argmode(0, 0, 0, 0, 0, iNNNN)
 
 const struct op_def op_defs[MAX_OPCODES] = {
 	/* n opcodes */
-	{ L"halt", 0x1f, argmode(0, 0, 0, 0, 0, iNNNN) },
+	{ L"halt", 0x00, NO_MODE },
 	/* r opcodes */
 	{ L"adds", 0x10, rmode(1, 1, 1, 0, 0) },	/* signed add */
 	{ L"addu", 0x11, rmode(1, 1, 1, 0, 0) },	/* unsigned add */
-	{ L"xor", 0x12, rmode(1, 1, 0, 0, 0) },		/* xor two registers */
+	{ L"xor", 0x12, rmode(1, 1, 1, 0, 0) },		/* xor two registers */
 	/* i opcodes */
 	{ L"addis",	0x20, imode(1, 1, 1) },	/* immediate signed add */
 	{ L"addiu",	0x21, imode(1, 1, 1) },	/* immediate unsigned add */
@@ -28,7 +29,6 @@ const struct op_def op_defs[MAX_OPCODES] = {
 	{ L"prntv", 0x2A, imode(0, 0, 1) },	/* print value */
 	{ L"beq", 0x2B, imode(1, 1, 1) },	/* branch on equal */
 	{ L"bne", 0x2C, imode(1, 1, 1) },	/* branch on not equal */
-	/* b opcodes */
-	{ L"jal", 0x3E, bmode(1) },	/* jump and link */
-	{ L"jmp", 0x3F, bmode(1) },	/* jump */
+	{ L"jmp", 0x2D, imode(0, 0, 1) },	/* jump */
+	{ NULL, 0, NO_MODE }
 };

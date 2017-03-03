@@ -20,15 +20,13 @@
 	wchar_t str[wcslen(from) + 1]; \
 	wcscpy(str, from);
 
-static const struct token *parse_la(struct parse_state *state);
-
 /* inform user of fatal error
  * and jump to exception handler */
 #define parse_err(state, fmt, ...) \
 { \
 	printf("[  error  ] :"); \
 	printf(" " fmt "\n", ##__VA_ARGS__); \
-	longjmp((state)->err_ex, 1); \
+	longjmp((state)->err_handler, 1); \
 }
 
 /* warn user of something non-fatal */
@@ -70,6 +68,10 @@ WRITE_FUNC(byte, u8);
 WRITE_FUNC(word, u16);
 WRITE_FUNC(long, u32);
 
+enum op_type;
+
+static const struct token *parse_la(struct parse_state *state);
+
 /* adds a label at the current position
  * returns 1 on redefinition of label */
 static int add_label_def(struct parse_state *state, const wchar_t *str, addr_t pos)
@@ -85,10 +87,15 @@ static int add_label_def(struct parse_state *state, const wchar_t *str, addr_t p
 
 /* adds a label argument to the label argument list
  * at the current position, with argument size asize */
-static void add_label_arg(struct parse_state *state, const wchar_t *str)
+static void add_label_arg(
+		struct parse_state *state,
+		const wchar_t *str,
+		union opcode *op,
+		u8 which)
 {
 	struct label_arg *arg = s_alloc(struct label_arg);
-	arg->rpos = state->cur_insns + sizeof(u16);
+	arg->opcode = (union opcode *)&state->prog->program[pos];
+	arg->arg = which;
 	arg->id = wcsdup(str);
 	/* add argument to beginning of list */
 	arg->next = state->label_args;
@@ -102,18 +109,29 @@ static void resolve_label_arguments(struct parse_state *state)
 	int err = 0;
 	LIST_FREELOOP(struct label_arg, state->label_args, each){
 		struct label_def *label = smap_lookup(state->label_defs, each->id);
-		write_word(state, label->pos, each->rpos);
 		if(!label){
-			err = 1;
 			parse_warn("label %ls never defined in source", each->id);
+			err = 1;
+		}else{
+			switch(each->arg){
+			case Cx_ARG:
+				each->opcode->i.Cx = label->pos;
+				break;
+			case Ax_ARG:
+				each->opcode->b.Ax = label->pos;
+				break;
+			default:
+				parse_err(state, "invalid argument to hold label");
+				break;
+			};
 		}
 		s_free(each->id);
 		s_free(each);
 	}
+	state->label_args = NULL;
 	if(err){
 		parse_err(state, "undefined labels in program");
 	}
-	state->label_args = NULL;
 }
 
 static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
@@ -207,15 +225,16 @@ static int parse_label(struct parse_state *state)
 
 static const struct op_def *find_def(const wchar_t *wcs)
 {
-	for(size_t i = 0; i < sizeof(op_defs)/sizeof(op_defs[0]); ++i){
+	for(size_t i = 0; op_defs[i].mnemonic; ++i){
 		if(!wcscmp(op_defs[i].mnemonic, wcs)){
-			return (op_defs + i);
+			return &op_defs[i];
 		}
 	}
 	return NULL;
 }
 
-static long parse_arg(struct parse_state *state, u8 argmode, u8 which)
+/* TODO better error checking */
+static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
 {
 	const struct token *tok = parse_la(state);
 	if(!HAS_ARG(argmode, which)){
@@ -229,11 +248,10 @@ static long parse_arg(struct parse_state *state, u8 argmode, u8 which)
 		ret = tok->data;
 		break;
 	case TOK_ID:
-		add_label_arg(state, tok->lexeme);
+		add_label_arg(state, tok->lexeme, );
 		break;
 	default:
 		parse_err(state, "expected arg, got \"%ls\"", tok->lexeme);
-		break;
 	};
 	parse_advance(state);
 	if(parse_test(state, TOK_COMMA)){
@@ -241,7 +259,6 @@ static long parse_arg(struct parse_state *state, u8 argmode, u8 which)
 	}
 	return ret;
 }
-
 
 static int parse_ins(struct parse_state *state)
 {
@@ -254,9 +271,7 @@ static int parse_ins(struct parse_state *state)
 		memset(&out_op, 0, sizeof(out_op));
 		out_op.I = op->code;
 		u8 argmode = op->argmode;
-		u8 mode = getmode(argmode);
-		//size_t nargs = NUM_ARGS(op->argmode);
-		switch(mode){
+		switch(getmode(argmode)){
 		case iNNNN:	/* no arguments */
 			break;
 		case iABCDF:
@@ -267,6 +282,7 @@ static int parse_ins(struct parse_state *state)
 			out_op.r.F = parse_arg(state, argmode, F_ARG);
 			break;
 		case iABCx:
+			/* TODO check for argument types */
 			out_op.i.A = parse_arg(state, argmode, A_ARG);
 			out_op.i.B = parse_arg(state, argmode, B_ARG);
 			out_op.i.Cx = parse_arg(state, argmode, Cx_ARG);
@@ -275,9 +291,10 @@ static int parse_ins(struct parse_state *state)
 			out_op.b.Ax = parse_arg(state, argmode, Ax_ARG);
 			break;
 		};
-		write_long(state, *(u32 *)&out_op, reserve_long(state));
+		write_long(state, out_op.op, reserve_long(state));
 	}else{
 		parse_err(state, "unrecognized opcode \"%ls\"", op_str);
+		return 1;
 	}
 	return 0;
 }
@@ -290,10 +307,8 @@ static int parse_expr(struct parse_state *state)
 		if(parse_test_n(state, 1, TOK_COLON)){
 			if(parse_label(state)){
 				return 1;
-			}else{
-				/* labels may be followed by more labels and one opcode */
-				return parse_expr(state);
 			}
+			return parse_expr(state);
 		}else{
 			if(parse_ins(state)){
 				return 1;
@@ -302,7 +317,6 @@ static int parse_expr(struct parse_state *state)
 			parse_match(state, TOK_EOL);
 			return 0;
 		}
-	/* handles a blank line */
 	case TOK_EOL:
 		parse_advance(state);
 		return 0;
@@ -321,7 +335,7 @@ int parse_file(FILE *in_f, struct kprog *res_prog)
 
 	int ret = 0;
 	/* set up error handling */
-	if(!setjmp(state.err_ex)){
+	if(!setjmp(state.err_handler)){
 		const struct token *la = NULL;
 		while(!ret && (la = parse_la(&state))->type != TOK_EOS){
 			ret = parse_expr(&state);

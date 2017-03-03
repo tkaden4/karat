@@ -9,12 +9,13 @@
 #include<parse/lex.h>
 #include<parse/rbuff.h>
 
-#define MAX_LOOK 2
+#define MAX_LOOK 3
 
 struct label_arg {
 	SLINK(struct label_arg);
 	wchar_t *id;
-	addr_t rpos;	/* location to resolve */
+	union opcode *opcode;	/* opcode to modify */
+	u8 arg;	/* which argument to modify */
 };
 
 struct label_def {
@@ -34,7 +35,7 @@ struct parse_state {
 	/* label definitions */
 	struct smap *label_defs;
 	/* error handling point */
-	jmp_buf err_ex;
+	jmp_buf err_handler;
 };
 
 /* parse file into program */

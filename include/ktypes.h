@@ -21,7 +21,6 @@ typedef void(*init_fp)(void *);
 
 #define CALL_CB(x, ...) x.cb(x.data, ##__VA_ARGS__)
 
-
 #define U(size) \
 typedef uint ## size ## _t u ## size
 #define I(size) \

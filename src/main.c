@@ -26,25 +26,16 @@ int main(int argc, const char *argv[])
 
 	FILE *test = fopen(prog, "r");
 	err_on(!test, "could not open %s", prog);
-
 	struct kprog *rprog = kprog_create();
 	if(!parse_file(test, rprog)){
-		puts("compiled program:");
-		for(size_t i = 0; i < rprog->prog_size; i += 4){
-			printf("0x%08X\n", *(u32 *)&rprog->program[i]);
-		}
-
 		struct cpu cpu;
 		cpu_init(&cpu);
 		cpu.pc = rprog->entry_point;
 		while(cpu.pc < rprog->prog_size){
 			cpu_step(&cpu, rprog);
 		}
-		kprog_destroy(rprog);
-	}else{
-		puts("unable to parse file");
 	}
-
+	kprog_destroy(rprog);
 	fclose(test);
 	return 0;
 }

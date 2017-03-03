@@ -41,25 +41,36 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 	union opcode op = *(union opcode *)&prog->program[cpu->pc];
 	cpu->pc += 4;
 	switch(op.I){
-	case 0x1F:
+	case 0x00:	/* halt */
 		cpu->pc = prog->prog_size;
 		break;
-	case 0x21:
+	case 0x12:	/* bitwise xor */
+		cpu->regs[op.r.A] = cpu->regs[op.r.B] ^ cpu->regs[op.r.C];
+		break;
+	case 0x21:	/* addiu */
 		cpu->regs[op.i.A] = cpu->regs[op.i.B] + op.i.Cx;
 		break;
-	case 0x22:
+	case 0x22:	/* loadk */
 		cpu->regs[op.i.A] = op.i.Cx;
 		break;
-	case 0x29:
+	case 0x29:	/* prntr */
 		printf("%d\n", cpu->regs[op.i.A]);
 		break;
-	case 0x2A:
+	case 0x2A:	/* prntv */
 		printf("%d\n", op.i.Cx);
 		break;
-	case 0x2C:
+	case 0x2B:	/* beq */
+		if(cpu->regs[op.i.A] == cpu->regs[op.i.B]){
+			cpu->pc = op.i.Cx;
+		}
+		break;
+	case 0x2C:	/* bne */
 		if(cpu->regs[op.i.A] != cpu->regs[op.i.B]){
 			cpu->pc = op.i.Cx;
 		}
+		break;
+	case 0x2D:	/* jmp */
+		cpu->pc = op.i.Cx;
 		break;
 	default:
 		err("unimplemented opcode 0x%X", op.I);
