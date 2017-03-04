@@ -1,10 +1,8 @@
 __start:
 	loadk r0, #1
 	loadk r1, #50
-	prntr r0
-	prntr r1
-	bne r0, r1, __exit
-	beq r0, r1, __exit2
+	bne r0, r1, __exit2
+	beq r0, r1, __exit
 __exit:
 	prntv #32
 	jmp done

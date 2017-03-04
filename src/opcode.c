@@ -1,5 +1,9 @@
 #include<vm/opcode.h>
 
+enum {
+
+};
+
 #define bshl(a, b) (((a) & 0x01) << (b))
 #define argmode(a, b, c, d, f, m) \
 	(bshl(a, 7) | bshl(b, 6) | bshl(c, 5) | bshl(d, 4) | bshl(f, 3) | (m & 0x3))
@@ -29,6 +33,6 @@ const struct op_def op_defs[MAX_OPCODES] = {
 	{ L"prntv", 0x2A, imode(0, 0, 1) },	/* print value */
 	{ L"beq", 0x2B, imode(1, 1, 1) },	/* branch on equal */
 	{ L"bne", 0x2C, imode(1, 1, 1) },	/* branch on not equal */
-	{ L"jmp", 0x2D, imode(0, 0, 1) },	/* jump */
+	{ L"jmp", 0x2D, bmode(1) },	/* jump */
 	{ NULL, 0, NO_MODE }
 };

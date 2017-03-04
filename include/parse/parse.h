@@ -11,15 +11,21 @@
 
 #define MAX_LOOK 3
 
+struct label_def {
+	addr_t pos;	/* what position it points to */
+};
+
+struct label_arg;
+struct parse_state;
+typedef int(*resolve_f)(const struct label_def *,
+						struct label_arg *,
+						struct parse_state *);
 struct label_arg {
 	SLINK(struct label_arg);
 	wchar_t *id;
-	union opcode *opcode;	/* opcode to modify */
-	u8 arg;	/* which argument to modify */
-};
-
-struct label_def {
-	addr_t pos;	/* what position it points to */
+	size_t op_pos;
+	/* how to resolve the argument */
+	resolve_f resolve;
 };
 
 struct parse_state {
@@ -28,6 +34,8 @@ struct parse_state {
 	RBUFF_DECL(tok_la_buff, struct token, MAX_LOOK) la_buff;
 	/* current position in bytecode */
 	size_t cur_insns;
+	/* current complete opcode */
+	size_t cur_op;
 	/* output program */
 	struct kprog *prog;
 	/* list of label arguments */

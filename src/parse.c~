@@ -87,11 +87,11 @@ static int add_label_def(struct parse_state *state, const wchar_t *str, addr_t p
 static void add_label_arg(
 		struct parse_state *state,
 		const wchar_t *str,
-		size_t op,	/* opcode to be changed */
+		union opcode *op,	/* opcode to be changed */
 		resolve_f resolver)
 {
 	struct label_arg *arg = s_alloc(struct label_arg);
-	arg->op_pos = op;
+	arg->opcode = op;
 	arg->id = wcsdup(str);
 	arg->resolve = resolver;
 	/* add argument to beginning of list */
@@ -111,7 +111,7 @@ static void resolve_label_arguments(struct parse_state *state)
 			err = 1;
 		}else{
 			if(each->resolve){
-				err = each->resolve(label, each, state);
+				err = each->resolve(label, each);
 			}else{
 				parse_warn("cannot resolve argument");
 				err = 1;
@@ -227,18 +227,16 @@ static const struct op_def *find_def(const wchar_t *wcs)
 }
 
 static int resolve_abcx(const struct label_def *def,
-						struct label_arg *arg,
-						struct parse_state *state)
+						struct label_arg *arg)
 {
-	((union opcode *)&state->prog->program[arg->op_pos])->i.Cx = def->pos;
+	arg->opcode->i.Cx = def->pos;
 	return 0;
 }
 
 static int resolve_ax(	const struct label_def *def,
-						struct label_arg *arg,
-						struct parse_state *state)
+						struct label_arg *arg)
 {
-	((union opcode *)&state->prog->program[arg->op_pos])->b.Ax = def->pos;
+	arg->opcode->b.Ax = def->pos;
 	return 0;
 }
 
@@ -249,6 +247,7 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
 	if(!HAS_ARG(argmode, which)){
 		return 0;
 	}
+	u8 mode = GETMODE(argmode);
 	long ret = 0;
 	switch(tok->type){
 	case TOK_REG:
@@ -258,13 +257,14 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
 		break;
 	case TOK_ID:
 	{
-		u8 mode = GETMODE(argmode);
+		union opcode *op = (union opcode *)&state->prog->program[state->cur_op];
 		if(mode == iABCx){
-			add_label_arg(state, tok->lexeme, state->cur_op, resolve_abcx);
+			add_label_arg(state, tok->lexeme, op, resolve_abcx);
 		}else if(mode == iAx){
-			add_label_arg(state, tok->lexeme, state->cur_op, resolve_ax);
+			add_label_arg(state, tok->lexeme, op, resolve_ax);
 		}else{
-			parse_err(state, "Address cannot fit into argument");
+			parse_warn("Address cannot fit into argument");
+			add_label_arg(state, tok->lexeme, op, NULL);
 		}
 	
 	}
@@ -372,6 +372,8 @@ int parse_file(FILE *in_f, struct kprog *res_prog)
 			s_free(each);
 		}
 	}
+	printf("%lu\n", state.cur_op);
+	exit(1);
 	parse_destroy(&state);
 	return ret;
 }

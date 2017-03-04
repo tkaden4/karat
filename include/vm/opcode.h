@@ -39,8 +39,6 @@
 #define Ax_POS A_POS
 #define Cx_POS C_POS
 
-#define SET_ARG(offset, size)
-
 enum {
 	iNNNN = 0,
 	iAx,
@@ -77,7 +75,7 @@ struct op_def {
 	u8 argmode;
 };
 
-#define getmode(a) ((a) & 0x3)
+#define GETMODE(a) ((a) & 0x3)
 /* check to see if opcode uses argument in position */ 
 #define HAS_ARG(argm, which) ((argm) & (0x80 >> (which)))
 //#define ARG_TYPE(argm, which) ((argm >> which) & 0x);

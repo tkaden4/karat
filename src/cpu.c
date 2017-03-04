@@ -70,7 +70,7 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 		}
 		break;
 	case 0x2D:	/* jmp */
-		cpu->pc = op.i.Cx;
+		cpu->pc = op.b.Ax;
 		break;
 	default:
 		err("unimplemented opcode 0x%X", op.I);
