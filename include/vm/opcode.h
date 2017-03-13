@@ -40,39 +40,44 @@
 #define Cx_POS C_POS
 
 enum {
-	iNNNN = 0,
-	iAx,
-	iABCx,
-	iABCDF,
-	ARG_MODES
+    iNNNN = 0,
+    iAx,
+    iABCx,
+    iABCDF,
+    ARG_MODES
 };
 
 /* argument identifiers */
 enum {
-	A_ARG = 0,
-	B_ARG,
-	C_ARG,
-	D_ARG,
-	F_ARG,
-	N_ARG,
-	Ax_ARG = A_ARG,
-	Cx_ARG = C_ARG,
-	Dx_ARG = D_ARG,
+    A_ARG = 0,
+    B_ARG,
+    C_ARG,
+    D_ARG,
+    F_ARG,
+    N_ARG,
+    Ax_ARG = A_ARG,
+    Cx_ARG = C_ARG,
+    Dx_ARG = D_ARG,
 };
 
 /* argument types */
 enum {
-	iArgN = 0,	/* not used */
-	iArgU,		/* used, any type */
-	iArgK,		/* constant value */
-	iArgR,		/* register */
-	iArgA,		/* address */
+    iArgN = 0,  /* not used */
+    iArgU,      /* used, any type, type doesnt matter */
+    iArgK,      /* constant value */
+    iArgR,      /* register */
+    iArgA,      /* address */
 };
 
+/* argmode
+ * argument types  mode
+ * aaabbbcccdddfff mm 
+ * 17 bits without */
+
 struct op_def {
-	wchar_t *mnemonic;
-	u8 code : 6;
-	u8 argmode;
+    wchar_t *mnemonic;
+    u8 code : 6;
+    u8 argmode;
 };
 
 #define GETMODE(a) ((a) & 0x3)
@@ -84,26 +89,26 @@ struct op_def {
 extern const struct op_def op_defs[MAX_OPCODES];
 
 union opcode {
-	u32 op;
-	union {
-		unsigned I: 6;
-		struct {
-			unsigned I: 6;
-			unsigned A: 5;
-			unsigned B: 5;
-			unsigned C: 5;
-			unsigned D: 5;
-			unsigned F: 6;
-		} r;
-		struct {
-			unsigned I: 6;
-			unsigned A: 5;
-			unsigned B: 5;
-			unsigned Cx: 16;
-		} i;
-		struct {
-			unsigned I: 6;
-			unsigned Ax: 26;
-		} b;
-	};
+    u32 op;
+    union {
+        unsigned I: 6;
+        struct {
+            unsigned I: 6;
+            unsigned A: 5;
+            unsigned B: 5;
+            unsigned C: 5;
+            unsigned D: 5;
+            unsigned F: 6;
+        } r;
+        struct {
+            unsigned I: 6;
+            unsigned A: 5;
+            unsigned B: 5;
+            unsigned Cx: 16;
+        } i;
+        struct {
+            unsigned I: 6;
+            unsigned Ax: 26;
+        } b;
+    };
 };

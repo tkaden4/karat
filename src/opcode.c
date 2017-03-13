@@ -1,9 +1,5 @@
 #include<vm/opcode.h>
 
-enum {
-
-};
-
 #define bshl(a, b) (((a) & 0x01) << (b))
 #define argmode(a, b, c, d, f, m) \
 	(bshl(a, 7) | bshl(b, 6) | bshl(c, 5) | bshl(d, 4) | bshl(f, 3) | (m & 0x3))

@@ -16,12 +16,6 @@ struct cpu {
 	union {
 		reg_t regs[GENERAL_REGS];
 	};
-	/* n c e x x x*/
-	struct {
-		int n : 1;
-		int c : 1;
-		int e : 1;
-	} flags;
 	addr_t pc;
 };
 
