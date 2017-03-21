@@ -1,1 +1,2 @@
 __start:
+    prntr r

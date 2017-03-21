@@ -308,8 +308,9 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
 
 static int parse_ins(struct parse_state *state)
 {
-    const struct token *la = parse_la(state);
-    STACK_WCSDUP(op_str, la->lexeme);
+    const struct token la = *parse_la(state);
+    parse_match(state, TOK_ID);
+    STACK_WCSDUP(op_str, la.lexeme);
     /* TODO re-implement opcode parsing */
     const struct op_def *op = find_def(op_str);
     if(op){
@@ -341,10 +342,9 @@ static int parse_ins(struct parse_state *state)
         write_long(state, out_op.op, reserve_long(state));
         state->cur_op += sizeof(u32);
     }else{
-        parse_err(state, "unrecognized opcode \"%ls\" on line %u", op_str, la->line_no);
+        parse_err(state, "unrecognized opcode \"%ls\" on line %u", op_str, la.line_no);
         return 1;
     }
-    parse_match(state, TOK_ID);
     return 0;
 }
 

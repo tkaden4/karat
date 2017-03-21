@@ -11,11 +11,6 @@ struct { ret(*cb)(void *, ##__VA_ARGS__); void *data; }
 #define MAKE_CB(type, fp, d) (type){ fp, d }
 #define RAW_CB(type, fp) MAKE_CB(type, fp, NULL)
 
-typedef CALLBACK(void, uint8_t) read_cb;
-typedef CALLBACK(uint8_t) write_cb;
-typedef CALLBACK(void) destroy_cb;
-typedef CALLBACK(void) init_cb;
-
 typedef void(*destroy_fp)(void *);
 typedef void(*init_fp)(void *);
 

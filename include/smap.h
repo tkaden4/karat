@@ -12,13 +12,11 @@ struct smap_node {
 };
 
 struct smap {
-	void(*destroy_node_f)(void *);
+	void(*destroy_val_f)(void *);
 	struct smap_node *map[HASH_BUCKETS];
 };
 
-struct smap *smap_create(void(*destroy_node)(void *));
-/* create with default destroy function (free) */
-struct smap *smap_create_d();
+struct smap *smap_create(void(*destroy_val)(void *));
 void *smap_lookup(struct smap *map, const wchar_t *key);
 void smap_insert(struct smap *map, const wchar_t *key, void *type);
 void smap_destroy(struct smap *map);
