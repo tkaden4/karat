@@ -4,8 +4,6 @@
 #include<stdbool.h>
 #include<stdio.h>
 
-#include"traits.h"
-
 #define fprefix(file, prefix, fmt, ...) \
 	fprintf(file,  "[ " prefix " ] " fmt " [ %s : %s : %d ]\n", \
 	##__VA_ARGS__, __FILE__, __func__, __LINE__ )

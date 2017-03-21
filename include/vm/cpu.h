@@ -4,7 +4,6 @@
 #include<stdio.h>
 /* karat files */
 #include<vm/kprog.h>
-#include<traits.h>
 #include<ktypes.h>
 
 typedef uint32_t reg_t;	/* general register datatype */

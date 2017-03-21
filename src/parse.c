@@ -319,6 +319,8 @@ static int parse_ins(struct parse_state *state)
         switch(GETMODE(argmode)){
         case iNNNN: /* no arguments */
             break;
+        /* TODO these three cases should be simplified
+         * into some sort of table lookup */
         case iABCDF:
             out_op.r.A = parse_arg(state, argmode, A_ARG);
             out_op.r.B = parse_arg(state, argmode, B_ARG);
@@ -372,6 +374,8 @@ static int parse_expr(struct parse_state *state)
     };
 }
 
+/* Parse a file into bytecode,
+ * placing in the kprog specified */
 int parse_file(FILE *in_f, struct kprog *res_prog)
 {
     err_on(!in_f, "input file not opened");

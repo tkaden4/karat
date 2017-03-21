@@ -29,6 +29,12 @@ const struct op_def op_defs[MAX_OPCODES] = {
 	{ L"prntv", 0x2A, imode(0, 0, 1) },	/* print value */
 	{ L"beq", 0x2B, imode(1, 1, 1) },	/* branch on equal */
 	{ L"bne", 0x2C, imode(1, 1, 1) },	/* branch on not equal */
-	{ L"jmp", 0x2D, bmode(1) },	/* jump */
+	{ L"jmp", 0x2D, bmode(1) },	        /* jump */
+	{ NULL, 0, NO_MODE }
+};
+
+/* DESIRED NEW FORMAT */
+const struct op_def op_defs_2[MAX_OPCODES] = {
+    { L"adds", 0x20, rmode(iArgR, iArgR, iArgU, iArgN, iArgN) },
 	{ NULL, 0, NO_MODE }
 };

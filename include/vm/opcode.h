@@ -21,6 +21,10 @@
 * F is an extra "scratch" value (as in no use for it yet)
 * */
 
+/* TODO fix some flaws in the opcode system
+ * that may lead to bugs in the future, such
+ * as Cx_ARG being equal to C_ARG */
+
 #define INS_SIZE 6
 #define A_SIZE 5
 #define B_SIZE 5
@@ -63,10 +67,10 @@ enum {
 /* argument types */
 enum {
     iArgN = 0,  /* not used */
-    iArgU,      /* used, any type, type doesnt matter */
+    iArgU,      /* used, any value */
     iArgK,      /* constant value */
     iArgR,      /* register */
-    iArgA,      /* address */
+    iArgA,      /* address/label */
 };
 
 /* argmode
