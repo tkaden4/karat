@@ -6,8 +6,14 @@
 #include<parse/rbuff.h>
 #include<ktypes.h>
 
+/* TODO remove limits on lexeme limit */
+#define MAX_LEXEME 20
+#define MAX_LEX_LOOK 4
+#if MAX_LEX_LOOK < 4
+#error "Lexer lookahead must be above 3"
+#endif
+
 struct token {
-	#define MAX_LEXEME 20
 	wchar_t lexeme[MAX_LEXEME];
 	size_t lsize;
 	enum {
@@ -28,7 +34,6 @@ struct token {
 
 struct lex_state {
 	FILE *file;
-	#define MAX_LEX_LOOK 10
 	RBUFF_DECL(lex_la_buff, wchar_t, MAX_LEX_LOOK) la_chars;
 	/* debugging info */
 	unsigned line_no;

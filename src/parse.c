@@ -107,13 +107,13 @@ static void resolve_label_arguments(struct parse_state *state)
     LIST_FREELOOP(struct label_arg, state->label_args, each){
         struct label_def *label = smap_lookup(state->label_defs, each->id);
         if(!label){
-            parse_warn("label %ls never defined in source", each->id);
+            parse_warn("label argument %ls never defined in source", each->id);
             err = 1;
         }else{
             if(each->resolve){
                 err = each->resolve(label, each, state);
             }else{
-                parse_warn("cannot resolve argument");
+                parse_warn("cannot resolve argument; undefined resolve function");
                 err = 1;
             }
         }
@@ -122,10 +122,15 @@ static void resolve_label_arguments(struct parse_state *state)
     }
     state->label_args = NULL;
     if(err){
-        parse_err(state, "unable to resolve labels due to errors");
+        parse_err(state, "unable to resolve label locations due to undefined label");
     }
 }
 
+/* Initialize the parser
+ * This involves: 
+ * - Initializing the lookahead buffer
+ * - Initializing the lexer
+ * - creating data */
 static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 {
     tok_la_buff_init(&state->la_buff);
@@ -147,9 +152,11 @@ static void parse_destroy(struct parse_state *state)
 {
     /* deal with unhandled forward definitions */
     smap_destroy(state->label_defs);
+    /* TODO This function is deprecated/unneeded */
     lex_destroy(&state->lstate);
 }
 
+/* Test n tokens ahead in the buffer */
 static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
 {
     if(n >= MAX_LOOK){
@@ -158,16 +165,19 @@ static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
     return tok_la_buff_elem_n(&state->la_buff, n)->type == tok_type;
 }
 
+/* test the zeroth token */
 static int parse_test(struct parse_state *state, unsigned tok_type)
 {
     return parse_test_n(state, 0, tok_type);
 }
 
+/* test the next 2 tokens */
 static int parse_test_2(struct parse_state *state, unsigned tok_1, unsigned tok_2)
 {
     return parse_test(state, tok_1) && parse_test_n(state, 1, tok_2);
 }
 
+/* advance to next token in buffer */
 static void parse_advance(struct parse_state *state)
 {
     /* delete front element from buffer */
@@ -175,16 +185,20 @@ static void parse_advance(struct parse_state *state)
     lex_next(&state->lstate, tok_la_buff_push_back(&state->la_buff));
 }
 
+/* grab the Nth token */
 static const struct token *parse_la_n(struct parse_state *state, size_t n)
 {
     return tok_la_buff_elem_n(&state->la_buff, n);
 }
 
+/* grab the zeroth token */
 static const struct token *parse_la(struct parse_state *state)
 {
     return parse_la_n(state, 0);
 }
 
+/* test the next token for a type,
+ * issuing an error if it doesnt match */
 static void parse_match(struct parse_state *state, unsigned tok_type)
 {
     if(parse_la(state)->type != tok_type){
@@ -195,19 +209,25 @@ static void parse_match(struct parse_state *state, unsigned tok_type)
     }
 }
 
+/* parse a label from the source
+ * and insert it into the list of
+ * labels to be resolved later */
 static int parse_label(struct parse_state *state)
 {
     if(!parse_test_2(state, TOK_ID, TOK_COLON)){
         parse_err(state, "mangled label");
     }
     STACK_WCSDUP(label, parse_la(state)->lexeme);
+    /* see if this is the entry point */
     if(!wcscmp(label, KPROG_ENTRY_POINT)){
         if(state->prog->entry_point >= 0){
+            /* someone redefined the entry point, oh brother */
             parse_err(state, "multiple definitions of entry point");
         }else{
             state->prog->entry_point = state->cur_insns;
         }
     }
+    /* make sure we don't already have this label defined */
     if(add_label_def(state, label, state->cur_insns)){
         parse_err(state, "redefinition of label %ls", label);
     }
@@ -216,6 +236,7 @@ static int parse_label(struct parse_state *state)
     return 0;
 }
 
+/* find an opcode from a string */
 static const struct op_def *find_def(const wchar_t *wcs)
 {
     for(size_t i = 0; op_defs[i].mnemonic; ++i){
@@ -226,6 +247,9 @@ static const struct op_def *find_def(const wchar_t *wcs)
     return NULL;
 }
 
+/* these resolve functions handle labels */
+
+/* resolve an ABCx opcode */
 static int resolve_abcx(const struct label_def *def,
                         struct label_arg *arg,
                         struct parse_state *state)
@@ -234,6 +258,7 @@ static int resolve_abcx(const struct label_def *def,
     return 0;
 }
 
+/* resolve an Ax opcode */
 static int resolve_ax(  const struct label_def *def,
                         struct label_arg *arg,
                         struct parse_state *state)
@@ -251,11 +276,13 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
     }
     long ret = 0;
     switch(tok->type){
+    /* these values are literals */
     case TOK_REG:
     case TOK_ADDR:
     case TOK_NUM:
         ret = tok->data;
         break;
+    /* label */
     case TOK_ID:
     {
         u8 mode = GETMODE(argmode);
@@ -281,13 +308,12 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
 
 static int parse_ins(struct parse_state *state)
 {
-    STACK_WCSDUP(op_str, parse_la(state)->lexeme);
-    parse_match(state, TOK_ID);
+    const struct token *la = parse_la(state);
+    STACK_WCSDUP(op_str, la->lexeme);
     /* TODO re-implement opcode parsing */
     const struct op_def *op = find_def(op_str);
     if(op){
         union opcode out_op;
-        memset(&out_op, 0, sizeof(out_op));
         out_op.I = op->code;
         u8 argmode = op->argmode;
         switch(GETMODE(argmode)){
@@ -313,9 +339,10 @@ static int parse_ins(struct parse_state *state)
         write_long(state, out_op.op, reserve_long(state));
         state->cur_op += sizeof(u32);
     }else{
-        parse_err(state, "unrecognized opcode \"%ls\"", op_str);
+        parse_err(state, "unrecognized opcode \"%ls\" on line %u", op_str, la->line_no);
         return 1;
     }
+    parse_match(state, TOK_ID);
     return 0;
 }
 

@@ -14,7 +14,6 @@
 int main(int argc, const char *argv[])
 {
     setlocale(LC_ALL, "");
-
     const char *prog = NULL;
     switch(argc){
     case 2:
@@ -28,16 +27,7 @@ int main(int argc, const char *argv[])
     err_on(!test, "could not open %s", prog);
     struct kprog *rprog = kprog_create();
     if(!parse_file(test, rprog)){
-//        struct cpu cpu;
-//        cpu_init(&cpu);
-//        cpu.pc = rprog->entry_point;
-//        while(cpu.pc < rprog->prog_size){
-//            cpu_step(&cpu, rprog);
-//        }
-        printf("Result Program; %lu bytes\n", rprog->prog_size);
-        FILE *out = fopen("test/asm.ko", "wb");
-        fwrite(rprog->program, 1, rprog->prog_size, out);
-        fclose(out);
+        printf("successfully parsed file\n");
     }
     kprog_destroy(rprog);
     fclose(test);

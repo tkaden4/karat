@@ -113,7 +113,7 @@ int lex_next(struct lex_state *state, struct token *res)
 	memset(res, 0, sizeof(struct token));
 
 	#define CASEC(c, t)\
-		case c: lex_advance(state); res->lexeme[0] = c; res->type = t; break;
+		case c: res->lexeme[0] = c; res->type = t; lex_advance(state); break;
 
 	int err = 0;
 	switch(la(state)){
@@ -171,6 +171,10 @@ int lex_next(struct lex_state *state, struct token *res)
 			lex_advance(state);
 		}
 		res->data = wcstoll(res->lexeme + 1, NULL, 10);
+        if(res->data > 31 || res->data < 0){
+            fprintf(stderr, "no register r%lld\n", res->data);
+            exit(0);
+        }
 		break;
 	CASEC(L':', TOK_COLON)
 	CASEC(L',', TOK_COMMA)

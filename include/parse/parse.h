@@ -10,6 +10,9 @@
 #include<parse/rbuff.h>
 
 #define MAX_LOOK 3
+#if MAX_LOOK < 3
+#error "Parser lookahead cannot be below 3"
+#endif
 
 struct label_def {
     addr_t pos; /* what position it points to */
