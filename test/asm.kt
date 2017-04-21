@@ -1,2 +1,2 @@
 __start:
-    prntr r
+    loadk r0, #18

@@ -27,7 +27,11 @@ int main(int argc, const char *argv[])
     err_on(!test, "could not open %s", prog);
     struct kprog *rprog = kprog_create();
     if(!parse_file(test, rprog)){
-        printf("successfully parsed file\n");
+        struct cpu cpu;
+        cpu_init(&cpu);
+        while(cpu.pc <= rprog->prog_size){
+            cpu_step(&cpu, rprog);
+        }
     }
     kprog_destroy(rprog);
     fclose(test);

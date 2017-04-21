@@ -32,9 +32,3 @@ const struct op_def op_defs[MAX_OPCODES] = {
 	{ L"jmp", 0x2D, bmode(1) },	        /* jump */
 	{ NULL, 0, NO_MODE }
 };
-
-/* DESIRED NEW FORMAT */
-const struct op_def op_defs_2[MAX_OPCODES] = {
-    { L"adds", 0x20, rmode(iArgR, iArgR, iArgU, iArgN, iArgN) },
-	{ NULL, 0, NO_MODE }
-};
