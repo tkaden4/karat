@@ -39,7 +39,6 @@ static inline u32 *read_long(struct cpu *cpu, struct kprog *prog)
 void cpu_step(struct cpu *cpu, struct kprog *prog)
 {
 	union opcode op = *(union opcode *)&prog->program[cpu->pc];
-	cpu->pc += 4;
 	switch(op.I){
 	case 0x00:	/* halt */
 		cpu->pc = prog->prog_size;
@@ -76,4 +75,5 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 		err("unimplemented opcode 0x%X", op.I);
 		break;
 	};
+	cpu->pc += 4;
 }

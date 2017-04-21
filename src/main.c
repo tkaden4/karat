@@ -29,7 +29,7 @@ int main(int argc, const char *argv[])
     if(!parse_file(test, rprog)){
         struct cpu cpu;
         cpu_init(&cpu);
-        while(cpu.pc <= rprog->prog_size){
+        while(cpu.pc < rprog->prog_size){
             cpu_step(&cpu, rprog);
         }
     }
