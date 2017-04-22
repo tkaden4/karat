@@ -32,5 +32,5 @@ const struct op_def op_defs[MAX_OPCODES] = {
     { L"beq",   0x2B, imode(1, 1, 1) }, /* branch on equal */
     { L"bne",   0x2C, imode(1, 1, 1) }, /* branch on not equal */
     { L"jmp",   0x2D, bmode(1) },       /* jump */
-    { NULL,     0,    NO_MODE }
+    { NULL,     0x00, NO_MODE },
 };

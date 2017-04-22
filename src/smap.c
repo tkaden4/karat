@@ -36,14 +36,9 @@ struct smap *smap_create(void(*destroy_val)(void *))
 void *smap_lookup(struct smap *map, const wchar_t *key)
 {
 	const struct smap_node *head = map->map[hash_to_index(key)];
-	if(!head){
-		return NULL;
-	}else if(head->next){
-		while(head && wcscmp(head->key, key) && (head = head->next));
-		return head->value;
-	}else{
-		return head->value;
-	}
+    void *value = NULL;
+    while(head && wcscmp(head->key, key) && (head = head->next) && (value = head->value));
+    return value;
 }
 
 static inline struct smap_node *make_node(const wchar_t *key, void *val)
