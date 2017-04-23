@@ -65,7 +65,7 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 		break;
 	case 0x2C:	/* bne */
 		if(cpu->regs[op.i.A] != cpu->regs[op.i.B]){
-			cpu->pc = op.i.Cx;
+			cpu->pc = op.i.Cx-sizeof(union opcode);
 		}
 		break;
 	case 0x2D:	/* jmp */
