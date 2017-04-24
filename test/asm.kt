@@ -1,4 +1,7 @@
 __start:
-    loadk r0, #$20
     loadk r1, #0
-    prntv #0
+    loadk r0, #$FFFFFFF
+loop:
+    addiu r1, r1, #1
+    prntr r1
+    bne r1, r0 loop
