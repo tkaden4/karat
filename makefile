@@ -22,6 +22,9 @@ $(EXECUTABLE) : $(OBJECTS)
 run:
 	./$(EXECUTABLE) ./test/asm.kt
 
+tst:
+	find ./test/*.kt | xargs -n 1 ./$(EXECUTABLE)
+
 clean:
 	$(RM) $(EXECUTABLE)
 	$(RM) $(OBJECTS)

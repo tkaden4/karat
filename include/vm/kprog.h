@@ -3,16 +3,47 @@
 /* karat files */
 #include<ktypes.h>
 
+/* PROGRAM FORMAT
+ DATA SECTION
+ ... (static data)
+ CODE SECTION
+ ... (bytecode)
+ STACK SECTION
+ ... (runtime data)
+ */
+
 #define KPROG_ENTRY_POINT L"__start"
+#define PROG_MAGIC ((u32)0x12344321)
+
+struct prog_header {
+    /* magic number */
+    u32 magic;
+    /* sections */
+    u16 data_start;
+    u16 text_start;
+    u16 stack_start;
+};
+
+struct prog_section {
+    u8 *section;
+    size_t __size;
+    size_t __cap;
+};
 
 struct kprog {
+    struct prog_header header;
 	u8 *program;
-	i32 entry_point;
+	i16 entry_point;
 	size_t prog_size;
 	/* for growth of program vector */
 	size_t __size;
 	size_t __cap;
 };
+
+const wchar_t *kprog_desc(const struct prog_header *, const struct kprog *);
+u8 *kprog_data(const struct prog_header *, struct kprog *);
+u8 *kprog_text(const struct prog_header *, struct kprog *);
+u8 *kprog_stack(const struct prog_header *, struct kprog *);
 
 struct kprog *kprog_create();
 /* append bytes to buffer */

@@ -17,6 +17,8 @@ const struct op_def op_defs[MAX_OPCODES] = {
     { L"adds",  0x10, rmode(1, 1, 1, 0, 0) }, /* signed add */
     { L"addu",  0x11, rmode(1, 1, 1, 0, 0) }, /* unsigned add */
     { L"xor",   0x12, rmode(1, 1, 1, 0, 0) }, /* xor two registers */
+    { L"loadr", 0x19, rmode(1, 1, 0, 0, 0) }, /* load register into register */
+    { L"loadr", 0x1A, rmode(1, 1, 0, 0, 0) },
     /* i opcodes */
     { L"addis", 0x20, imode(1, 1, 1) }, /* immediate signed add */
     { L"addiu", 0x21, imode(1, 1, 1) }, /* immediate unsigned add */
@@ -32,5 +34,7 @@ const struct op_def op_defs[MAX_OPCODES] = {
     { L"beq",   0x2B, imode(1, 1, 1) }, /* branch on equal */
     { L"bne",   0x2C, imode(1, 1, 1) }, /* branch on not equal */
     { L"jmp",   0x2D, bmode(1) },       /* jump */
+    { L"bgt",   0x2E, imode(1, 1, 1) }, /* branch on not equal */
+    { L"blt",   0x2F, imode(1, 1, 1) }, /* branch on not equal */
     { NULL,     0x00, NO_MODE },
 };

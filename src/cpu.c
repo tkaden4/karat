@@ -15,30 +15,10 @@ void cpu_reset(struct cpu *state)
 	memset(state, 0, sizeof(struct cpu));
 }
 
-#define INC(cpu) ++(cpu)->pc;
-
-static inline u8 *read_byte(struct cpu *cpu, struct kprog *prog)
-{
-	return &prog->program[cpu->pc++];
-}
-
-static inline u16 *read_word(struct cpu *cpu, struct kprog *prog)
-{
-	u16 *ret = (u16 *)&prog->program[cpu->pc];
-	cpu->pc += sizeof(u16);
-	return ret;
-}
-
-static inline u32 *read_long(struct cpu *cpu, struct kprog *prog)
-{
-	u32 *ret = (u32 *)&prog->program[cpu->pc];
-	cpu->pc += sizeof(u32);
-	return ret;
-}
-
 void cpu_step(struct cpu *cpu, struct kprog *prog)
 {
 	union opcode op = *(union opcode *)&prog->program[cpu->pc];
+	cpu->pc += 4;
 	switch(op.I){
 	case 0x00:	/* halt */
 		cpu->pc = prog->prog_size;
@@ -52,6 +32,9 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 	case 0x22:	/* loadk */
 		cpu->regs[op.i.A] = op.i.Cx;
 		break;
+    case 0x19:  /* loadr */
+        cpu->regs[op.i.A] = cpu->regs[op.i.B];
+        break;
 	case 0x29:	/* prntr */
 		printf("%d\n", cpu->regs[op.i.A]);
 		break;
@@ -65,15 +48,20 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 		break;
 	case 0x2C:	/* bne */
 		if(cpu->regs[op.i.A] != cpu->regs[op.i.B]){
-			cpu->pc = op.i.Cx-sizeof(union opcode);
+			cpu->pc = op.i.Cx;
 		}
 		break;
 	case 0x2D:	/* jmp */
 		cpu->pc = op.b.Ax;
 		break;
+    case 0x2E:  /* bgt */
+        cpu->pc = cpu->regs[op.i.A] > cpu->regs[op.i.B] ? op.i.Cx : cpu->pc;
+        break;
+    case 0x2F:  /* blt */
+        cpu->pc = cpu->regs[op.i.A] < cpu->regs[op.i.B] ? op.i.Cx : cpu->pc;
+        break;
 	default:
-		err("unimplemented opcode 0x%X", op.I);
+		err("unimplemented opcode 0x%2X", op.I);
 		break;
 	};
-	cpu->pc += 4;
 }
