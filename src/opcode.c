@@ -18,7 +18,7 @@ const struct op_def op_defs[MAX_OPCODES] = {
     { L"addu",  0x11, rmode(1, 1, 1, 0, 0) }, /* unsigned add */
     { L"xor",   0x12, rmode(1, 1, 1, 0, 0) }, /* xor two registers */
     { L"loadr", 0x19, rmode(1, 1, 0, 0, 0) }, /* load register into register */
-    { L"loadr", 0x1A, rmode(1, 1, 0, 0, 0) },
+    { L"modr",  0x1C, rmode(1, 1, 1, 0, 0) }, /* get remainder */
     /* i opcodes */
     { L"jmpr",  0x1B, imode(1, 0, 0), },
     { L"addis", 0x20, imode(1, 1, 1) }, /* immediate signed add */
@@ -41,3 +41,18 @@ const struct op_def op_defs[MAX_OPCODES] = {
     /* sentinel */
     { NULL,     0x00, NO_MODE },
 };
+
+#include<log.h>
+
+static inline void __attribute__((constructor)) __check()
+{
+    int test[MAX_OPCODES] = {0};
+    for(size_t i = 0; i < MAX_OPCODES; ++i){
+        const struct op_def *op = &op_defs[i];
+        if(!op->mnemonic){
+            break;
+        }
+        err_on(test[op->code], "redefinition of opcode 0x%2X : %ls", op->code, op->mnemonic);
+        test[op->code] = 1;
+    }
+}

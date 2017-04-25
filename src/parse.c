@@ -358,12 +358,12 @@ static int parse_expr(struct parse_state *state)
     case TOK_ID:
         if(parse_test_n(state, 1, TOK_COLON)){
             if(parse_label(state)){
-                return 1;
+                parse_err(state, "couldn't parse label");
             }
             return parse_expr(state);
         }else{
             if(parse_ins(state)){
-                return 1;
+                parse_err(state, "couldn't parse instruction");
             }
             /* only one instruction allowed per line */
             parse_match(state, TOK_EOL);

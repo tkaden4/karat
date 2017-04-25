@@ -26,6 +26,9 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
     case 0x1B:  /* jmpr */
         cpu->pc = cpu->regs[op.i.A];
         break;
+    case 0x1C:  /* remr */
+        cpu->regs[op.r.A] = cpu->regs[op.r.B] % cpu->regs[op.r.C];
+        break;
 	case 0x12:	/* bitwise xor */
 		cpu->regs[op.r.A] = cpu->regs[op.r.B] ^ cpu->regs[op.r.C];
 		break;
@@ -36,7 +39,7 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 		cpu->regs[op.i.A] = op.i.Cx;
 		break;
     case 0x19:  /* loadr */
-        cpu->regs[op.i.A] = cpu->regs[op.i.B];
+        cpu->regs[op.r.A] = cpu->regs[op.r.B];
         break;
 	case 0x29:	/* prntr */
 		printf("%d\n", cpu->regs[op.i.A]);

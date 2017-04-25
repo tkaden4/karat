@@ -8,12 +8,13 @@
 #define FNV_PRIME 16777619
 #define FNV_OFFSET_BASIS 2166136261
 
-static inline uint32_t FNV1a_hash(register const void *data)
+static inline uint32_t FNV1a_hash(register const wchar_t *data)
 {
 	register uint32_t hash = FNV_OFFSET_BASIS;
-	while(*(char *)data){
+	while(*data){
 		#define hash_octet(h, o, p) h = ((h) ^ (o)) * (p);
 		hash_octet(hash, *(const char *)data, FNV_PRIME);
+		hash_octet(hash, *(const char *)(data + 1), FNV_PRIME);
 		++data;
 		#undef hash_octet
 	}

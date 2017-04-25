@@ -163,7 +163,11 @@ int lex_next(struct lex_state *state, struct token *res)
 		res->lexeme[0] = L'r';
 		lex_advance(state);
 		size_t i = 1;
-		wchar_t c = 0;
+		wchar_t c = la(state);
+        if(!iswdigit(c)){
+            err = 1;
+            return err;
+        }
 		while(iswdigit((c = la(state)))){
 			if(i == MAX_LEXEME - 1){
 				break;

@@ -35,7 +35,7 @@ int main(int argc, const char *argv[])
             cpu_step(&cpu, rprog);
         }
     }else{
-        puts("couldn't parse file");
+        puts("couldn't assemble program");
     }
     kprog_destroy(rprog);
     fclose(test);
