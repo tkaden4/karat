@@ -23,6 +23,9 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 	case 0x00:	/* halt */
 		cpu->pc = prog->prog_size;
 		break;
+    case 0x1B:  /* jmpr */
+        cpu->pc = cpu->regs[op.i.A];
+        break;
 	case 0x12:	/* bitwise xor */
 		cpu->regs[op.r.A] = cpu->regs[op.r.B] ^ cpu->regs[op.r.C];
 		break;

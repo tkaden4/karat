@@ -20,6 +20,7 @@ const struct op_def op_defs[MAX_OPCODES] = {
     { L"loadr", 0x19, rmode(1, 1, 0, 0, 0) }, /* load register into register */
     { L"loadr", 0x1A, rmode(1, 1, 0, 0, 0) },
     /* i opcodes */
+    { L"jmpr",  0x1B, imode(1, 0, 0), },
     { L"addis", 0x20, imode(1, 1, 1) }, /* immediate signed add */
     { L"addiu", 0x21, imode(1, 1, 1) }, /* immediate unsigned add */
     { L"loadk", 0x22, imode(1, 0, 1) }, /* load constant into register */
@@ -33,8 +34,10 @@ const struct op_def op_defs[MAX_OPCODES] = {
     { L"prntv", 0x2A, imode(0, 0, 1) }, /* print value */
     { L"beq",   0x2B, imode(1, 1, 1) }, /* branch on equal */
     { L"bne",   0x2C, imode(1, 1, 1) }, /* branch on not equal */
-    { L"jmp",   0x2D, bmode(1) },       /* jump */
     { L"bgt",   0x2E, imode(1, 1, 1) }, /* branch on not equal */
     { L"blt",   0x2F, imode(1, 1, 1) }, /* branch on not equal */
+    /* b opcodes */
+    { L"jmp",   0x30, bmode(1) },       /* jump */
+    /* sentinel */
     { NULL,     0x00, NO_MODE },
 };
