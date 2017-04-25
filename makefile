@@ -20,10 +20,10 @@ $(EXECUTABLE) : $(OBJECTS)
 	$(CC) -o $@ $^ $(LIBS)
 
 run:
-	./$(EXECUTABLE) ./test/asm.kt
+	./$(EXECUTABLE) ./test/asm.k
 
 tst:
-	find ./test/*.kt | xargs -n 1 ./$(EXECUTABLE)
+	find ./test/*.k | xargs -n 1 ./$(EXECUTABLE)
 
 clean:
 	$(RM) $(EXECUTABLE)

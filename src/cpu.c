@@ -64,7 +64,6 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
         cpu->pc = cpu->regs[op.i.A] < cpu->regs[op.i.B] ? op.i.Cx : cpu->pc;
         break;
 	default:
-		err("unimplemented opcode 0x%2X", op.I);
-		break;
+        err("unimplemented opcode 0x%2X", op.I);
 	};
 }

@@ -9,7 +9,7 @@
 #include<parse/parse.h>
 
 #define usage() \
-    printf("Usage: karat < file.kt >"); exit(0);
+    printf("Usage: karat < file.k >"); exit(0);
 
 int main(int argc, const char *argv[])
 {
