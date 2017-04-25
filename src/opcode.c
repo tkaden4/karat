@@ -17,6 +17,8 @@ const struct op_def op_defs[MAX_OPCODES] = {
     { L"adds",  0x10, rmode(1, 1, 1, 0, 0) }, /* signed add */
     { L"addu",  0x11, rmode(1, 1, 1, 0, 0) }, /* unsigned add */
     { L"xor",   0x12, rmode(1, 1, 1, 0, 0) }, /* xor two registers */
+    { L"subs",  0x13, rmode(1, 1, 1, 0, 0) }, /* subtract two registers */
+    { L"subu",  0x14, rmode(1, 1, 1, 0, 0) }, /* subtract two registers */
     { L"loadr", 0x19, rmode(1, 1, 0, 0, 0) }, /* load register into register */
     { L"modr",  0x1C, rmode(1, 1, 1, 0, 0) }, /* get remainder */
     /* i opcodes */

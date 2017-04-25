@@ -34,6 +34,7 @@ int main(int argc, const char *argv[])
         printf("running program (%lu bytes)...\n", rprog->prog_size);
         struct cpu cpu;
         cpu_init(&cpu);
+        cpu.pc = rprog->entry_point;
         while(cpu.pc < rprog->prog_size){
             cpu_step(&cpu, rprog);
         }

@@ -32,6 +32,12 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 	case 0x12:	/* bitwise xor */
 		cpu->regs[op.r.A] = cpu->regs[op.r.B] ^ cpu->regs[op.r.C];
 		break;
+    case 0x13:  /* subs */
+        cpu->regs[op.r.A] = cpu->regs[op.r.B] - cpu->regs[op.r.C];
+        break;
+    case 0x10:  /* adds */
+        cpu->regs[op.r.A] = cpu->regs[op.r.B] + cpu->regs[op.r.C];
+        break;
 	case 0x21:	/* addiu */
 		cpu->regs[op.i.A] = cpu->regs[op.i.B] + op.i.Cx;
 		break;
@@ -57,7 +63,7 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
 			cpu->pc = op.i.Cx;
 		}
 		break;
-	case 0x2D:	/* jmp */
+	case 0x30:	/* jmp */
 		cpu->pc = op.b.Ax;
 		break;
     case 0x2E:  /* bgt */
