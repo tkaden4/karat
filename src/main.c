@@ -1,6 +1,6 @@
 #include<locale.h>
 #include<wchar.h>
-#include<SDL2/SDL.h>
+#include<time.h>
 
 #include<log.h>
 #include<alloc.h>
@@ -25,9 +25,12 @@ int main(int argc, const char *argv[])
 
     FILE *test = fopen(prog, "r");
     err_on(!test, "could not open %s", prog);
+
     printf("assembling \"%s\"\n", prog);
+    time_t start = clock();
     struct kprog *rprog = kprog_create();
     if(!parse_file(test, rprog)){
+        printf("assembly took %lfms\n", ((double)clock()-start)/CLOCKS_PER_SEC);
         printf("running program (%lu bytes)...\n", rprog->prog_size);
         struct cpu cpu;
         cpu_init(&cpu);
@@ -37,6 +40,7 @@ int main(int argc, const char *argv[])
     }else{
         puts("couldn't assemble program");
     }
+
     kprog_destroy(rprog);
     fclose(test);
     return 0;

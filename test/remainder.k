@@ -6,4 +6,6 @@ __start:
     beq r3, r2, _equal
     halt
 _equal:
-    prntv #3
+    loadk r0, #0
+    loadk r1, #0
+    prntr r2
