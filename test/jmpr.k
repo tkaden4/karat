@@ -1,3 +1,4 @@
+; jump using a register
 __start:
     loadk r0, end
     jmpr r0

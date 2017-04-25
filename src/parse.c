@@ -134,7 +134,7 @@ static void resolve_label_arguments(struct parse_state *state)
 static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 {
     tok_la_buff_init(&state->la_buff);
-    lex_init(&state->lstate, f);
+    lex_init(&state->lstate, f, &state->err_handler);
 
     for(size_t i = 0; i < MAX_LOOK; ++i){
         struct token *t = tok_la_buff_push_back(&state->la_buff);

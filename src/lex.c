@@ -9,6 +9,15 @@
 
 RBUFF_IMPL(lex_la_buff, wchar_t, MAX_LEX_LOOK)
 
+/* inform user of fatal error
+ * and jump to exception handler */
+#define lex_err(state, fmt, ...) \
+{ \
+    printf("[  error  ] :"); \
+    printf(" " fmt "\n", ##__VA_ARGS__); \
+    longjmp(*(state)->err, 1); \
+}
+
 static void lex_advance(struct lex_state *);
 static wchar_t la(struct lex_state *);
 
@@ -18,7 +27,7 @@ static inline wchar_t readwc(FILE *f)
 	return c == WEOF ? L'\0' : (wchar_t)c;
 }
 
-void lex_init(struct lex_state *state, FILE *f)
+void lex_init(struct lex_state *state, FILE *f, jmp_buf *b)
 {
 	state->file = f;
 	state->line_no = 1;
@@ -27,6 +36,7 @@ void lex_init(struct lex_state *state, FILE *f)
 	for(size_t i = 0; i < MAX_LEX_LOOK; ++i){
 		*lex_la_buff_push_back(&state->la_chars) = readwc(state->file);
 	}
+    state->err = b;
 }
 
 /* @deprecated */
@@ -136,7 +146,7 @@ int lex_next(struct lex_state *state, struct token *res)
 			lex_advance(state);
 			break;
 		}else{
-			err = 1;
+            lex_err(state, "expected letter after '.'");
 		}
 		break;
 	case L'#':
@@ -149,7 +159,7 @@ int lex_next(struct lex_state *state, struct token *res)
 			if(iswdigit(la(state))){
 				lex_number(state, res, 10);
 			}else{
-				err = 1;
+                lex_err(state, "expected number, got '%lc'", la(state));
 			}
 		};
 		break;
@@ -165,8 +175,8 @@ int lex_next(struct lex_state *state, struct token *res)
 		size_t i = 1;
 		wchar_t c = la(state);
         if(!iswdigit(c)){
-            err = 1;
-            return err;
+            lex_err(state, "invalid register constant at l:%u c:%u", state->line_no, state->col_no);
+            return 1;
         }
 		while(iswdigit((c = la(state)))){
 			if(i == MAX_LEXEME - 1){
@@ -177,8 +187,7 @@ int lex_next(struct lex_state *state, struct token *res)
 		}
 		res->data = wcstoll(res->lexeme + 1, NULL, 10);
         if(res->data > 31 || res->data < 0){
-            fprintf(stderr, "no register r%lld\n", res->data);
-            exit(0);
+            lex_err(state, "no register r%lld\n", res->data);
         }
 		break;
 	CASEC(L':', TOK_COLON)
@@ -196,7 +205,7 @@ int lex_next(struct lex_state *state, struct token *res)
 				lex_advance(state);
 			}
 		}else{
-			err("couldn't match character %lc", la(state));
+			lex_err(state, "couldn't match character %lc", la(state));
 		}
 		break;
 	};

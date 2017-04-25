@@ -5,6 +5,7 @@
 /* karat files */
 #include<parse/rbuff.h>
 #include<ktypes.h>
+#include<setjmp.h>
 
 /* TODO remove limits on lexeme limit */
 #define MAX_LEXEME 20
@@ -38,8 +39,9 @@ struct lex_state {
 	/* debugging info */
 	unsigned line_no;
 	unsigned col_no;
+    jmp_buf *err;
 };
 
-void lex_init(struct lex_state *state, FILE *f);
+void lex_init(struct lex_state *state, FILE *f, jmp_buf *b);
 int lex_next(struct lex_state *state, struct token *tok);
 void lex_destroy(struct lex_state *state);

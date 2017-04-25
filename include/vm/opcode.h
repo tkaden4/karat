@@ -79,7 +79,7 @@ enum {
  * 17 bits without */
 
 struct op_def {
-    wchar_t *mnemonic;
+    const wchar_t * const mnemonic;
     u8 code : 6;
     u8 argmode;
 };
@@ -90,8 +90,10 @@ struct op_def {
 //#define ARG_TYPE(argm, which) ((argm >> which) & 0x);
 
 #define MAX_OPCODES (64)
+/* opcode definitions */
 extern const struct op_def op_defs[MAX_OPCODES];
 
+/* convenience struct */
 union opcode {
     u32 op;
     union {
