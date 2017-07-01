@@ -4,5 +4,5 @@ __start:
     loadk r1, #5
 loop:
     addiu r0, r0, #1
-    prntr r0
+    putr r0
     blt r0, r1, loop

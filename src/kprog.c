@@ -24,7 +24,7 @@ void kprog_append_bytes(struct kprog *prog, u32 data, size_t bytes)
 		prog->program = s_realloc(prog->program, prog->__cap);
 	}
 	register u8 *dptr = (u8 *)&data;
-	for(register size_t i = 1; i <= bytes; ++i){
+	for(size_t i = 1; i <= bytes; ++i){
 		prog->program[prog->__size++] = dptr[bytes - i];
 	}
 }

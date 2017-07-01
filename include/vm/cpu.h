@@ -21,3 +21,4 @@ struct cpu {
 void cpu_init(struct cpu *state);
 void cpu_reset(struct cpu *state);
 void cpu_step(struct cpu *state, struct kprog *prog);
+void cpu_run(struct cpu *cpu, struct kprog *prog);

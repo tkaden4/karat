@@ -32,8 +32,8 @@ const struct op_def op_defs[MAX_OPCODES] = {
     { L"getb",  0x26, imode(1, 1, 1) }, /* get byte */
     { L"getw",  0x27, imode(1, 1, 1) }, /* get word */
     { L"getl",  0x28, imode(1, 1, 1) }, /* get long */
-    { L"prntr", 0x29, imode(1, 0, 0) }, /* print register */
-    { L"prntv", 0x2A, imode(0, 0, 1) }, /* print value */
+    { L"putr",  0x29, imode(1, 0, 0) }, /* print register */
+    { L"putv",  0x2A, imode(0, 0, 1) }, /* print value */
     { L"beq",   0x2B, imode(1, 1, 1) }, /* branch on equal */
     { L"bne",   0x2C, imode(1, 1, 1) }, /* branch on not equal */
     { L"bgt",   0x2E, imode(1, 1, 1) }, /* branch on not equal */

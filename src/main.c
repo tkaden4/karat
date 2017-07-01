@@ -27,19 +27,15 @@ int main(int argc, const char *argv[])
     err_on(!test, "could not open %s", prog);
 
     printf("assembling \"%s\"\n", prog);
-    time_t start = clock();
+    const time_t start = clock();
     struct kprog *rprog = kprog_create();
     if(!parse_file(test, rprog)){
         printf("assembly took %lfms\n", ((double)clock()-start)/CLOCKS_PER_SEC);
         printf("running program (%lu bytes)...\n", rprog->prog_size);
-        struct cpu cpu;
+        /* Run the program */
+        struct cpu cpu = {};
         cpu_init(&cpu);
-        cpu.pc = rprog->entry_point;
-        while(cpu.pc < rprog->prog_size){
-            cpu_step(&cpu, rprog);
-        }
-    }else{
-        puts("couldn't assemble program");
+        cpu_run(&cpu, rprog);
     }
 
     kprog_destroy(rprog);

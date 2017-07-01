@@ -15,6 +15,14 @@ void cpu_reset(struct cpu *state)
 	memset(state, 0, sizeof(struct cpu));
 }
 
+void cpu_run(struct cpu *cpu, struct kprog *prog)
+{
+    cpu->pc = prog->entry_point;
+    while(cpu->pc < prog->prog_size){
+        cpu_step(cpu, prog);
+    }
+}
+
 void cpu_step(struct cpu *cpu, struct kprog *prog)
 {
 	union opcode op = *(union opcode *)&prog->program[cpu->pc];

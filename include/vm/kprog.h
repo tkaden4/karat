@@ -12,6 +12,8 @@
  ... (runtime data)
  */
 
+/* TODO implement magic */
+
 #define KPROG_ENTRY_POINT L"__start"
 #define PROG_MAGIC ((u32)0x12344321)
 
@@ -24,18 +26,12 @@ struct prog_header {
     u16 stack_start;
 };
 
-struct prog_section {
-    u8 *section;
-    size_t __size;
-    size_t __cap;
-};
-
 struct kprog {
     struct prog_header header;
-	u8 *program;
-	i16 entry_point;
+	i32 entry_point;
 	size_t prog_size;
-	/* for growth of program vector */
+	/* vector */
+	u8 *program;
 	size_t __size;
 	size_t __cap;
 };

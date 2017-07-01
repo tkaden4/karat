@@ -18,23 +18,23 @@
 /* create a stack copy of a string */
 #define STACK_WCSDUP(str, from) \
     wchar_t str[wcslen(from) + 1]; \
-    wcscpy(str, from);
+    wcscpy(str, from)
 
 /* inform user of fatal error
  * and jump to exception handler */
 #define parse_err(state, fmt, ...) \
-{ \
+do { \
     printf("[  error  ] :"); \
     printf(" " fmt "\n", ##__VA_ARGS__); \
     longjmp((state)->err_handler, 1); \
-}
+} while(0)
 
 /* warn user of something non-fatal */
 #define parse_warn(fmt, ...) \
-{ \
+do { \
     printf("[ warning ] :"); \
     printf(" " fmt "\n", ##__VA_ARGS__); \
-}
+} while(0)
 
 /* reserve bytes in memory, returning
  * the location where it was reserved */
@@ -129,8 +129,9 @@ static void resolve_label_arguments(struct parse_state *state)
 /* Initialize the parser
  * This involves: 
  * - Initializing the lookahead buffer
- * - Initializing the lexer
- * - creating data */
+ * - Initializing the lexer 
+ * - Initializing label argument list
+ * - Initializing label definition map */
 static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 {
     tok_la_buff_init(&state->la_buff);
@@ -166,13 +167,13 @@ static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
 }
 
 /* test the zeroth token */
-static int parse_test(struct parse_state *state, unsigned tok_type)
+static inline int parse_test(struct parse_state *state, unsigned tok_type)
 {
     return parse_test_n(state, 0, tok_type);
 }
 
 /* test the next 2 tokens */
-static int parse_test_2(struct parse_state *state, unsigned tok_1, unsigned tok_2)
+static inline int parse_test_2(struct parse_state *state, unsigned tok_1, unsigned tok_2)
 {
     return parse_test(state, tok_1) && parse_test_n(state, 1, tok_2);
 }
@@ -186,13 +187,13 @@ static void parse_advance(struct parse_state *state)
 }
 
 /* grab the Nth token */
-static const struct token *parse_la_n(struct parse_state *state, size_t n)
+static inline const struct token *parse_la_n(struct parse_state *state, size_t n)
 {
     return tok_la_buff_elem_n(&state->la_buff, n);
 }
 
 /* grab the zeroth token */
-static const struct token *parse_la(struct parse_state *state)
+static inline const struct token *parse_la(struct parse_state *state)
 {
     return parse_la_n(state, 0);
 }
@@ -259,9 +260,9 @@ static int resolve_abcx(const struct label_def *def,
 }
 
 /* resolve an Ax opcode */
-static int resolve_ax(  const struct label_def *def,
-                        struct label_arg *arg,
-                        struct parse_state *state)
+static int resolve_ax(const struct label_def *def,
+                      struct label_arg *arg,
+                      struct parse_state *state)
 {
     ((union opcode *)&state->prog->program[arg->op_pos])->b.Ax = def->pos;
     return 0;

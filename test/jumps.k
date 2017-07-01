@@ -6,14 +6,14 @@ __start:
     adds r0, r0, r2
     jmpr r0
 zero:
-    prntv #0
+    putv #0
 one:
-    prntv #1
+    putv #1
 two:
-    prntv #2
+    putv #2
 three:
-    prntv #3
+    putv #3
 four:
-    prntv #4
+    putv #4
 five:
-    prntv #5
+    putv #5
