@@ -11,7 +11,7 @@
 
 #define MAX_LOOK 2
 #if MAX_LOOK < 2
-#error "Parser lookahead cannot be below 3"
+#error "Parser lookahead cannot be below 2"
 #endif
 
 struct label_def {
