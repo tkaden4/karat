@@ -103,6 +103,30 @@ static inline int lex_number(
     return 0;
 }
 
+static inline int is_reg(const wchar_t *lexeme)
+{
+    if(lexeme[0] != L'r') return 0;
+    wchar_t next = L'\0';
+    while((next = *++lexeme)){
+        if(!iswdigit(next)){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static inline int verify_token(struct lex_state *state, struct token *tok)
+{
+    if(tok->type == TOK_ID && is_reg(tok->lexeme)){
+        tok->type = TOK_REG;
+        tok->data = wcstoll(tok->lexeme + 1, NULL, 10);
+        if(tok->data > 31 || tok->data < 0){
+            lex_err(state, "invalid register constant at l:%u c:%u: %ls",
+                           state->line_no, state->col_no, tok->lexeme);
+        }
+    }
+    return 0;
+}
 
 int lex_next(struct lex_state *state, struct token *res)
 {
@@ -162,28 +186,6 @@ int lex_next(struct lex_state *state, struct token *res)
         lex_advance(state);
         lex_number(state, res, 16);
         break;
-    case L'r':
-        res->type = TOK_REG;
-        res->lexeme[0] = L'r';
-        lex_advance(state);
-        size_t i = 1;
-        wchar_t c = la(state);
-        if(!iswdigit(c)){
-            lex_err(state, "invalid register constant at l:%u c:%u", state->line_no, state->col_no);
-            return 1;
-        }
-        while(iswdigit((c = la(state)))){
-            if(i == MAX_LEXEME - 1){
-                break;
-            }
-            res->lexeme[i++] = c;
-            lex_advance(state);
-        }
-        res->data = wcstoll(res->lexeme + 1, NULL, 10);
-        if(res->data > 31 || res->data < 0){
-            lex_err(state, "no register r%lld\n", res->data);
-        }
-        break;
     CASEC(L':', TOK_COLON)
     CASEC(L',', TOK_COMMA)
     default:
@@ -198,6 +200,7 @@ int lex_next(struct lex_state *state, struct token *res)
                 res->lexeme[index++] = c;
                 lex_advance(state);
             }
+            err = verify_token(state, res);
         }else{
             lex_err(state, "couldn't match character %lc", la(state));
         }

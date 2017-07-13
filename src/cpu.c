@@ -37,6 +37,9 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
     case 0x1C:  /* remr */
         cpu->regs[op.r.A] = cpu->regs[op.r.B] % cpu->regs[op.r.C];
         break;
+    case 0x1D:  /* read */
+        cpu->regs[op.r.A] = fgetc(stdin);
+        break;
 	case 0x12:	/* bitwise xor */
 		cpu->regs[op.r.A] = cpu->regs[op.r.B] ^ cpu->regs[op.r.C];
 		break;

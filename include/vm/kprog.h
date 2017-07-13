@@ -13,19 +13,8 @@
  */
 
 #define KPROG_ENTRY_POINT L"__start"
-#define PROG_MAGIC ((u32)0x12344321)
-
-struct prog_header {
-    /* magic number */
-    u32 magic;
-    /* sections */
-    u16 data_start;
-    u16 text_start;
-    u16 stack_start;
-};
 
 struct kprog {
-    struct prog_header header;
 	i32 entry_point;
 	size_t prog_size;
 	/* vector */

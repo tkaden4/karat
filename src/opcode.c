@@ -9,7 +9,7 @@
 #define NO_MODE argmode(0, 0, 0, 0, 0, iNNNN)
 
 /* TODO add typed arguments */
-
+/* TODO generate opcodes through separate dispatch program */
 const struct op_def op_defs[MAX_OPCODES] = {
     /* n opcodes */
     { L"halt",  0x00, NO_MODE },
@@ -21,6 +21,7 @@ const struct op_def op_defs[MAX_OPCODES] = {
     { L"subu",  0x14, rmode(1, 1, 1, 0, 0) }, /* subtract two registers */
     { L"loadr", 0x19, rmode(1, 1, 0, 0, 0) }, /* load register into register */
     { L"modr",  0x1C, rmode(1, 1, 1, 0, 0) }, /* get remainder */
+    { L"read",  0x1D, rmode(1, 0, 0, 0, 0) }, /* read character from stdin */
     /* i opcodes */
     { L"jmpr",  0x1B, imode(1, 0, 0), },
     { L"addis", 0x20, imode(1, 1, 1) }, /* immediate signed add */
@@ -46,6 +47,7 @@ const struct op_def op_defs[MAX_OPCODES] = {
 
 #include<log.h>
 
+/* TODO initialize here */
 static inline void __attribute__((constructor)) __check()
 {
     int test[MAX_OPCODES] = {0};
