@@ -21,10 +21,7 @@ static inline uint32_t FNV1a_hash(register const wchar_t *data)
 	return hash;
 }
 
-static inline size_t hash_to_index(const wchar_t * const key)
-{
-	return FNV1a_hash(key) % HASH_BUCKETS;
-}
+#define hash_to_index(key) (FNV1a_hash(key) % HASH_BUCKETS)
 
 struct smap *smap_create(void(*destroy_val)(void *))
 {

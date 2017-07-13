@@ -44,4 +44,3 @@ struct lex_state {
 
 void lex_init(struct lex_state *state, FILE *f, jmp_buf *b);
 int lex_next(struct lex_state *state, struct token *tok);
-void lex_destroy(struct lex_state *state);

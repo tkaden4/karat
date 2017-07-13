@@ -153,14 +153,13 @@ static void parse_destroy(struct parse_state *state)
 {
     /* deal with unhandled forward definitions */
     smap_destroy(state->label_defs);
-    /* TODO This function is deprecated/unneeded */
-    lex_destroy(&state->lstate);
 }
 
 /* Test n tokens ahead in the buffer */
 static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
 {
     if(n >= MAX_LOOK){
+        parse_err(state, "exceeded maximum lookahead of %lu", n);
         return 0;
     }
     return tok_la_buff_elem_n(&state->la_buff, n)->type == tok_type;
@@ -277,7 +276,6 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
     }
     long ret = 0;
     switch(tok->type){
-    /* these values are literals */
     case TOK_REG:
     case TOK_ADDR:
     case TOK_NUM:

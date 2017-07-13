@@ -9,8 +9,8 @@
 #include<parse/lex.h>
 #include<parse/rbuff.h>
 
-#define MAX_LOOK 3
-#if MAX_LOOK < 3
+#define MAX_LOOK 2
+#if MAX_LOOK < 2
 #error "Parser lookahead cannot be below 3"
 #endif
 

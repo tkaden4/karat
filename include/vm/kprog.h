@@ -12,8 +12,6 @@
  ... (runtime data)
  */
 
-/* TODO implement magic */
-
 #define KPROG_ENTRY_POINT L"__start"
 #define PROG_MAGIC ((u32)0x12344321)
 
@@ -36,10 +34,9 @@ struct kprog {
 	size_t __cap;
 };
 
-const wchar_t *kprog_desc(const struct prog_header *, const struct kprog *);
-u8 *kprog_data(const struct prog_header *, struct kprog *);
-u8 *kprog_text(const struct prog_header *, struct kprog *);
-u8 *kprog_stack(const struct prog_header *, struct kprog *);
+#define kprog_text(header) (((struct kprog *)(&header))->program + (header).text)
+#define kprog_data(header) (((struct kprog *)(&header))->program + (header).data)
+#define kprog_stack(header) (((struct kprog *)(&header))->program + (header).stack)
 
 struct kprog *kprog_create();
 /* append bytes to buffer */

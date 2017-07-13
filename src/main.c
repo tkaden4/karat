@@ -33,7 +33,7 @@ int main(int argc, const char *argv[])
         printf("assembly took %lfms\n", ((double)clock()-start)/CLOCKS_PER_SEC);
         printf("running program (%lu bytes)...\n", rprog->prog_size);
         /* Run the program */
-        struct cpu cpu = {};
+        struct cpu cpu;
         cpu_init(&cpu);
         cpu_run(&cpu, rprog);
     }
