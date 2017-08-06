@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
     err_on(!program, "could not open %s", prog);
 
     int err = 0;
-
     printf("assembling \"%s\"\n", prog);
     const time_t start = clock();
     struct kprog *rprog = kprog_create();

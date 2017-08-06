@@ -6,7 +6,7 @@ A simple VM
 lua
 
 ## To Compile ##
-`make generate ; make build`
+`make generate ; make`
 
 "make generate" only needs to be run once
 
@@ -33,4 +33,4 @@ Turn off some safety checks to improve speed
 
 ## Tutorial/Wiki ###
 
-???
+In progress
