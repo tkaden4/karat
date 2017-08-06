@@ -20,7 +20,7 @@ $(EXECUTABLE) : $(OBJECTS)
 	$(CC) -o $@ $^ $(LIBS)
 
 generate:
-	luajit ./opgen/gen.lua > ./include/ops/opcodes.inc
+	lua ./opgen/gen.lua > ./include/ops/opcodes.inc
 
 run:
 	./$(EXECUTABLE) ./test/test.k

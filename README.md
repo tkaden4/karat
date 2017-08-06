@@ -3,7 +3,7 @@
 A simple VM
 
 ## Dependencies ##
-- luajit
+- lua or luajit
 
 ## Current features ##
 * Simple set of opcodes

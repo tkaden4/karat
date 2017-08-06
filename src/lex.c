@@ -2,6 +2,7 @@
 #include<ctype.h>
 #include<string.h>
 
+#include<vm/cpu.h>
 #include<parse/lex.h>
 #include<parse/rbuff.h>
 #include<alloc.h>
@@ -124,7 +125,7 @@ static inline int check_id(struct lex_state *state, struct token *tok)
     if(is_reg(tok->lexeme)){
         tok->type = TOK_REG;
         tok->data = wcstoll(tok->lexeme + 1, NULL, 10);
-        if(tok->data > 31 || tok->data < 0){
+        if(tok->data >= GENERAL_REGS || tok->data < 0){
             lex_err(state, "invalid register constant at l:%u c:%u: %ls",
                            state->line_no, state->col_no, tok->lexeme);
         }
