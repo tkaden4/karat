@@ -7,6 +7,7 @@ lua
 
 ## To Compile ##
 `make generate ; make build`
+
 "make generate" only needs to be run once
 
 ## Current features ##
