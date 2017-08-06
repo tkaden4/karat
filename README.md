@@ -15,6 +15,7 @@ A simple VM
 - [ ] typed opcode arguments
 - [ ] in-memory stack
 - [ ] opcode generation
+- [x] command line arguments
 
 ## Tutorial/Wiki ###
 
