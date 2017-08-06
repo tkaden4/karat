@@ -17,11 +17,15 @@ int main(int argc, char *argv[])
     setlocale(LC_ALL, "");
 
     int c = EOF;
+    bool lint = false;
     const char *output = NULL;
-    while((c = getopt(argc, argv, "o:")) != -1){
+    while((c = getopt(argc, argv, "o:l")) != -1){
         switch(c){
         case 'o':
             output = optarg;
+            break;
+        case 'l':
+            lint = true;
             break;
         case '?':
             usage();
@@ -52,7 +56,10 @@ int main(int argc, char *argv[])
     if(!parse_file(program, rprog)){
         printf("assembly took %lfms\n", ((double)clock()-start)/CLOCKS_PER_SEC);
         /* Run the program */
-        if(output){
+        if(lint){
+            puts("linted successfully");
+            goto done;
+        }else if(output){
             printf("writing to %s...\n", output);
             FILE *out = fopen(output, "w");
             if(!out){
