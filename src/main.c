@@ -1,6 +1,7 @@
 #include<locale.h>
 #include<wchar.h>
 #include<time.h>
+#include<unistd.h>
 
 #include<log.h>
 #include<alloc.h>
@@ -9,36 +10,68 @@
 #include<parse/parse.h>
 
 #define usage() \
-    printf("Usage: karat < file.k >"); exit(0);
+    printf("Usage: karat <file>\n"); exit(0);
 
-int main(int argc, const char *argv[])
+int main(int argc, char *argv[])
 {
     setlocale(LC_ALL, "");
-    const char *prog = NULL;
-    switch(argc){
-    case 2:
-        prog = argv[1];
-        break;
-    default:
-        usage();
-    };
 
-    FILE *test = fopen(prog, "r");
-    err_on(!test, "could not open %s", prog);
+    int c = EOF;
+    const char *output = NULL;
+    (void) output;
+    while((c = getopt(argc, argv, "o:")) != -1){
+        switch(c){
+        case 'o':
+            output = optarg;
+            break;
+        case '?':
+            if(opterr){
+                usage();
+                return 1;
+            }
+        }
+    }
+
+    if(optind >= argc){
+        fputs("expected a file argument\n", stderr);
+        usage();
+        return 1;
+    }else if(optind != argc - 1){
+        fputs("too many arguments\n", stderr);
+        usage();
+        return 1;
+    }
+
+    const char *prog = argv[optind];
+
+    FILE *program = fopen(prog, "r");
+    err_on(!program, "could not open %s", prog);
 
     printf("assembling \"%s\"\n", prog);
     const time_t start = clock();
     struct kprog *rprog = kprog_create();
-    if(!parse_file(test, rprog)){
+    if(!parse_file(program, rprog)){
         printf("assembly took %lfms\n", ((double)clock()-start)/CLOCKS_PER_SEC);
-        printf("running program (%lu bytes)...\n", rprog->prog_size);
         /* Run the program */
-        struct cpu cpu;
-        cpu_init(&cpu);
-        cpu_run(&cpu, rprog);
+        if(output){
+            printf("writing to %s...\n", output);
+            FILE *out = fopen(output, "w");
+            if(!out){
+                fprintf(stderr, "unable to open output file %s\n", output);
+                goto done;
+            }
+            fwrite(rprog->program, rprog->prog_size, 1, out);
+            fclose(out);
+        }else{
+            printf("running program (%lu bytes)...\n", rprog->prog_size);
+            struct cpu cpu;
+            cpu_init(&cpu);
+            cpu_run(&cpu, rprog);
+        } 
     }
 
+done:
     kprog_destroy(rprog);
-    fclose(test);
+    fclose(program);
     return 0;
 }
