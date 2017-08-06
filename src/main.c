@@ -18,17 +18,14 @@ int main(int argc, char *argv[])
 
     int c = EOF;
     const char *output = NULL;
-    (void) output;
     while((c = getopt(argc, argv, "o:")) != -1){
         switch(c){
         case 'o':
             output = optarg;
             break;
         case '?':
-            if(opterr){
-                usage();
-                return 1;
-            }
+            usage();
+            return 1;
         }
     }
 
@@ -47,6 +44,8 @@ int main(int argc, char *argv[])
     FILE *program = fopen(prog, "r");
     err_on(!program, "could not open %s", prog);
 
+    int err = 0;
+
     printf("assembling \"%s\"\n", prog);
     const time_t start = clock();
     struct kprog *rprog = kprog_create();
@@ -58,6 +57,7 @@ int main(int argc, char *argv[])
             FILE *out = fopen(output, "w");
             if(!out){
                 fprintf(stderr, "unable to open output file %s\n", output);
+                err = 1;
                 goto done;
             }
             fwrite(rprog->program, rprog->prog_size, 1, out);
@@ -73,5 +73,5 @@ int main(int argc, char *argv[])
 done:
     kprog_destroy(rprog);
     fclose(program);
-    return 0;
+    return err;
 }
