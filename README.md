@@ -6,6 +6,12 @@ A simple VM
 lua
 
 ## To Compile ##
+Preprocessor Flags:
+
+KDEBUG : Keep debug code in
+
+KARAT\_PROD : Turn off some safety checks to improve speed
+
 `make generate ; make build`
 
 "make generate" only needs to be run once
