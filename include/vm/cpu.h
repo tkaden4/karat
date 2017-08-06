@@ -12,9 +12,7 @@ typedef uint32_t reg_t;	/* general register datatype */
 
 struct cpu {
 	/* general registers */
-	union {
-		reg_t regs[GENERAL_REGS];
-	};
+    reg_t regs[GENERAL_REGS];
 	addr_t pc;
 };
 

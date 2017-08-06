@@ -26,7 +26,7 @@ void cpu_run(struct cpu *cpu, struct kprog *prog)
 void cpu_step(struct cpu *cpu, struct kprog *prog)
 {
 	union opcode op = *(union opcode *)&prog->program[cpu->pc];
-	cpu->pc += 4;
+	cpu->pc += sizeof(union opcode);
 	switch(op.I){
 	case 0x00:	/* halt */
 		cpu->pc = prog->prog_size;

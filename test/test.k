@@ -1,5 +1,5 @@
 ; print the max value
 __start:
-    putv #$FFFF
+    putv #xFFFF
     putv #65535
-    putv #%1111111111111111
+    putv #b1111111111111111

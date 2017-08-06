@@ -10,7 +10,7 @@
 /* TODO remove limits on lexeme limit */
 #define MAX_LEXEME 20
 #define MAX_LEX_LOOK 4
-#if MAX_LEX_LOOK < 4
+#if MAX_LEX_LOOK <= 3 
 #error "Lexer lookahead must be above 3"
 #endif
 
@@ -24,7 +24,6 @@ struct token {
 		TOK_ADDR,
 		TOK_COMMA,
 		TOK_COLON,
-		TOK_DOT_CHAR,	/* .l, .d, .w */
 		TOK_EOL,
 		TOK_EOS,
 	} type;

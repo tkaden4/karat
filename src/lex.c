@@ -75,7 +75,7 @@ static inline int lex_number(
     struct token *res,
     size_t base)
 {
-    static int(*test)(wint_t) = NULL;
+    int(*test)(wint_t) = NULL;
     switch(base){
     case 0:
     case 10:
@@ -115,9 +115,13 @@ static inline int is_reg(const wchar_t *lexeme)
     return 1;
 }
 
-static inline int verify_token(struct lex_state *state, struct token *tok)
+/* test id for possible other lexemes */
+static inline int check_id(struct lex_state *state, struct token *tok)
 {
-    if(tok->type == TOK_ID && is_reg(tok->lexeme)){
+    if(tok->type != TOK_ID){
+        return 1;
+    }
+    if(is_reg(tok->lexeme)){
         tok->type = TOK_REG;
         tok->data = wcstoll(tok->lexeme + 1, NULL, 10);
         if(tok->data > 31 || tok->data < 0){
@@ -134,27 +138,23 @@ int lex_next(struct lex_state *state, struct token *res)
     while(la(state) == L'\t' || la(state) == L' '){
         lex_advance(state);
     }
+    /* remove comments */
     if(la(state) == L';'){
         while(la(state) && la(state) != L'\n'){
             lex_advance(state);
         }
     }
-    memset(res, 0, sizeof(struct token));
 
-    #define CASEC(c, t)\
-        case c: res->lexeme[0] = c; res->type = t; lex_advance(state); break;
+    #define CASES(c, t, str) \
+        case c: \
+            res->type = t; \
+            wcsncpy(res->lexeme, str, MAX_LEXEME); \
+            lex_advance(state); \
+            break
 
     int err = 0;
     switch(la(state)){
-    case L'\n':
-        res->type = TOK_EOL;
-        wcsncpy(res->lexeme, L"EOL", MAX_LEXEME);
-        lex_advance(state);
-        break;
-    case L'\0':
-        res->type = TOK_EOS;
-        wcsncpy(res->lexeme, L"EOS", MAX_LEXEME);
-        break;
+    /* TODO remove or implement fully
     case L'.':
         lex_advance(state);
         if(iswalpha(la(state))){
@@ -167,12 +167,13 @@ int lex_next(struct lex_state *state, struct token *res)
             lex_err(state, "expected letter after '.'");
         }
         break;
+    */
     case L'#':
         res->type = TOK_NUM;
         lex_advance(state);
         switch(la(state)){
-        case L'$': lex_advance(state); lex_number(state, res, 16); break;
-        case L'%': lex_advance(state); lex_number(state, res, 2); break;
+        case L'x': lex_advance(state); lex_number(state, res, 16); break;
+        case L'b': lex_advance(state); lex_number(state, res, 2); break;
         default:
             if(iswdigit(la(state))){
                 lex_number(state, res, 10);
@@ -181,13 +182,16 @@ int lex_next(struct lex_state *state, struct token *res)
             }
         };
         break;
-    case L'$':
+    /* Address literal */
+    case L'@':
         res->type = TOK_ADDR;
         lex_advance(state);
         lex_number(state, res, 16);
         break;
-    CASEC(L':', TOK_COLON)
-    CASEC(L',', TOK_COMMA)
+    CASES(L':', TOK_COLON, L":");
+    CASES(L',', TOK_COMMA, L",");
+    CASES(L'\n', TOK_EOL,  L"EOL");
+    CASES(L'\0', TOK_EOS,  L"EOS");
     default:
         if(is_id_start(la(state))){
             res->type = TOK_ID;
@@ -200,7 +204,7 @@ int lex_next(struct lex_state *state, struct token *res)
                 res->lexeme[index++] = c;
                 lex_advance(state);
             }
-            err = verify_token(state, res);
+            err = check_id(state, res);
         }else{
             lex_err(state, "couldn't match character %lc", la(state));
         }
@@ -209,6 +213,8 @@ int lex_next(struct lex_state *state, struct token *res)
 
     res->line_no = state->line_no;
     res->col_no = state->col_no;
+
+    #undef CASES
 
     return err;
 }

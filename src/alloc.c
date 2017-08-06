@@ -1,3 +1,5 @@
+#ifndef KARAT_PROD
+
 #include<alloc.h>
 
 #define CHECK_RET(x) \
@@ -36,3 +38,4 @@ void s_free(void *bytes)
     }
     free(bytes);
 }
+#endif

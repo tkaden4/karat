@@ -3,15 +3,6 @@
 /* karat files */
 #include<ktypes.h>
 
-/* PROGRAM FORMAT
- DATA SECTION
- ... (static data)
- CODE SECTION
- ... (bytecode)
- STACK SECTION
- ... (runtime data)
- */
-
 #define KPROG_ENTRY_POINT L"__start"
 
 struct kprog {

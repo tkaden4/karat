@@ -20,6 +20,7 @@ struct label_def {
 
 struct label_arg;
 struct parse_state;
+
 typedef int(*resolve_f)(const struct label_def *,
                         struct label_arg *,
                         struct parse_state *);

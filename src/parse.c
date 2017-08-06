@@ -237,7 +237,7 @@ static int parse_label(struct parse_state *state)
 }
 
 /* find an opcode from a string */
-static const struct op_def *find_def(const wchar_t *wcs)
+static inline const struct op_def *find_def(const wchar_t *wcs)
 {
     for(size_t i = 0; op_defs[i].mnemonic; ++i){
         if(!wcscmp(op_defs[i].mnemonic, wcs)){
@@ -250,7 +250,7 @@ static const struct op_def *find_def(const wchar_t *wcs)
 /* these resolve functions handle labels */
 
 /* resolve an ABCx opcode */
-static int resolve_abcx(const struct label_def *def,
+static inline int resolve_abcx(const struct label_def *def,
                         struct label_arg *arg,
                         struct parse_state *state)
 {
@@ -259,7 +259,7 @@ static int resolve_abcx(const struct label_def *def,
 }
 
 /* resolve an Ax opcode */
-static int resolve_ax(const struct label_def *def,
+static inline int resolve_ax(const struct label_def *def,
                       struct label_arg *arg,
                       struct parse_state *state)
 {
@@ -288,11 +288,14 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
     case TOK_ID:
     {
         u8 mode = GETMODE(argmode);
-        if(mode == iABCx){
+        switch(mode){
+        case iABCx:
             add_label_arg(state, tok->lexeme, state->cur_op, resolve_abcx);
-        }else if(mode == iAx){
+            break;
+        case iAx:
             add_label_arg(state, tok->lexeme, state->cur_op, resolve_ax);
-        }else{
+            break;
+        default:
             parse_err(state, "Address cannot fit into argument");
         }
     
