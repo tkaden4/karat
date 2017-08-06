@@ -15,29 +15,29 @@
 #endif
 
 struct token {
-	wchar_t lexeme[MAX_LEXEME];
-	size_t lsize;
-	enum {
-		TOK_ID,
-		TOK_NUM,
-		TOK_REG,
-		TOK_ADDR,
-		TOK_COMMA,
-		TOK_COLON,
-		TOK_EOL,
-		TOK_EOS,
-	} type;
-	unsigned line_no;
-	unsigned col_no;
-	long long data;	/* for num and reg, as well as dot_char */
+    wchar_t lexeme[MAX_LEXEME];
+    size_t lsize;
+    enum {
+        TOK_ID,
+        TOK_NUM,
+        TOK_REG,
+        TOK_ADDR,
+        TOK_COMMA,
+        TOK_COLON,
+        TOK_EOL,
+        TOK_EOS,
+    } type;
+    unsigned line_no;
+    unsigned col_no;
+    long long data; /* for num and reg, as well as dot_char */
 };
 
 struct lex_state {
-	FILE *file;
-	RBUFF_DECL(lex_la_buff, wchar_t, MAX_LEX_LOOK) la_chars;
-	/* debugging info */
-	unsigned line_no;
-	unsigned col_no;
+    FILE *file;
+    RBUFF_DECL(lex_la_buff, wchar_t, MAX_LEX_LOOK) la_chars;
+    /* debugging info */
+    unsigned line_no;
+    unsigned col_no;
     jmp_buf *err;
 };
 

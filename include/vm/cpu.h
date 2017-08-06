@@ -6,14 +6,14 @@
 #include<vm/kprog.h>
 #include<ktypes.h>
 
-typedef uint32_t reg_t;	/* general register datatype */
+typedef uint32_t reg_t; /* general register datatype */
 
 #define GENERAL_REGS 32
 
 struct cpu {
-	/* general registers */
+    /* general registers */
     reg_t regs[GENERAL_REGS];
-	addr_t pc;
+    addr_t pc;
 };
 
 void cpu_init(struct cpu *state);

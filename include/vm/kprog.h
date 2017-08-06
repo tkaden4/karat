@@ -6,12 +6,12 @@
 #define KPROG_ENTRY_POINT L"__start"
 
 struct kprog {
-	i32 entry_point;
-	size_t prog_size;
-	/* vector */
-	u8 *program;
-	size_t __size;
-	size_t __cap;
+    i32 entry_point;
+    size_t prog_size;
+    /* vector */
+    u8 *program;
+    size_t __size;
+    size_t __cap;
 };
 
 #define kprog_text(header) (((struct kprog *)(&header))->program + (header).text)

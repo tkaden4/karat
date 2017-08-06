@@ -3,7 +3,7 @@
 #include<stdint.h>
 #include<stdlib.h>
 
-typedef uint16_t addr_t;	/* address datatype */
+typedef uint16_t addr_t;    /* address datatype */
 
 #define CALLBACK(ret, ...) \
 struct { ret(*cb)(void *, ##__VA_ARGS__); void *data; }

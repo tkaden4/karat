@@ -33,7 +33,7 @@ void s_free(void *bytes)
 {
     if(!bytes){
         fprintf(stderr, "FATAL::> Attempt to free unallocated memory\n");
-		exit(1);
+        exit(1);
         return;
     }
     free(bytes);
