@@ -15,8 +15,12 @@ ifeq ($(OS), Windows_NT)
 	RM = del
 endif
 
+
 $(EXECUTABLE) : $(OBJECTS)
 	$(CC) -o $@ $^ $(LIBS)
+
+generate:
+	luajit ./opgen/gen.lua > ./include/ops/opcodes.inc
 
 run:
 	./$(EXECUTABLE) ./test/test.k

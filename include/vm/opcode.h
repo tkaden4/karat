@@ -89,9 +89,8 @@ struct op_def {
 #define HAS_ARG(argm, which) ((argm) & (0x80 >> (which)))
 //#define ARG_TYPE(argm, which) ((argm >> which) & 0x);
 
-#define MAX_OPCODES (64)
-/* opcode definitions */
-extern const struct op_def op_defs[MAX_OPCODES];
+///* opcode definitions */
+//extern const struct op_def op_defs[MAX_OPCODES];
 
 /* convenience struct */
 union opcode {
@@ -118,3 +117,13 @@ union opcode {
         } b;
     };
 };
+
+#define bshl(a, b) (((a) & 0x01) << (b))
+#define argmode(a, b, c, d, f, m) \
+    (bshl(a, 7) | bshl(b, 6) | bshl(c, 5) | bshl(d, 4) | bshl(f, 3) | (m & 0x3))
+#define bmode(ax) argmode(ax, 0, 0, 0, 0, iAx)
+#define imode(a, b, cx) argmode(a, b, cx, 0, 0, iABCx)
+#define rmode(a, b, c, d, f) argmode(a, b, c, d, f, iABCDF)
+#define NO_MODE argmode(0, 0, 0, 0, 0, iNNNN)
+
+#include<ops/opcodes.inc>

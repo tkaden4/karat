@@ -28,59 +28,59 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
     union opcode op = *(union opcode *)&prog->program[cpu->pc];
     cpu->pc += sizeof(union opcode);
     switch(op.I){
-    case 0x00:  /* halt */
+    case HALT_CODE:
         cpu->pc = prog->prog_size;
         break;
-    case 0x1B:  /* jmpr */
+    case JMPR_CODE:
         cpu->pc = cpu->regs[op.i.A];
         break;
-    case 0x1C:  /* remr */
+    case MODR_CODE:
         cpu->regs[op.r.A] = cpu->regs[op.r.B] % cpu->regs[op.r.C];
         break;
-    case 0x1D:  /* read */
+    case READ_CODE:
         cpu->regs[op.r.A] = fgetc(stdin);
         break;
-    case 0x12:  /* bitwise xor */
+    case XOR_CODE:
         cpu->regs[op.r.A] = cpu->regs[op.r.B] ^ cpu->regs[op.r.C];
         break;
-    case 0x13:  /* subs */
+    case SUBS_CODE:
         cpu->regs[op.r.A] = cpu->regs[op.r.B] - cpu->regs[op.r.C];
         break;
-    case 0x10:  /* adds */
+    case ADDS_CODE:
         cpu->regs[op.r.A] = cpu->regs[op.r.B] + cpu->regs[op.r.C];
         break;
-    case 0x21:  /* addiu */
+    case ADDIU_CODE:
         cpu->regs[op.i.A] = cpu->regs[op.i.B] + op.i.Cx;
         break;
-    case 0x22:  /* loadk */
+    case LOADK_CODE:
         cpu->regs[op.i.A] = op.i.Cx;
         break;
-    case 0x19:  /* loadr */
+    case LOADR_CODE:
         cpu->regs[op.r.A] = cpu->regs[op.r.B];
         break;
-    case 0x29:  /* prntr */
+    case PUTR_CODE:
         printf("%d\n", cpu->regs[op.i.A]);
         break;
-    case 0x2A:  /* prntv */
+    case PUTV_CODE:
         printf("%d\n", op.i.Cx);
         break;
-    case 0x2B:  /* beq */
+    case BEQ_CODE:
         if(cpu->regs[op.i.A] == cpu->regs[op.i.B]){
             cpu->pc = op.i.Cx;
         }
         break;
-    case 0x2C:  /* bne */
+    case BNE_CODE:
         if(cpu->regs[op.i.A] != cpu->regs[op.i.B]){
             cpu->pc = op.i.Cx;
         }
         break;
-    case 0x30:  /* jmp */
+    case JMP_CODE:
         cpu->pc = op.b.Ax;
         break;
-    case 0x2E:  /* bgt */
+    case BGT_CODE:
         cpu->pc = cpu->regs[op.i.A] > cpu->regs[op.i.B] ? op.i.Cx : cpu->pc;
         break;
-    case 0x2F:  /* blt */
+    case BLT_CODE:
         cpu->pc = cpu->regs[op.i.A] < cpu->regs[op.i.B] ? op.i.Cx : cpu->pc;
         break;
     default:

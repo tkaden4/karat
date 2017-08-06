@@ -2,6 +2,9 @@
 
 A simple VM
 
+## Dependencies ##
+- luajit
+
 ## Current features ##
 * Simple set of opcodes
 * Working interpreter
