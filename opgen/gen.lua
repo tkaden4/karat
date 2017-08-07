@@ -62,15 +62,13 @@ output("#define MAX_OPCODES " .. MAX_OPCODES)
 output "static const struct op_def op_defs[MAX_OPCODES] = {"
 
 indent = indent + 1
-
+-- print opcodes
 for k, v in pairs(opcodes) do
     local def = string.format("%s_CODE", string.upper(v[1]))
     output(string.format("#define %s 0x%02X", def, k));
     opcode(v[1], def, v[2])
 end
-
 -- create sentinel value
 output "{ NULL, 0, NO_MODE }, "
-
 indent = indent - 1
 output "};"
