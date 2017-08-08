@@ -34,6 +34,8 @@ local opcodes = {
     { "jmpr",  "imode(1, 0, 0)" }, -- jump relative to register
     { "addis", "imode(1, 1, 1)" }, -- immediate signed add */
     { "addiu", "imode(1, 1, 1)" }, -- immediate unsigned add */
+    { "subis", "imode(1, 1, 1)" }, -- immediate unsigned sub */
+    { "subiu", "imode(1, 1, 1)" }, -- immediate unsigned sub */
     { "loadk", "imode(1, 0, 1)" }, -- load constant into register */
     { "putb",  "imode(1, 1, 1)" }, -- put byte */
     { "putw",  "imode(1, 1, 1)" }, -- put word */

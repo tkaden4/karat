@@ -9,8 +9,6 @@ __start:
     loadk r4, #1
     ; zero value
     loadk r5, #0
-    ; one value
-    loadk r6, #1
 loop:
     ; save current value
     loadr r7, r2
@@ -19,7 +17,7 @@ loop:
     ; load old value 
     loadr r1, r7
     ; subtract instance count
-    subs r3, r3, r6
+    subis r3, r3, #1
     ; exit loop if done iterating
     bne r3, r5, loop
     ; print result

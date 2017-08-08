@@ -44,6 +44,8 @@ void cpu_step(struct cpu *cpu, struct kprog *prog)
         cpu->regs[op.r.A] = cpu->regs[op.r.B] + cpu->regs[op.r.C]; break;
     case ADDIU_CODE:
         cpu->regs[op.i.A] = cpu->regs[op.i.B] + op.i.Cx; break;
+    case SUBIS_CODE:
+        cpu->regs[op.i.A] = cpu->regs[op.i.B] - op.i.Cx; break;
     case LOADK_CODE:
         cpu->regs[op.i.A] = op.i.Cx; break;
     case LOADR_CODE:
