@@ -7,8 +7,10 @@
 #include<ktypes.h>
 #include<setjmp.h>
 
-/* TODO remove limits on lexeme limit */
+/* TODO remove limits on lexeme size */
+/* use ungetc() to read entire file, interspersing L'\0' */
 #define MAX_LEXEME 20
+
 #define MAX_LEX_LOOK 4
 #if MAX_LEX_LOOK <= 3 
 #error "Lexer lookahead must be above 3"

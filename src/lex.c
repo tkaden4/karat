@@ -95,6 +95,7 @@ static inline int lex_number(
     wchar_t c = 0;
     while(test((c = la(state)))){
         if(i == MAX_LEXEME - 1){
+            lex_err(state, "number does not fit into max lexeme size of %d", MAX_LEXEME);
             break;
         }
         res->lexeme[i++] = c;
@@ -199,7 +200,8 @@ int lex_next(struct lex_state *state, struct token *res)
             wchar_t c = 0;
             size_t index = 0;
             while(is_id_body((c = la(state)))){
-                if(index >= MAX_LEXEME - 2){
+                if(index >= MAX_LEXEME - 1){
+                    lex_err(state, "id does not fit into max lexeme size of %d", MAX_LEXEME);
                     break;
                 }
                 res->lexeme[index++] = c;
