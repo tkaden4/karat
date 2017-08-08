@@ -66,7 +66,7 @@ local defnames = {}
 for i, v in pairs(opcodes) do
     local def = string.format("%s_CODE", string.upper(v[1]))
     defnames[i] = def
-    output(string.format("%s = 0x%02X,", def, i));
+    output(string.format("%s = 0x%02X,", def, i - 1));
 end
 indent = indent - 1
 output("};")

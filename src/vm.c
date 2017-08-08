@@ -7,9 +7,8 @@
 
 void cpu_init(struct cpu *state)
 {
-    if(state){
-        memset(state, 0, sizeof(struct cpu));
-    }
+    err_on(!state, "cpu state not initialized");
+    memset(state, 0, sizeof(struct cpu));
 }
 
 #define rmode_bin3(cpu, opcode, op) \
@@ -33,8 +32,8 @@ void vm_step(struct vm *vm)
     case HALT_CODE:     cpu->pc = prog->prog_size; break;
     /* Register-mode instructions */
     case JMPR_CODE:     cpu->pc = cpu->regs[op.i.A]; break;
-    case MODR_CODE:     cpu->regs[op.r.A] = cpu->regs[op.r.B] % cpu->regs[op.r.C]; break;
     case READ_CODE:     cpu->regs[op.r.A] = fgetc(stdin); break;
+    case MODR_CODE:     rmode_bin3(cpu, op, %);
     case XORR_CODE:     rmode_bin3(cpu, op, ^);
     case SUBS_CODE:     rmode_bin3(cpu, op, -);
     case ADDS_CODE:     rmode_bin3(cpu, op, +);
@@ -53,7 +52,11 @@ void vm_step(struct vm *vm)
     case BLT_CODE:      bmode_bin3(cpu, op, <);
     case JMP_CODE:      cpu->pc = op.b.Ax; break;
     default:
-        err("unimplemented opcode 0x%02X", op.I);
+        if(op.I >= MAX_OPCODES){
+            err("mangled opcode out of range: 0x%02X", op.I);
+        }else{
+            err("unimplemented opcode 0x%02X (%ls)", op.I, op_defs[op.I].mnemonic);
+        }
     };
 }
 
