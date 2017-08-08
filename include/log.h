@@ -6,7 +6,7 @@
 
 #define fprefix(file, prefix, fmt, ...) \
     fprintf(file,  "[ " prefix " ] " fmt " [ %s : %s : %d ]\n", \
-    ##__VA_ARGS__, __FILE__, __func__, __LINE__ )
+            ##__VA_ARGS__, __FILE__, __func__, __LINE__ )
 
 #ifdef KDEBUG 
 #define fdebug(file, fmt, ...) \

@@ -104,7 +104,7 @@ static void add_label_arg(
 static void resolve_label_arguments(struct parse_state *state)
 {
     int err = 0;
-    LIST_FREELOOP(struct label_arg, state->label_args, each){
+    LIST_FREELOOP(state->label_args, each){
         struct label_def *label = smap_lookup(state->label_defs, each->id);
         if(!label){
             parse_warn("label argument %ls never defined in source", each->id);
@@ -403,7 +403,7 @@ int parse_file(FILE *in_f, struct kprog *res_prog)
         kprog_finalize(res_prog);
     }else{  /* error specific code */
         ret = 1;
-        LIST_FREELOOP(struct label_arg, state.label_args, each){
+        LIST_FREELOOP(state.label_args, each){
             s_free(each->id);
             s_free(each);
         }
