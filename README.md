@@ -25,9 +25,10 @@ Turn off some safety checks to improve speed
 - [ ] debugger
 - [ ] modules
 - [ ] embedding library
-- [ ] macro system
+- [ ] macro system (aliases, functions)
 - [ ] typed opcode arguments
-- [ ] in-memory stack
+- [ ] stack, vm, and ports
+- [ ] string literals
 - [x] opcode generation
 - [x] command line arguments
 

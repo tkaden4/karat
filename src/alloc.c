@@ -38,4 +38,5 @@ void s_free(void *bytes)
     }
     free(bytes);
 }
+
 #endif

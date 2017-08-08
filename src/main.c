@@ -5,8 +5,7 @@
 
 #include<log.h>
 #include<alloc.h>
-#include<vm/kprog.h>
-#include<vm/cpu.h>
+#include<vm/vm.h>
 #include<parse/parse.h>
 
 #define usage() \
@@ -70,9 +69,8 @@ int main(int argc, char *argv[])
             fclose(out);
         }else{
             printf("running program (%lu bytes)...\n", rprog->prog_size);
-            struct cpu cpu;
-            cpu_init(&cpu);
-            cpu_run(&cpu, rprog);
+            struct vm vm;
+            vm_run(&vm, rprog);
         } 
     }
 

@@ -319,7 +319,7 @@ static int parse_ins(struct parse_state *state)
     /* TODO re-implement opcode parsing */
     const struct op_def *op = find_def(op_str);
     if(op){
-        union opcode out_op;
+        union opcode out_op = {};
         out_op.I = op->code;
         u8 argmode = op->argmode;
         switch(GETMODE(argmode)){

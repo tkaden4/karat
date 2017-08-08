@@ -9,3 +9,5 @@ struct vm {
     struct cpu cpu;
     u8 *memory;
 };
+
+void vm_run(struct vm *vm, struct kprog *prog);

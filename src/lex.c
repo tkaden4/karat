@@ -40,7 +40,7 @@ void lex_init(struct lex_state *state, FILE *f, jmp_buf *b)
     state->err = b;
 }
 
-static wchar_t la(struct lex_state *state)
+static inline wchar_t la(struct lex_state *state)
 {
     return *lex_la_buff_front(&state->la_chars);
 }
