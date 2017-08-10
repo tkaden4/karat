@@ -87,33 +87,29 @@ struct op_def {
 #define GETMODE(a) ((a) & 0x3)
 /* check to see if opcode uses argument in position */ 
 #define HAS_ARG(argm, which) ((argm) & (0x80 >> (which)))
-//#define ARG_TYPE(argm, which) ((argm >> which) & 0x);
-
-///* opcode definitions */
-//extern const struct op_def op_defs[MAX_OPCODES];
 
 /* convenience struct */
 union opcode {
     u32 op;
     union {
-        unsigned I: 6;
+        unsigned I: INS_SIZE;
         struct {
-            unsigned I: 6;
-            unsigned A: 5;
-            unsigned B: 5;
-            unsigned C: 5;
-            unsigned D: 5;
-            unsigned F: 6;
+            unsigned I: INS_SIZE;
+            unsigned A: A_SIZE;
+            unsigned B: B_SIZE;
+            unsigned C: C_SIZE;
+            unsigned D: D_SIZE;
+            unsigned F: F_SIZE;
         } r;
         struct {
-            unsigned I: 6;
-            unsigned A: 5;
-            unsigned B: 5;
-            unsigned Cx: 16;
+            unsigned I: INS_SIZE;
+            unsigned A: A_SIZE;
+            unsigned B: B_SIZE;
+            unsigned Cx: Cx_SIZE;
         } i;
         struct {
-            unsigned I: 6;
-            unsigned Ax: 26;
+            unsigned I: INS_SIZE;
+            unsigned Ax: Ax_SIZE;
         } b;
     };
 };

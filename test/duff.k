@@ -7,7 +7,6 @@ __start:
 ; calculate offset
     loadk r3, #0
     loadk r4, #4
-    ; muls r0, r1, r4
 mult:
     adds r0, r0, r1
     addiu r3, r3, #1

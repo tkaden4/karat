@@ -5,9 +5,7 @@ __start:
     loadk r2, #1
     ; maximum value
     loadk r3, #47
-    ; negative one
     loadk r4, #1
-    ; zero value
     loadk r5, #0
 loop:
     ; save current value
