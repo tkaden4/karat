@@ -22,7 +22,7 @@ $(EXECUTABLE) : $(OBJECTS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 generate:
-	lua ./opgen/gen.lua > ./include/ops/opcodes.inc
+	lua ./gen.lua > ./include/opcodes.inc
 
 profile:
 	$(MAKE) clean CFLAGS='$(CFLAGS) -pg -O2' CC=gcc-4.9

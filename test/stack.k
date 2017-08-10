@@ -1,16 +1,16 @@
 __start:
-    loadk r0, #20
-    loadk r1, #40
-
+    loadk r0, #5
+    ; push values
+loop:
     pushr r0
-    pushr r1
-
-    loadk r0, #44
-    loadk r1, #88
-
+    subis r0, r0, #1
+    loadk r1, #0
+    bne r0, r1, loop
+    ; pop values
+    loadk r0, #5
+_loop:
     popr r1
-    popr r0
-
-    putr r0
     putr r1
-    halt
+    subis r0, r0, #1
+    loadk r1, #0
+    bne r0, r1, _loop

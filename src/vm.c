@@ -15,7 +15,7 @@
     (cpu)->pc = (cpu)->regs[opcode.i.A] cmp (cpu)->regs[opcode.i.B] \
     ? opcode.i.Cx : (cpu)->pc; break
 
-void vm_step(struct vm *vm)
+static inline void vm_step(struct vm *vm)
 {
     struct cpu *cpu = &vm->cpu;
     struct kprog *prog = vm->prog;

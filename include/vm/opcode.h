@@ -122,4 +122,4 @@ union opcode {
 #define rmode(a, b, c, d, f) argmode(a, b, c, d, f, iABCDF)
 #define NO_MODE argmode(0, 0, 0, 0, 0, iNNNN)
 
-#include<ops/opcodes.inc>
+#include<opcodes.inc>
