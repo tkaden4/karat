@@ -34,6 +34,8 @@ local opcodes = {
     { "loadr", "rmode(1, 1, 0, 0, 0)" }, -- load register into register
     { "modr",  "rmode(1, 1, 1, 0, 0)" }, -- get remainder
     { "read",  "rmode(1, 0, 0, 0, 0)" }, -- read character from stdin
+    { "pushr",  "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
+    { "popr",  "rmode(1, 0, 0, 0, 0)" }, -- pop value into register
     -- I opcodes
     { "jmpr",  "imode(1, 0, 0)" }, -- jump relative to register
     { "addis", "imode(1, 1, 1)" }, -- immediate signed add */

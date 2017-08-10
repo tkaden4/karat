@@ -12,8 +12,15 @@ typedef uint32_t reg_t; /* general register datatype */
 
 struct cpu {
     /* general registers */
-    reg_t regs[GENERAL_REGS];
-    addr_t pc;
+    union {
+        reg_t regs[GENERAL_REGS];
+        struct {
+            reg_t __pad[GENERAL_REGS - 3];
+            reg_t sp;
+            reg_t bp;
+            reg_t pc;
+        };
+    };
 };
 
 void cpu_init(struct cpu *state);

@@ -32,6 +32,14 @@ void vm_step(struct vm *vm)
     case SUBS_CODE:     rmode_bin(cpu, op, -);
     case ADDS_CODE:     rmode_bin(cpu, op, +);
     case MULS_CODE:     rmode_bin(cpu, op, *);
+    case PUSHR_CODE:
+        *(reg_t *)(vm->memory + cpu->sp) = cpu->regs[op.i.A];
+        cpu->sp += sizeof(reg_t);
+        break;
+    case POPR_CODE: 
+        cpu->sp -= sizeof(reg_t);
+        cpu->regs[op.i.A] = *(reg_t *)(vm->memory + cpu->sp);
+        break;
     /* Intermediate-mode instructions */
     case ADDIU_CODE:    imode_bin(cpu, op, +);
     case SUBIS_CODE:    imode_bin(cpu, op, -);
@@ -59,6 +67,7 @@ void vm_run(struct vm *vm, struct kprog *prog)
     memset(vm, 0, sizeof(*vm));
     vm->prog = prog;
     vm->memory = s_malloc(1024); 
+    memset(vm->memory, 0, 1024);
 
     vm->cpu.pc = prog->entry_point;
     while(vm->cpu.pc < prog->prog_size){
