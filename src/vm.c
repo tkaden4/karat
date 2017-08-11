@@ -24,6 +24,10 @@ static inline void vm_step(struct vm *vm)
     switch(op.I){
     /* No-mode instructions */
     case HALT_CODE:     cpu->pc = prog->prog_size; break;
+    case RET_CODE:
+        cpu->sp -= sizeof(reg_t);
+        cpu->pc = ((reg_t *)vm->memory)[cpu->sp];
+        break;
     /* Register-mode instructions */
     case JMPR_CODE:     cpu->pc = cpu->regs[op.i.A]; break;
     case READ_CODE:     cpu->regs[op.r.A] = fgetc(stdin); break;
@@ -53,6 +57,11 @@ static inline void vm_step(struct vm *vm)
     case BGT_CODE:      bmode_cmp(cpu, op, >);
     case BLT_CODE:      bmode_cmp(cpu, op, <);
     case JMP_CODE:      cpu->pc = op.b.Ax; break;
+    case CALL_CODE:
+        ((reg_t *)vm->memory)[cpu->sp] = cpu->pc;;
+        cpu->sp += sizeof(reg_t);
+        cpu->pc = op.b.Ax;
+        break;
     default:
         if(op.I >= MAX_OPCODES){
             err("mangled opcode out of range: 0x%02X", op.I);
