@@ -15,16 +15,16 @@
     (cpu)->pc = (cpu)->regs[opcode.i.A] cmp (cpu)->regs[opcode.i.B] \
     ? opcode.i.Cx : (cpu)->pc; break
 
-#define push(cpu, value) \
+#define push(vm, value) \
     ({  \
-        *(typeof(value) *)(vm->memory + cpu->sp) = (value); \
-        cpu->sp += sizeof(value); \
+        *(typeof(value) *)((vm)->memory + (vm)->cpu.sp) = (value); \
+        (vm)->cpu.sp += sizeof(value); \
      })
 
-#define pop(cpu, type) \
+#define pop(vm, type) \
     ({ \
-        cpu->sp -= sizeof(type); \
-        *(type *)(vm->memory + cpu->sp); \
+        (vm)->cpu.sp -= sizeof(type); \
+        *(type *)((vm)->memory + (vm)->cpu.sp); \
      })
 
 static inline void vm_step(struct vm *vm)
@@ -36,7 +36,7 @@ static inline void vm_step(struct vm *vm)
     switch(op.I){
     /* No-mode instructions */
     case HALT_CODE:     cpu->pc = prog->prog_size; break;
-    case RET_CODE:      cpu->pc = pop(cpu, reg_t); break;
+    case RET_CODE:      cpu->pc = pop(vm, reg_t); break;
     /* Register-mode instructions */
     case JMPR_CODE:     cpu->pc = cpu->regs[op.i.A]; break;
     case READ_CODE:     cpu->regs[op.r.A] = fgetc(stdin); break;
@@ -45,8 +45,8 @@ static inline void vm_step(struct vm *vm)
     case SUBS_CODE:     rmode_bin(cpu, op, -);
     case ADDS_CODE:     rmode_bin(cpu, op, +);
     case MULS_CODE:     rmode_bin(cpu, op, *);
-    case PUSHR_CODE:    push(cpu, cpu->regs[op.i.A]); break;
-    case POPR_CODE:     cpu->regs[op.i.A] = pop(cpu, reg_t); break;
+    case PUSHR_CODE:    push(vm, cpu->regs[op.i.A]); break;
+    case POPR_CODE:     cpu->regs[op.i.A] = pop(vm, reg_t); break;
     /* Intermediate-mode instructions */
     case ADDIU_CODE:    imode_bin(cpu, op, +);
     case SUBIS_CODE:    imode_bin(cpu, op, -);
@@ -61,7 +61,7 @@ static inline void vm_step(struct vm *vm)
     case BLT_CODE:      bmode_cmp(cpu, op, <);
     case JMP_CODE:      cpu->pc = op.b.Ax; break;
     case CALL_CODE:
-        push(cpu, cpu->pc);
+        push(vm, cpu->pc);
         cpu->pc = op.b.Ax;
         break;
     default:
