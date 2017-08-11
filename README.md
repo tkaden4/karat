@@ -27,8 +27,8 @@ Turn off some safety checks to improve speed
 - [ ] embedding library
 - [ ] macro system (aliases, functions)
 - [ ] typed opcode arguments
-- [x] stack, vm, and ports (stack added)
 - [ ] string literals
+- [x] stack, vm, and ports (stack added)
 - [x] opcode generation
 - [x] command line arguments
 

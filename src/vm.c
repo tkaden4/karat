@@ -15,6 +15,18 @@
     (cpu)->pc = (cpu)->regs[opcode.i.A] cmp (cpu)->regs[opcode.i.B] \
     ? opcode.i.Cx : (cpu)->pc; break
 
+#define push(cpu, value) \
+    ({  \
+        *(typeof(value) *)(vm->memory + cpu->sp) = (value); \
+        cpu->sp += sizeof(value); \
+     })
+
+#define pop(cpu, type) \
+    ({ \
+        cpu->sp -= sizeof(type); \
+        *(type *)(vm->memory + cpu->sp); \
+     })
+
 static inline void vm_step(struct vm *vm)
 {
     struct cpu *cpu = &vm->cpu;
@@ -24,10 +36,7 @@ static inline void vm_step(struct vm *vm)
     switch(op.I){
     /* No-mode instructions */
     case HALT_CODE:     cpu->pc = prog->prog_size; break;
-    case RET_CODE:
-        cpu->sp -= sizeof(reg_t);
-        cpu->pc = ((reg_t *)vm->memory)[cpu->sp];
-        break;
+    case RET_CODE:      cpu->pc = pop(cpu, reg_t); break;
     /* Register-mode instructions */
     case JMPR_CODE:     cpu->pc = cpu->regs[op.i.A]; break;
     case READ_CODE:     cpu->regs[op.r.A] = fgetc(stdin); break;
@@ -36,14 +45,8 @@ static inline void vm_step(struct vm *vm)
     case SUBS_CODE:     rmode_bin(cpu, op, -);
     case ADDS_CODE:     rmode_bin(cpu, op, +);
     case MULS_CODE:     rmode_bin(cpu, op, *);
-    case PUSHR_CODE:
-        *(reg_t *)(vm->memory + cpu->sp) = cpu->regs[op.i.A];
-        cpu->sp += sizeof(reg_t);
-        break;
-    case POPR_CODE: 
-        cpu->sp -= sizeof(reg_t);
-        cpu->regs[op.i.A] = *(reg_t *)(vm->memory + cpu->sp);
-        break;
+    case PUSHR_CODE:    push(cpu, cpu->regs[op.i.A]); break;
+    case POPR_CODE:     cpu->regs[op.i.A] = pop(cpu, reg_t); break;
     /* Intermediate-mode instructions */
     case ADDIU_CODE:    imode_bin(cpu, op, +);
     case SUBIS_CODE:    imode_bin(cpu, op, -);
@@ -58,8 +61,7 @@ static inline void vm_step(struct vm *vm)
     case BLT_CODE:      bmode_cmp(cpu, op, <);
     case JMP_CODE:      cpu->pc = op.b.Ax; break;
     case CALL_CODE:
-        ((reg_t *)vm->memory)[cpu->sp] = cpu->pc;;
-        cpu->sp += sizeof(reg_t);
+        push(cpu, cpu->pc);
         cpu->pc = op.b.Ax;
         break;
     default:
