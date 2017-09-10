@@ -279,7 +279,7 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
     case TOK_REG:
     case TOK_ADDR:
     case TOK_NUM:
-        if((uint16_t)tok->data != tok->data){
+        if((u16)tok->data != tok->data){
             parse_err(state, "\"%ls\" exceeds 16-bit number limit", tok->lexeme);
         }
         ret = tok->data;

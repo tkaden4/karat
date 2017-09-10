@@ -18,13 +18,10 @@
 * A-D are registers
 * Ax is a value
 * Cx is a value
-* F is an extra "scratch" value (as in no use for it yet)
+* F is an extra "scratch" value (no current use)
 * */
 
-/* TODO fix some flaws in the opcode system
- * that may lead to bugs in the future, such
- * as Cx_ARG being equal to C_ARG */
-
+#define OPCODE_SIZE 32
 #define INS_SIZE 6
 #define A_SIZE 5
 #define B_SIZE 5
@@ -47,8 +44,7 @@ enum {
     iNNNN = 0,
     iAx,
     iABCx,
-    iABCDF,
-    ARG_MODES
+    iABCDF
 };
 
 /* argument identifiers */
@@ -67,30 +63,43 @@ enum {
 /* argument types */
 enum {
     iArgN = 0,  /* not used */
-    iArgU,      /* used, any value */
     iArgK,      /* constant value */
     iArgR,      /* register */
     iArgA,      /* address/label */
 };
 
-/* argmode
- * argument types  mode
- * aaabbbcccdddfff mm 
- * 17 bits without */
-
 struct op_def {
     const wchar_t * const mnemonic;
-    u8 code : 6;
-    u8 argmode;
+    unsigned code : INS_SIZE;
+    u16 argmode;
 };
 
-#define GETMODE(a) ((a) & 0x3)
+/* argument mode
+ * tt tt tt tt tt mm
+ * tt is the type for each argument
+ * mm is the argument mode */
+
+/* shift a bit left */
+#define bshl(a, b) (((a) & 0x01) << (b))
+/* create an argument mode */
+#define argmode(a, b, c, d, f, m) \
+    (bshl(a, 7) | bshl(b, 6) | bshl(c, 5) | bshl(d, 4) | bshl(f, 3) | (m & 0x3))
+/* mode for branching instructions */
+#define bmode(ax) argmode(ax, iArgN, iArgN, iArgN, iArgN, iAx)
+/* mode from immediate instructions */
+#define imode(a, b, cx) argmode(a, b, cx, iArgN, iArgN, iABCx)
+/* mode from register instructions */
+#define rmode(a, b, c, d, f) argmode(a, b, c, d, f, iABCDF)
+/* argument with no mode */
+#define NO_MODE argmode(iArgN, iArgN, iArgN, iArgN, iArgN, iNNNN)
+/* get the argument mode */
+#define GETMODE(a) ((a) & 0b11)
 /* check to see if opcode uses argument in position */ 
-#define HAS_ARG(argm, which) ((argm) & (0x80 >> (which)))
+#define HAS_ARG(argm, which) ((argm) & (0b10000000 >> (which)))
 
 /* convenience struct */
 union opcode {
-    u32 op;
+    unsigned op : OPCODE_SIZE;
     union {
         unsigned I: INS_SIZE;
         struct {
@@ -113,13 +122,5 @@ union opcode {
         } b;
     };
 };
-
-#define bshl(a, b) (((a) & 0x01) << (b))
-#define argmode(a, b, c, d, f, m) \
-    (bshl(a, 7) | bshl(b, 6) | bshl(c, 5) | bshl(d, 4) | bshl(f, 3) | (m & 0x3))
-#define bmode(ax) argmode(ax, 0, 0, 0, 0, iAx)
-#define imode(a, b, cx) argmode(a, b, cx, 0, 0, iABCx)
-#define rmode(a, b, c, d, f) argmode(a, b, c, d, f, iABCDF)
-#define NO_MODE argmode(0, 0, 0, 0, 0, iNNNN)
 
 #include<opcodes.inc>

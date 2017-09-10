@@ -3,12 +3,16 @@
 A simple VM
 
 ## Dependencies ##
-lua
+`lua`
 
-## To Compile ##
-`make generate ; make`
+## Building ##
+Karat uses CMake to build.
 
-"make generate" only needs to be run once
+run `gen.lua` and write output to include/opcodes.inc
+
+Easy building:
+
+`cmake . -H. -Bbuild ; cmake --build build`
 
 ### Preprocessor Flags ###
 #### KDEBUG ####
