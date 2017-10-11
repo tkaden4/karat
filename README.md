@@ -32,7 +32,8 @@ Turn off some safety checks to improve speed
 - [ ] macro system (aliases, functions)
 - [ ] typed opcode arguments
 - [ ] string literals
-- [x] stack, vm, and ports (stack added)
+- [ ] modules
+- [x] stack + stack opcodes
 - [x] opcode generation
 - [x] command line arguments
 

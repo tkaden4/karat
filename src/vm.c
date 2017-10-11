@@ -30,7 +30,7 @@
 static inline void vm_step(struct vm *vm)
 {
     struct cpu *cpu = &vm->cpu;
-    struct kprog *prog = vm->prog;
+    const struct kprog *prog = vm->prog;
     union opcode op = *(union opcode *)&prog->program[cpu->pc];
     cpu->pc += sizeof(union opcode);
     switch(op.I){
@@ -73,7 +73,7 @@ static inline void vm_step(struct vm *vm)
     };
 }
 
-void vm_run(struct vm *vm, struct kprog *prog)
+void vm_run(struct vm *vm, const struct kprog *prog)
 {
     memset(vm, 0, sizeof(*vm));
     vm->prog = prog;

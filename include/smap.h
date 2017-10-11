@@ -3,7 +3,7 @@
 #include<wchar.h>
 #include"list.h"
 
-#define HASH_BUCKETS 229    /* not much thought, just a small prime number */
+#define HASH_BUCKETS (229 * 7 + 1)    /* not much thought, just a small prime number */
 
 struct smap_node {
     SLINK(struct smap_node);
@@ -12,7 +12,7 @@ struct smap_node {
 };
 
 struct smap {
-    void(*destroy_val_f)(void *);
+    void(*destroy_val_f)(void *);   /* so we can remove nodes dependent on what is being held */
     struct smap_node *map[HASH_BUCKETS];
 };
 

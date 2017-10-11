@@ -86,3 +86,5 @@ void smap_destroy(struct smap *map)
 	}
 	s_free(map);
 }
+
+#undef hash_to_index
