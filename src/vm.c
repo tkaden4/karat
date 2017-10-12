@@ -12,8 +12,10 @@
     (cpu)->regs[opcode.i.A] = (cpu)->regs[opcode.i.B] op opcode.i.Cx; break
 
 #define bmode_cmp(cpu, opcode, cmp) \
-    (cpu)->pc = (cpu)->regs[opcode.i.A] cmp (cpu)->regs[opcode.i.B] \
-    ? opcode.i.Cx : (cpu)->pc; break
+    ({ \
+        (cpu)->pc = (cpu)->regs[opcode.i.A] cmp (cpu)->regs[opcode.i.B] \
+        ? opcode.i.Cx : (cpu)->pc; break; \
+    })
 
 #define push(vm, value) \
     ({  \
@@ -37,6 +39,13 @@ static inline void vm_step(struct vm *vm)
     /* No-mode instructions */
     case HALT_CODE:     cpu->pc = prog->prog_size; break;
     case RET_CODE:      cpu->pc = pop(vm, reg_t); break;
+    case DUP_CODE: 
+    {
+        reg_t val = pop(vm, reg_t);
+        push(vm, val);
+        push(vm, val);
+    }
+        break;
     /* Register-mode instructions */
     case JMPR_CODE:     cpu->pc = cpu->regs[op.i.A]; break;
     case READ_CODE:     cpu->regs[op.r.A] = fgetc(stdin); break;
