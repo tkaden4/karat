@@ -14,10 +14,6 @@ struct kprog {
     size_t __cap;
 };
 
-#define kprog_text(header) (((struct kprog *)(&header))->program + (header).text)
-#define kprog_data(header) (((struct kprog *)(&header))->program + (header).data)
-#define kprog_stack(header) (((struct kprog *)(&header))->program + (header).stack)
-
 struct kprog *kprog_create();
 /* append bytes to buffer */
 void kprog_append_bytes(struct kprog *prog, u32 data, size_t bytes);
