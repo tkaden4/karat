@@ -1,8 +1,8 @@
 #pragma once
 
-#include<ktypes.h>
-#include<vm/cpu.h>
-#include<vm/kprog.h>
+#include<karat/ktypes.h>
+#include<karat/vm/cpu.h>
+#include<karat/vm/kprog.h>
 
 struct vm {
     const struct kprog *prog;

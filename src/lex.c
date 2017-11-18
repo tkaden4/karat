@@ -2,11 +2,11 @@
 #include<ctype.h>
 #include<string.h>
 
-#include<vm/cpu.h>
-#include<parse/lex.h>
-#include<parse/rbuff.h>
-#include<alloc.h>
-#include<log.h>
+#include<karat/vm/cpu.h>
+#include<karat/parse/lex.h>
+#include<karat/parse/rbuff.h>
+#include<karat/alloc.h>
+#include<karat/log.h>
 
 RBUFF_IMPL(lex_la_buff, wchar_t, MAX_LEX_LOOK)
 

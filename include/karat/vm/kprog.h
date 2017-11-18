@@ -1,7 +1,7 @@
 #pragma once
 
 /* karat files */
-#include<ktypes.h>
+#include<karat/ktypes.h>
 
 #define KPROG_ENTRY_POINT L"__start"
 

@@ -4,16 +4,16 @@
 #include<ctype.h>
 #include<wchar.h>
 /* karat files */
-#include<parse/rbuff.h>
-#include<parse/parse.h>
-#include<parse/lex.h>
-#include<vm/opcode.h>
-#include<vm/cpu.h>
-#include<list.h>
-#include<ktypes.h>
-#include<alloc.h>
-#include<log.h>
-#include<smap.h>
+#include<karat/parse/rbuff.h>
+#include<karat/parse/parse.h>
+#include<karat/parse/lex.h>
+#include<karat/vm/opcode.h>
+#include<karat/vm/cpu.h>
+#include<karat/list.h>
+#include<karat/ktypes.h>
+#include<karat/alloc.h>
+#include<karat/log.h>
+#include<karat/smap.h>
 
 /* create a stack copy of a string */
 #define STACK_WCSDUP(str, from) \

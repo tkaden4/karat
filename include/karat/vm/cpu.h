@@ -3,8 +3,8 @@
 #include<stdint.h>
 #include<stdio.h>
 /* karat files */
-#include<vm/kprog.h>
-#include<ktypes.h>
+#include<karat/vm/kprog.h>
+#include<karat/ktypes.h>
 
 typedef uint32_t reg_t; /* general register datatype */
 

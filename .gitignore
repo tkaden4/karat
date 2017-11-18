@@ -1,6 +1,8 @@
 *.swp
 *.s
 *.o
+*.so
+*.dll
 *.tmp
 /karat
 /karat.exe
@@ -8,15 +10,6 @@
 # for ctags
 tags
 
-# cmake
+gmon.out
 /build
 /out
-/CMakeCache.txt
-/CMakeFiles
-/CMakeScripts
-/Testing
-/Makefile
-/cmake_install.cmake
-/install_manifest.txt
-/compile_commands.json
-/CTestTestfile.cmake

@@ -1,7 +1,7 @@
 #pragma once
 
 #include<wchar.h>
-#include"list.h"
+#include<karat/list.h>
 
 #define HASH_BUCKETS (229 * 7 + 1)    /* not much thought, just a small prime number */
 

@@ -3,13 +3,14 @@
 #include<time.h>
 #include<unistd.h>
 
-#include<log.h>
-#include<alloc.h>
-#include<vm/vm.h>
-#include<parse/parse.h>
+#include<karat/log.h>
+#include<karat/alloc.h>
+#include<karat/vm/vm.h>
+#include<karat/mod.h>
+#include<karat/parse/parse.h>
 
 #define usage() \
-    printf("Usage: karat <file>\n"); exit(0);
+    ({ printf("Usage: karat <file>\n"); exit(0); })
 
 int main(int argc, char *argv[])
 {

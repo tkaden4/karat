@@ -1,39 +1,39 @@
 SOURCES=$(wildcard ./src/*.c)
 OBJECTS=$(SOURCES:.c=.o)
-ifndef CFLAGS
-CFLAGS=-Wall -Wextra -Werror -Wno-unused-function -std=gnu99 -DKDEBUG -I./include/
-endif
+CFLAGS=-Wall -Wextra -Werror -pipe -O1 -Wno-unused-function -std=gnu99 -DKDEBUG -I./include/
+LDFLAGS=-ldl
 EXECUTABLE=karat
+DISCARD=$(OBJECTS) $(EXECUTABLE)
+
 # check and see if we have ccache
 HAS_CCACHE := $(shell command -v ccache 2> /dev/null)
 ifdef HAS_CCACHE
-	CC=ccache cc
+	CC := ccache $(CC)
 else
-	CC=cc
+	CC := $(CC)
 endif
 
-ifeq ($(OS), Windows_NT)
-	EXECUTABLE = karat.exe
-	RM = del
-endif
-
+all: $(EXECUTABLE) modules
 
 $(EXECUTABLE) : $(OBJECTS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
-generate:
-	lua ./gen.lua > ./include/opcodes.inc
+# compile all the modules that come with Karat
+modules:
+	$(MAKE) -C mod/
 
+# create debugging information
 profile:
-	$(MAKE) clean CFLAGS='$(CFLAGS) -pg -O2' CC=gcc-4.9
-	$(MAKE) CFLAGS='$(CFLAGS) -pg -O2' CC=gcc-4.9
+	$(MAKE) clean CFLAGS='$(CFLAGS) -pg -O2'
+	$(MAKE) CFLAGS='$(CFLAGS) -pg -O2'
 
+# run karat on a simple test suite
 run:
 	./$(EXECUTABLE) ./test/test.k
 
 tst:
-	find ./test/*.k | xargs -n 1 ./$(EXECUTABLE)
+	echo $(LS) test/*.k | col | xargs -n 1 ./$(EXECUTABLE)
 
 clean:
-	$(RM) $(EXECUTABLE)
-	$(RM) $(OBJECTS)
+	$(RM) $(DISCARD)
+	$(MAKE) -C mod/ clean

@@ -4,10 +4,10 @@
 #include<stdio.h>
 #include<setjmp.h>
 /* karat files */
-#include<vm/kprog.h>
-#include<list.h>
-#include<parse/lex.h>
-#include<parse/rbuff.h>
+#include<karat/vm/kprog.h>
+#include<karat/list.h>
+#include<karat/parse/lex.h>
+#include<karat/parse/rbuff.h>
 
 #define MAX_LOOK 2
 #if MAX_LOOK < 2

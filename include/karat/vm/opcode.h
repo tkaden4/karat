@@ -1,7 +1,7 @@
 #pragma once
 
 #include<wchar.h>
-#include<ktypes.h>
+#include<karat/ktypes.h>
 
 /* opcode design
 * All opcodes are 32 bits wide (easier to parse)
@@ -21,6 +21,7 @@
 * F is an extra "scratch" value (no current use)
 * */
 
+#define MAX_OPCODES 64
 #define OPCODE_SIZE 32
 #define INS_SIZE 6
 #define A_SIZE 5
@@ -123,4 +124,4 @@ union opcode {
     };
 };
 
-#include<opcodes.inc>
+#include<karat/opcodes.inc>

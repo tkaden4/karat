@@ -1,9 +1,8 @@
-#include<vm/vm.h>
-
-#include<log.h>
-#include<alloc.h>
-#include<vm/opcode.h>
-#include<vm/cpu.h>
+#include<karat/vm/vm.h>
+#include<karat/log.h>
+#include<karat/alloc.h>
+#include<karat/vm/opcode.h>
+#include<karat/vm/cpu.h>
 
 #define rmode_bin(cpu, opcode, op) \
     (cpu)->regs[opcode.r.A] = (cpu)->regs[opcode.r.B] op (cpu)->regs[opcode.r.C]; break
@@ -12,10 +11,8 @@
     (cpu)->regs[opcode.i.A] = (cpu)->regs[opcode.i.B] op opcode.i.Cx; break
 
 #define bmode_cmp(cpu, opcode, cmp) \
-    ({ \
         (cpu)->pc = (cpu)->regs[opcode.i.A] cmp (cpu)->regs[opcode.i.B] \
-        ? opcode.i.Cx : (cpu)->pc; break; \
-    })
+        ? opcode.i.Cx : (cpu)->pc; break
 
 #define push(vm, value) \
     ({  \
@@ -63,6 +60,7 @@ static inline void vm_step(struct vm *vm)
     case LOADR_CODE:    cpu->regs[op.r.A] = cpu->regs[op.r.B]; break;
     case PUTR_CODE:     printf("%d\n", cpu->regs[op.i.A]); break;
     case PUTV_CODE:     printf("%d\n", op.i.Cx); break;
+    case PUSHK_CODE:    push(vm, (reg_t)op.i.Cx); break;
     /* Branch-mode instructions */
     case BEQ_CODE:      bmode_cmp(cpu, op, ==);
     case BNE_CODE:      bmode_cmp(cpu, op, !=);

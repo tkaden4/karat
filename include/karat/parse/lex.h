@@ -3,8 +3,8 @@
 #include<wchar.h>
 #include<stdlib.h>
 /* karat files */
-#include<parse/rbuff.h>
-#include<ktypes.h>
+#include<karat/parse/rbuff.h>
+#include<karat/ktypes.h>
 #include<setjmp.h>
 
 /* TODO remove limits on lexeme size */

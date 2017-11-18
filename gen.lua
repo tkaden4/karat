@@ -40,6 +40,8 @@ local opcodes = {
     { "popr",  "rmode(1, 0, 0, 0, 0)" }, -- pop value into register
     -- I opcodes
     { "jmpr",  "imode(1, 0, 0)" }, -- jump relative to register
+    { "larg",  "imode(1, 0, 1)" }, -- load argument
+    { "pushk", "imode(0, 0, 1)" }, -- push a constant to the stack
     { "addis", "imode(1, 1, 1)" }, -- immediate signed add */
     { "addiu", "imode(1, 1, 1)" }, -- immediate unsigned add */
     { "subis", "imode(1, 1, 1)" }, -- immediate unsigned sub */
