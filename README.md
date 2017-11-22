@@ -24,6 +24,8 @@ Keep debug code in
 Turn off some safety checks for production
 
 ## In Progress ##
+- [ ] memory mapped io
+- [ ] interrupt vectors
 - [ ] documentation
 - [ ] remove lua script
 - [ ] debugger
@@ -33,7 +35,7 @@ Turn off some safety checks for production
 - [ ] string literals
 - [ ] interrupts/ports
 - [ ] jit compilation
-- [ ] opcode overloading (simulated CISC)
+- [ ] opcode indirections (simulated CISC)
 - [x] modules
 - [x] stack + stack opcodes
 - [x] command line arguments
