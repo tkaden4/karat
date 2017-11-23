@@ -7,6 +7,9 @@ and the other is to write a scripting language that compiles to karat. Because
 of these goals, Karat will try to remain more like an assembly interpreter than
 a high-level bytecode interpreter (not the JVM, Python VM, etc.).
 
+## Usage ##
+`man ./karat.1` for more details
+
 ### Building ###
 Build entire project:
 `make`
@@ -25,18 +28,18 @@ Turn off some safety checks for production
 
 ## In Progress / TODO ##
 - [ ] move to 32/64 bit
-- [ ] memory mapped io
-- [ ] interrupt vectors
-- [ ] documentation
 - [ ] remove lua script
-- [ ] debugger
+- [ ] documentation
 - [ ] embedding library
 - [ ] macro system (aliases, functions, loops)
 - [ ] typed opcode arguments
+- [ ] opcode indirections (simulated CISC)
 - [ ] string literals
 - [ ] interrupts/ports
+- [ ] memory mapped io
+- [ ] interrupt vectors
 - [ ] jit compilation
-- [ ] opcode indirections (simulated CISC)
+- [x] debugger
 - [x] modules
 - [x] stack + stack opcodes
 - [x] command line arguments
