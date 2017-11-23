@@ -10,6 +10,9 @@ a high-level bytecode interpreter (not the JVM, Python VM, etc.).
 ## Usage ##
 `man ./karat.1` for more details
 
+## System specificiation (In Progress) ##
+- Little Endian
+
 ### Building ###
 Build entire project:
 `make`
