@@ -23,7 +23,8 @@ Keep debug code in
 #### KARAT\_PROD ####
 Turn off some safety checks for production
 
-## In Progress ##
+## In Progress / TODO ##
+- [ ] move to 32/64 bit
 - [ ] memory mapped io
 - [ ] interrupt vectors
 - [ ] documentation
@@ -39,3 +40,9 @@ Turn off some safety checks for production
 - [x] modules
 - [x] stack + stack opcodes
 - [x] command line arguments
+
+## Contribution ##
+Karat is open to outside contributions. Look at the above list
+to see what needs to be worked on. If you encounter a bug during
+development, make an issue or open a pull request with a solution.
+Any help is appreciated!
