@@ -45,7 +45,6 @@ static inline void vm_step(struct vm *vm)
         break;
     /* Register-mode instructions */
     case JMPR_CODE:     cpu->pc = cpu->regs[op.i.A]; break;
-    case READ_CODE:     cpu->regs[op.r.A] = fgetc(stdin); break;
     case MODR_CODE:     rmode_bin(cpu, op, %);
     case XORR_CODE:     rmode_bin(cpu, op, ^);
     case SUBS_CODE:     rmode_bin(cpu, op, -);
@@ -80,12 +79,12 @@ static inline void vm_step(struct vm *vm)
     };
 }
 
-void vm_run(struct vm *vm, const struct kprog *prog)
+void vm_run(struct vm *vm, const struct vm_options opts, const struct kprog *prog)
 {
     memset(vm, 0, sizeof(*vm));
     vm->prog = prog;
-    vm->memory = s_malloc(1024); 
-    memset(vm->memory, 0, 1024);
+    vm->memory = s_malloc(opts.memory_size); 
+    memset(vm->memory, 0, opts.memory_size);
 
     vm->cpu.pc = prog->entry_point;
     while(vm->cpu.pc < prog->prog_size){

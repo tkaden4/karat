@@ -9,6 +9,7 @@
 typedef uint32_t reg_t; /* general register datatype */
 
 #define GENERAL_REGS 32
+#define BLANK_CPU (struct cpu){ .regs = {0} }
 
 struct cpu {
     /* general registers */
@@ -17,13 +18,13 @@ struct cpu {
         struct {
             reg_t __pad[GENERAL_REGS - 3];
             reg_t sp;
-            reg_t bp;
             reg_t pc;
         };
     };
 };
 
-void cpu_init(struct cpu *state);
-void cpu_reset(struct cpu *state);
-void cpu_step(struct cpu *state, struct kprog *prog);
-void cpu_run(struct cpu *cpu, struct kprog *prog);
+static inline void cpu_init(struct cpu *cpu, reg_t pc, reg_t sp)
+{
+    cpu->sp = sp;
+    cpu->pc = pc;
+}

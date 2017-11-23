@@ -6,7 +6,7 @@
 #include<karat/log.h>
 #include<karat/alloc.h>
 #include<karat/vm/vm.h>
-#include<karat/mod.h>
+#include<karat/debug.h>
 #include<karat/parse/parse.h>
 
 #define usage() \
@@ -18,14 +18,18 @@ int main(int argc, char *argv[])
 
     int c = EOF;
     bool lint = false;
+    bool debug = false;
     const char *output = NULL;
-    while((c = getopt(argc, argv, "o:l")) != -1){
+    while((c = getopt(argc, argv, "o:ld")) != -1){
         switch(c){
         case 'o':
             output = optarg;
             break;
         case 'l':
             lint = true;
+            break;
+        case 'd':
+            debug = true;
             break;
         case '?':
             usage();
@@ -58,6 +62,9 @@ int main(int argc, char *argv[])
         if(lint){
             puts("linted successfully");
             goto done;
+        }else if(debug){
+            err = idebug(rprog, (struct vm_options){ .memory_size = 8096 });
+            goto done;
         }else if(output){
             printf("writing to %s...\n", output);
             FILE *out = fopen(output, "w");
@@ -71,7 +78,7 @@ int main(int argc, char *argv[])
         }else{
             printf("running program (%lu bytes)...\n", rprog->prog_size);
             struct vm vm;
-            vm_run(&vm, rprog);
+            vm_run(&vm, (struct vm_options){ .memory_size = 8096 }, rprog);
         } 
     }
 

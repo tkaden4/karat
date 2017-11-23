@@ -35,8 +35,7 @@ local opcodes = {
     { "xorr",  "rmode(1, 1, 1, 0, 0)" }, -- xor two registers
     { "loadr", "rmode(1, 1, 0, 0, 0)" }, -- load register into register
     { "modr",  "rmode(1, 1, 1, 0, 0)" }, -- get remainder
-    { "read",  "rmode(1, 0, 0, 0, 0)" }, -- read character from stdin
-    { "pushr",  "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
+    { "pushr", "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
     { "popr",  "rmode(1, 0, 0, 0, 0)" }, -- pop value into register
     -- I opcodes
     { "jmpr",  "imode(1, 0, 0)" }, -- jump relative to register
@@ -65,6 +64,11 @@ local opcodes = {
 
 }
 
+if #opcodes >= MAX_OPCODES then
+    print "too many opcodes"
+    return 1
+end
+
 output("#define MAX_OPCODES " .. MAX_OPCODES)
 
 output("enum {")
@@ -79,11 +83,6 @@ indent = indent - 1
 output("};")
 
 print("")
-
-if #opcodes >= MAX_OPCODES then
-    print "more opcodes than allowed"
-    return 1
-end
 
 output "static const struct op_def op_defs[MAX_OPCODES] = {"
 

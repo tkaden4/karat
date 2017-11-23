@@ -3,7 +3,9 @@
 #include<string.h>
 
 /* "Templated" ring buffer implementation.
- * used primarily in parser/lexer for lookahead */
+ * used primarily in parser/lexer for lookahead
+ * Ring buffers benefit from better memory usage 
+ * and speed. */
 
 #define RBUFF_ELEM_INDEX(start, size, n) (((start) + (n)) % (size))
 

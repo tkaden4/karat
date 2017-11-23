@@ -1,4 +1,7 @@
 #pragma once
 
-/* debug a karat program */
-int debug(const char *path);
+#include<karat/vm/vm.h>
+#include<karat/vm/kprog.h>
+
+/* start interactive debugger */
+int idebug(const struct kprog *prog, struct vm_options opts);

@@ -5,7 +5,7 @@
 #define DLINK(type) struct { type * prev; type *next; }
 
 /* the each_var must be defined before */
-#define LIST_FOREACH( head, each_var) \
+#define LIST_FOREACH(head, each_var) \
 for(typeof(*head) *each_var = NULL, *___walk = head; \
         (each_var = ___walk); ___walk = ___walk->next)
 

@@ -69,10 +69,13 @@ enum {
     iArgA,      /* address/label */
 };
 
+
+typedef u16 amode_t;
+
 struct op_def {
     const wchar_t * const mnemonic;
     unsigned code : INS_SIZE;
-    u16 argmode;
+    amode_t argmode;
 };
 
 /* argument mode
