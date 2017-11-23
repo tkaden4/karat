@@ -5,13 +5,13 @@
 #include<karat/vm/kprog.h>
 
 struct vm_options {
-    u32 memory_size;
+    uint32_t memory_size;
 };
 
 struct vm {
     const struct kprog *prog;
     struct cpu cpu;
-    u8 *memory;
+    uint8_t *memory;
 };
 
 void vm_run(struct vm *vm, struct vm_options opts, const struct kprog *prog);

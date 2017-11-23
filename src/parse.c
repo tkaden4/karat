@@ -59,14 +59,14 @@ static void write_ ## name(struct parse_state *state, type b, size_t at) \
 RBUFF_IMPL(tok_la_buff, struct token, MAX_LOOK);
 
 /* create memory-reserving functions */
-RESERVE_FUNC(byte, u8);
-RESERVE_FUNC(word, u16);
-RESERVE_FUNC(long, u32);
+RESERVE_FUNC(byte, uint8_t);
+RESERVE_FUNC(word, uint16_t);
+RESERVE_FUNC(long, uint32_t);
 
 /* create writing functions */
-WRITE_FUNC(byte, u8);
-WRITE_FUNC(word, u16);
-WRITE_FUNC(long, u32);
+WRITE_FUNC(byte, uint8_t);
+WRITE_FUNC(word, uint16_t);
+WRITE_FUNC(long, uint32_t);
 
 static const struct token *parse_la(struct parse_state *state);
 
@@ -268,7 +268,7 @@ static inline int resolve_ax(const struct label_def *def,
 }
 
 /* TODO better error checking */
-static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
+static long long parse_arg(struct parse_state *state, uint8_t argmode, uint8_t which)
 {
     const struct token *tok = parse_la(state);
     if(!HAS_ARG(argmode, which)){
@@ -279,7 +279,7 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
     case TOK_REG:
     case TOK_ADDR:
     case TOK_NUM:
-        if((u16)tok->data != tok->data){
+        if((uint16_t)tok->data != tok->data){
             parse_err(state, "\"%ls\" exceeds 16-bit number limit", tok->lexeme);
         }
         ret = tok->data;
@@ -287,7 +287,7 @@ static long long parse_arg(struct parse_state *state, u8 argmode, u8 which)
     /* label */
     case TOK_ID:
     {
-        u8 mode = GETMODE(argmode);
+        uint8_t mode = GETMODE(argmode);
         switch(mode){
         case iABCx:
             add_label_arg(state, tok->lexeme, state->cur_op, resolve_abcx);
@@ -321,7 +321,7 @@ static int parse_ins(struct parse_state *state)
     if(op){
         union opcode out_op = {};
         out_op.I = op->code;
-        u8 argmode = op->argmode;
+        uint8_t argmode = op->argmode;
         switch(GETMODE(argmode)){
         case iNNNN: /* no arguments */
             break;
@@ -345,7 +345,7 @@ static int parse_ins(struct parse_state *state)
             break;
         };
         write_long(state, out_op.op, reserve_long(state));
-        state->cur_op += sizeof(u32);
+        state->cur_op += sizeof(uint32_t);
     }else{
         parse_err(state, "unrecognized opcode \"%ls\" on line %u", op_str, la.line_no);
         return 1;

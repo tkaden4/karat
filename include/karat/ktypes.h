@@ -13,19 +13,3 @@ typedef uint16_t addr_t;    /* address datatype */
 #define RAW_CB(type, fp) MAKE_CB(type, fp, NULL)
 
 #define CALL_CB(x, ...) x.cb(x.data, ##__VA_ARGS__)
-
-#define U(size) typedef uint ## size ## _t u ## size
-#define I(size) typedef int ## size ## _t i ## size
-
-U(8);
-U(16);
-U(32);
-U(64);
-
-I(8);
-I(16);
-I(32);
-I(64);
-
-#undef U
-#undef I

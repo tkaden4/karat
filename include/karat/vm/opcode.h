@@ -70,7 +70,7 @@ enum {
 };
 
 
-typedef u16 amode_t;
+typedef uint16_t amode_t;
 
 struct op_def {
     const wchar_t * const mnemonic;

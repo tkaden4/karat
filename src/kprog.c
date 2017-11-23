@@ -14,7 +14,7 @@ struct kprog *kprog_create()
     return ret;
 }
 
-void kprog_append_bytes(struct kprog *prog, u32 data, size_t bytes)
+void kprog_append_bytes(struct kprog *prog, uint32_t data, size_t bytes)
 {
     /* fix byte count errors */
     bytes = bytes > sizeof(data) ? sizeof(data) : bytes;
@@ -24,7 +24,7 @@ void kprog_append_bytes(struct kprog *prog, u32 data, size_t bytes)
         prog->__cap += bytes;
         prog->program = s_realloc(prog->program, prog->__cap);
     }
-    register u8 *dptr = (u8 *)&data;
+    register uint8_t *dptr = (uint8_t *)&data;
     for(size_t i = 1; i <= bytes; ++i){
         prog->program[prog->__size++] = dptr[bytes - i];
     }
