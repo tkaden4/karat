@@ -1,7 +1,7 @@
 SOURCES=$(wildcard ./src/*.c)
 OBJECTS=$(SOURCES:.c=.o)
 CFLAGS=-Wall -Wextra -Werror -pipe -O1 -Wno-unused-function -std=gnu99 -DKDEBUG -I./include/
-LDFLAGS=-ldl
+LDFLAGS=-ldl -lreadline
 EXECUTABLE=karat
 DISCARD=$(OBJECTS) $(EXECUTABLE)
 
@@ -13,7 +13,10 @@ else
 	CC := $(CC)
 endif
 
-all: $(EXECUTABLE) modules
+all: $(EXECUTABLE) modules opcodes
+
+opcodes:
+	lua gen.lua > include/karat/opcodes.inc
 
 $(EXECUTABLE) : $(OBJECTS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
@@ -29,7 +32,7 @@ profile:
 
 # run karat on a simple test suite
 run:
-	./$(EXECUTABLE) ./test/test.k
+	./$(EXECUTABLE) -d ./test/test.k
 
 tst:
 	echo $(LS) test/*.k | col | xargs -n 1 ./$(EXECUTABLE)
