@@ -38,10 +38,11 @@ static inline void dis_opcode(const union opcode *op)
 {
 #define put_reg(reg) printf("r%d ", reg);
     const struct op_def *def = find_op_by_code(op);
-    printf("%ls ", def->mnemonic);
+    printf("%ls", def->mnemonic);
     amode_t mode = def->argmode;
-    switch(GETMODE(mode)){
+    switch(MODETYPE(mode)){
     case iABCDF:
+        putchar(' ');
         if(HAS_ARG(mode, A_ARG)) put_reg(op->r.A);
         if(HAS_ARG(mode, B_ARG)) put_reg(op->r.B);
         if(HAS_ARG(mode, C_ARG)) put_reg(op->r.C);
@@ -49,17 +50,18 @@ static inline void dis_opcode(const union opcode *op)
         if(HAS_ARG(mode, F_ARG)) put_reg(op->r.F);
         break;
     case iABCx:
+        putchar(' ');
         if(HAS_ARG(mode, A_ARG)) put_reg(op->i.A);
         if(HAS_ARG(mode, B_ARG)) put_reg(op->i.B);
         if(HAS_ARG(mode, Cx_ARG)) printf("$%04lX", (size_t)op->i.Cx);
         break;
     case iAx:
+        putchar(' ');
         if(HAS_ARG(mode, Ax_ARG)) printf("$%08lX", (size_t)op->b.Ax);
         break;
     default:
         break;
     };
-    puts("");
 #undef put_reg
 }
 
@@ -67,8 +69,9 @@ static inline void dis_opcode(const union opcode *op)
 static inline void dis(struct debug_ctx *d)
 {
     for(size_t i = 0; i < d->vm.prog->prog_size; i += sizeof(union opcode)){
-        printf("$%04lX ", i);
+        printf("$%08lX ", i);
         dis_opcode(opcode_at(d->vm.prog, i));
+        puts("");
     }
 }
 
@@ -102,15 +105,17 @@ int idebug(const struct kprog *prog, struct vm_options opts)
     char *line = NULL;
     bool running = true;
     while(running && (line = readline("kdb> "))){
-        const char *trimmed = trim(line, ' ');
-        if(s_eq(trimmed, "exit")){
-            running = false;
-        }else if(s_eq(trimmed, "dis")){
-            dis(&d);
-        }else if(s_eq(trimmed, "help")){
-            help();
-        }else{
-            longcmd(trimmed, &d);
+        if(!s_eq(line, "")){
+            const char *trimmed = trim(line, ' ');
+            if(s_eq(trimmed, "exit")){
+                running = false;
+            }else if(s_eq(trimmed, "dis")){
+                dis(&d);
+            }else if(s_eq(trimmed, "help")){
+                help();
+            }else{
+                longcmd(trimmed, &d);
+            }
         }
         s_free(line);
     }

@@ -97,7 +97,7 @@ struct op_def {
 /* argument with no mode */
 #define NO_MODE argmode(iArgN, iArgN, iArgN, iArgN, iArgN, iNNNN)
 /* get the argument mode */
-#define GETMODE(a) ((a) & 0b11)
+#define MODETYPE(a) ((a) & 0b11)
 /* check to see if opcode uses argument in position */ 
 #define HAS_ARG(argm, which) ((argm) & (0b10000000 >> (which)))
 

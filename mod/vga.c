@@ -1,44 +1,55 @@
+#include<stdlib.h>
+#include<stdint.h>
+
 #include<karat/ktypes.h>
 #include<karat/mod.h>
-/* #include<karat/interrupt.h> */
+#include<karat/vm/types.h>
 
 MODULE(
     "karat.vga",
     "Kaden Thomas"
 );
 
-struct soft_irq {
+#define alloc(type) (malloc(sizeof(type)))
 
+#define VGA_WIDTH 800
+#define VGA_HEIGHT 600
+
+struct vga_data {
+    /* TODO or is this in main memory? */
+    k32_t *bitmap;
 };
 
-struct hard_irq {
-
-};
-
-struct io_port {
-
-};
-
-/* interrupts by the module
- * Mod -> Karat */
-const struct hard_irq hard_irqs[] = {
-
-};
-
-/* interrupts by the cpu
- * Karat -> Mod */
-const struct soft_irq soft_irqs[] = {
-
-};
-
-int on_module_load(void **data)
+/* TODO byte-order may become an issue */
+/* TODO handle transparency bits */
+static void set_pix_s(struct vga_data *data, k16_t x, k16_t y, k32_t color)
 {
-    (void) data;
+    data->bitmap[(VGA_WIDTH * y) % (VGA_WIDTH * VGA_HEIGHT) + (x % VGA_WIDTH)] = color;
+}
+
+static void draw_rect(struct vga_data *data, k16_t x1, k16_t y1, k16_t x2, k16_t y2, k32_t color)
+{
+    for(register size_t i = y1; i < y2; ++i){
+        for(register size_t k = x1; k < x2; ++k){
+            set_pix_s(data, k, i, color);
+        }
+    }
+}
+
+static int on_module_load(struct vga_data **data)
+{
+    *data = alloc(struct vga_data);
+    (*data)->bitmap = alloc(uint32_t[VGA_WIDTH * VGA_HEIGHT]);
     return 0;
 }
 
-int on_module_unload(void *data)
+static int on_module_unload(struct vga_data *data)
 {
-    (void) data;
+    if(data){
+        if(data->bitmap){
+            free(data->bitmap);
+        }
+        free(data);
+    }
     return 0;
 }

@@ -287,7 +287,7 @@ static long long parse_arg(struct parse_state *state, uint8_t argmode, uint8_t w
     /* label */
     case TOK_ID:
     {
-        uint8_t mode = GETMODE(argmode);
+        uint8_t mode = MODETYPE(argmode);
         switch(mode){
         case iABCx:
             add_label_arg(state, tok->lexeme, state->cur_op, resolve_abcx);
@@ -322,7 +322,7 @@ static int parse_ins(struct parse_state *state)
         union opcode out_op = {};
         out_op.I = op->code;
         uint8_t argmode = op->argmode;
-        switch(GETMODE(argmode)){
+        switch(MODETYPE(argmode)){
         case iNNNN: /* no arguments */
             break;
         /* TODO these three cases should be simplified

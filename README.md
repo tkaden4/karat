@@ -11,7 +11,8 @@ a high-level bytecode interpreter (not the JVM, Python VM, etc.).
 `man ./karat.1` for more details
 
 ## System specificiation (In Progress) ##
-- Little Endian
+- Big Endian
+- Multi-word instruction set
 
 ### Building ###
 Build entire project:
