@@ -1,12 +1,12 @@
 # Modules
 
-Modules act as a sort of "loadable device" that can be used
+Modules represent devices connected to the VM that can be used
 to extend the functionality of Karat beyond what is provided
-by the basic assembler. This was done in order to strip the 
-main assembler of any bias towards a specific domain.
+by the basic assembler. This was done in order to strip Karat
+of any bias towards a specific domain.
 
 
-Modules are loaded at runtim, in order to remove the cost of
+Modules are loaded at runtime, in order to remove the cost of
 recompilation every time you wish to add a new module and also
 to allow more flexible configurations.
 
