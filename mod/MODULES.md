@@ -6,7 +6,7 @@ by the basic assembler. This was done in order to strip Karat
 of any bias towards a specific domain.
 
 
-Modules are loaded at runtime, in order to remove the cost of
+Modules are loaded at runtime in order to remove the cost of
 recompilation every time you wish to add a new module and also
 to allow more flexible configurations.
 
