@@ -6,6 +6,7 @@
 #include<karat/log.h>
 #include<karat/alloc.h>
 #include<karat/vm/vm.h>
+#include<karat/mod.h>
 #include<karat/debug.h>
 #include<karat/parse/parse.h>
 

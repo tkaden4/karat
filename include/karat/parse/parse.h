@@ -15,7 +15,7 @@
 #endif
 
 struct label_def {
-    addr_t pos; /* what position it points to */
+    uint16_t pos; /* what position it points to */
 };
 
 struct label_arg;

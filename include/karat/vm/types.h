@@ -1,7 +1,5 @@
 #pragma once
 
-#include<karat/ktypes.h>
-
 /* native karat types */
 typedef uint8_t k8_t;
 typedef uint16_t k16_t;

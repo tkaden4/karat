@@ -1,8 +1,8 @@
 #include<stdio.h>
+#include<stdint.h>
 
 #include<karat/alloc.h>
 #include<karat/smap.h>
-#include<karat/ktypes.h>
 
 /* implementation of the FNV hashing algorithm */
 

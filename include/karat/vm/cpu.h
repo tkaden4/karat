@@ -4,7 +4,6 @@
 #include<stdio.h>
 /* karat files */
 #include<karat/vm/kprog.h>
-#include<karat/ktypes.h>
 #include<karat/log.h>
 
 typedef uint32_t reg_t; /* general register datatype */
@@ -34,6 +33,16 @@ static void print_cpu_info(struct cpu *cpu)
 {
     err_on(!cpu, "cpu is NULL");
     for(size_t i = 0; i < GENERAL_REGS; ++i){
-        printf("r%lu: %u\n", i, cpu->regs[i]);
+        switch(i){
+        case 30:
+            printf("sp: %u\n", cpu->regs[i]);
+            break;
+        case 31:
+            printf("pc: %u\n", cpu->regs[i]);
+            break;
+        default:
+            printf("r%lu: %u\n", i, cpu->regs[i]);
+            break;
+        };
     }
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include<wchar.h>
-#include<karat/ktypes.h>
 
 /* opcode design
 * All opcodes are 32 bits wide (easier to parse)

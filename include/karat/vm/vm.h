@@ -1,6 +1,5 @@
 #pragma once
 
-#include<karat/ktypes.h>
 #include<karat/vm/cpu.h>
 #include<karat/vm/kprog.h>
 

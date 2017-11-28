@@ -10,7 +10,6 @@
 #include<karat/vm/opcode.h>
 #include<karat/vm/cpu.h>
 #include<karat/list.h>
-#include<karat/ktypes.h>
 #include<karat/alloc.h>
 #include<karat/log.h>
 #include<karat/smap.h>
@@ -72,7 +71,7 @@ static const struct token *parse_la(struct parse_state *state);
 
 /* adds a label at the current position
  * returns 1 on redefinition of label */
-static int add_label_def(struct parse_state *state, const wchar_t *str, addr_t pos)
+static int add_label_def(struct parse_state *state, const wchar_t *str, uint16_t pos)
 {
     if(smap_lookup(state->label_defs, str)){
         return 1;

@@ -1,9 +1,11 @@
 #include<stdio.h>
+#include<stdint.h>
 #include<string.h>
+
+#include<dlfcn.h>
 
 #include<karat/mod.h>
 #include<karat/log.h>
-#include<dlfcn.h>
 
 #ifdef __linux
 #define MODULE_FEXT ".so"
@@ -46,11 +48,16 @@ int module_load(struct kmod *mod, const char *name)
     strcpy(path + nlen, MODULE_FEXT);
     /* load the module */
     mod->handle = __get_module_handle(path);
-    return 0;
+    module_init_f init = __get_module_symbol(mod->handle, "on_module_load");
+    return init(&mod->mod_data);
 }
 
-/* XXX remove */
 int module_unload(struct kmod *mod)
 {
-    return __unload_module_handle(mod->handle);
+    module_unload_f unload = __get_module_symbol(mod->handle, "on_module_unload");
+    int err = unload(mod->mod_data);
+    if(__unload_module_handle(mod->handle)){
+        err = 1;
+    }
+    return err;
 }

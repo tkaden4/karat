@@ -50,8 +50,15 @@ static inline void vm_step(struct vm *vm)
     case SUBS_CODE:     rmode_bin(cpu, op, -);
     case ADDS_CODE:     rmode_bin(cpu, op, +);
     case MULS_CODE:     rmode_bin(cpu, op, *);
-    case PUSHR_CODE:    push(vm, cpu->regs[op.i.A]); break;
+    case PUSHR_CODE:    push(vm, cpu->regs[op.r.A]); break;
     case POPR_CODE:     cpu->regs[op.i.A] = pop(vm, reg_t); break;
+    case TRAP_CODE:
+    {
+        const reg_t code = op.r.A;
+        printf("interrupt generated with code: %u\n", code);
+        print_cpu_info(cpu);
+    }
+    break;
     /* Intermediate-mode instructions */
     case ADDIU_CODE:    imode_bin(cpu, op, +);
     case SUBIS_CODE:    imode_bin(cpu, op, -);
