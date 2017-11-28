@@ -287,16 +287,22 @@ static long long parse_arg(struct parse_state *state, uint8_t argmode, uint8_t w
     /* label */
     case TOK_ID:
     {
-        uint8_t mode = MODETYPE(argmode);
-        switch(mode){
-        case iABCx:
-            add_label_arg(state, tok->lexeme, state->cur_op, resolve_abcx);
-            break;
-        case iAx:
-            add_label_arg(state, tok->lexeme, state->cur_op, resolve_ax);
-            break;
-        default:
-            parse_err(state, "Address cannot fit into argument");
+        if(!wcscmp(tok->lexeme, L"sp")){
+            ret = 30;
+        }else if(!wcscmp(tok->lexeme, L"pc")){
+            ret = 31;
+        }else{
+            uint8_t mode = MODETYPE(argmode);
+            switch(mode){
+            case iABCx:
+                add_label_arg(state, tok->lexeme, state->cur_op, resolve_abcx);
+                break;
+            case iAx:
+                add_label_arg(state, tok->lexeme, state->cur_op, resolve_ax);
+                break;
+            default:
+                parse_err(state, "Address cannot fit into argument");
+            }
         }
     
     }
