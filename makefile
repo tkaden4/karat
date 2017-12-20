@@ -1,9 +1,9 @@
 SOURCES=$(wildcard ./src/*.c)
 OBJECTS=$(SOURCES:.c=.o)
-CFLAGS=-Wall -Wextra -Werror -pipe -O1 -Wno-unused-function -std=gnu99 -DKDEBUG -I./include/
+CFLAGS=-Wall -Wextra -Werror -pipe -O2 -Wno-unused-function -std=gnu99 -DKDEBUG -I./include/
 LDFLAGS=-ldl -lreadline
 EXECUTABLE=karat
-DISCARD=$(OBJECTS) $(EXECUTABLE)
+DISCARD=$(OBJECTS) $(EXECUTABLE) include/karat/opcodes.inc
 
 # check and see if we have ccache
 HAS_CCACHE := $(shell command -v ccache 2> /dev/null)
@@ -13,7 +13,7 @@ else
 	CC := $(CC)
 endif
 
-all: $(EXECUTABLE) modules opcodes
+all: opcodes $(EXECUTABLE) modules
 
 opcodes:
 	lua gen.lua > include/karat/opcodes.inc
@@ -32,7 +32,7 @@ profile:
 
 # run karat on a simple test suite
 run:
-	./$(EXECUTABLE) -d ./test/test.k
+	./$(EXECUTABLE) ./test/test.k
 
 tst:
 	echo $(LS) test/*.k | col | xargs -n 1 ./$(EXECUTABLE)

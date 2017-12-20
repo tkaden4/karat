@@ -26,63 +26,105 @@
         *(type *)((vm)->memory + (vm)->cpu.sp); \
      })
 
+/* for defining generic handlers */
+/*
+#define handler_of(type, program, ip, x, body) \
+    type *__attribute__((unused)) x = (type *)(&program[ip] + sizeof(type)); \
+    body; \
+    goto **handlers[program[(ip += sizeof(type))]];
+    */
+
+
+#define match_as(x, y) \
+    typeof(y) x = y; \
+    switch(x)
+
+
+#define handle(code, body) \
+    case code ## _CODE: { body; } break
+
+#define default_handler(body) \
+    default: body; break;
+
+#define arithmetic(body, ...) \
+    body(+); \
+    body(-); \
+    body(*); \
+    body(%); \
+    body(/)
+
 static inline void vm_step(struct vm *vm)
 {
     struct cpu *cpu = &vm->cpu;
     const struct kprog *prog = vm->prog;
     union opcode op = *(union opcode *)&prog->program[cpu->pc];
     cpu->pc += sizeof(union opcode);
-    switch(op.I){
+
+    match_as(code, (uint8_t)op.I) {
     /* No-mode instructions */
-    case HALT_CODE:     cpu->pc = prog->prog_size; break;
-    case RET_CODE:      cpu->pc = pop(vm, reg_t); break;
-    case DUP_CODE: 
-    {
+    handle(HALT,    cpu->pc = prog->prog_size);
+    handle(RET,     cpu->pc = pop(vm, reg_t));
+    handle(DUP, {
         reg_t val = pop(vm, reg_t);
         push(vm, val);
         push(vm, val);
-    }
-        break;
+    });
+    handle(PUSHA, {
+        for(size_t i = 0; i < GENERAL_REGS; ++i){
+            push(vm, cpu->regs[i]);
+        }
+            
+    });
+    handle(POPA, {
+        for(size_t i = 1; i <= GENERAL_REGS; ++i){
+            cpu->regs[GENERAL_REGS - i] = pop(vm, reg_t);
+        }
+    });
     /* Register-mode instructions */
-    case JMPR_CODE:     cpu->pc = cpu->regs[op.i.A]; break;
-    case MODR_CODE:     rmode_bin(cpu, op, %);
-    case XORR_CODE:     rmode_bin(cpu, op, ^);
-    case SUBS_CODE:     rmode_bin(cpu, op, -);
-    case ADDS_CODE:     rmode_bin(cpu, op, +);
-    case MULS_CODE:     rmode_bin(cpu, op, *);
-    case PUSHR_CODE:    push(vm, cpu->regs[op.r.A]); break;
-    case POPR_CODE:     cpu->regs[op.i.A] = pop(vm, reg_t); break;
-    case TRAP_CODE:
-    {
-        const reg_t code = op.r.A;
+    handle(READ, 
+        cpu->regs[op.r.A] = *(reg_t *)&vm->memory[cpu->regs[op.r.B]]
+    );
+    handle(STOR,
+        *(reg_t *)&vm->memory[cpu->regs[op.r.B]] = cpu->regs[op.r.A]
+    );
+    handle(ADDS,    rmode_bin(cpu, op, +));
+    handle(MODR,    rmode_bin(cpu, op, %));
+    handle(XORR,    rmode_bin(cpu, op, ^));
+    handle(SUBS,    rmode_bin(cpu, op, -));
+    handle(MULS,    rmode_bin(cpu, op, *));
+    handle(JMPR,    cpu->pc = cpu->regs[op.i.A]);
+    handle(PUSH,   push(vm, (reg_t)cpu->regs[op.r.A]));
+    handle(POP,    cpu->regs[op.r.A] = pop(vm, reg_t));
+    handle(TRAP, {
+        reg_t code = (reg_t)(op.r.A & 0b11111);
         printf("interrupt generated with code: %u\n", code);
         print_cpu_info(cpu);
-    }
-    break;
+    });
     /* Intermediate-mode instructions */
-    case ADDIU_CODE:    imode_bin(cpu, op, +);
-    case SUBIS_CODE:    imode_bin(cpu, op, -);
-    case LOADK_CODE:    cpu->regs[op.i.A] = op.i.Cx; break;
-    case LOADR_CODE:    cpu->regs[op.r.A] = cpu->regs[op.r.B]; break;
-    case PUTR_CODE:     printf("%d\n", cpu->regs[op.i.A]); break;
-    case PUTV_CODE:     printf("%d\n", op.i.Cx); break;
-    case PUSHK_CODE:    push(vm, (reg_t)op.i.Cx); break;
+    handle(ADDIU,   imode_bin(cpu, op, +));
+    handle(SUBIS,   imode_bin(cpu, op, -));
+    handle(LOADK,   cpu->regs[op.i.A] = op.i.Cx);
+    handle(LOADR,   cpu->regs[op.r.A] = cpu->regs[op.r.B]);
+    handle(PUTR,    printf("%d\n", cpu->regs[op.i.A]));
+    handle(PUTV,    printf("%d\n", op.i.Cx));
+    handle(PUSHK,   push(vm, (reg_t)op.i.Cx));
     /* Branch-mode instructions */
-    case BEQ_CODE:      bmode_cmp(cpu, op, ==);
-    case BNE_CODE:      bmode_cmp(cpu, op, !=);
-    case BGT_CODE:      bmode_cmp(cpu, op, >);
-    case BLT_CODE:      bmode_cmp(cpu, op, <);
-    case JMP_CODE:      cpu->pc = op.b.Ax; break;
-    case CALL_CODE:
+    handle(BEQ,     bmode_cmp(cpu, op, ==));
+    handle(BNE,     bmode_cmp(cpu, op, !=));
+    handle(BGT,     bmode_cmp(cpu, op, >));
+    handle(BLT,     bmode_cmp(cpu, op, <));
+    handle(JMP,     cpu->pc = op.b.Ax);
+    handle(CALL, {
         push(vm, cpu->pc);
         cpu->pc = op.b.Ax;
-        break;
-    default:
+    });
+    default_handler({
         if(op.I >= MAX_OPCODES){
             err("mangled opcode out of range: 0x%02X", op.I);
         }else{
             err("unimplemented opcode 0x%02X (%ls)", op.I, op_defs[op.I].mnemonic);
         }
+    });
     };
 }
 

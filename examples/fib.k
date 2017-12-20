@@ -5,6 +5,7 @@ __start:
     loadk r2, #1
     ; maximum value
     loadk r3, #47
+    ; simple constants
     loadk r4, #1
     loadk r5, #0
 loop:

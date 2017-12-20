@@ -18,6 +18,8 @@ local opcodes = {
     { "halt", "NO_MODE" },
     { "ret",  "NO_MODE" },
     { "dup",  "NO_MODE" },
+    { "popa", "NO_MODE" },
+    { "pusha","NO_MODE" },
     -- R opcodes
     { "adds",  "rmode(1, 1, 1, 0, 0)" }, -- signed add
     { "addu",  "rmode(1, 1, 1, 0, 0)" }, -- unsigned add
@@ -30,23 +32,19 @@ local opcodes = {
     { "xorr",  "rmode(1, 1, 1, 0, 0)" }, -- xor two registers
     { "loadr", "rmode(1, 1, 0, 0, 0)" }, -- load register into register
     { "modr",  "rmode(1, 1, 1, 0, 0)" }, -- get remainder
-    { "pushr", "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
-    { "popr",  "rmode(1, 0, 0, 0, 0)" }, -- pop value into register
+    { "push",  "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
+    { "pop",   "rmode(1, 0, 0, 0, 0)" }, -- pop value into register
+    { "trap",  "rmode(1, 0, 0, 0, 0)" }, -- do trap
+    { "read",  "rmode(1, 1, 0, 0, 0)" }, -- read value from memory
+    { "stor",  "rmode(1, 1, 0, 0, 0)" }, -- store value into memory
     -- I opcodes
     { "jmpr",  "imode(1, 0, 0)" }, -- jump relative to register
-    { "larg",  "imode(1, 0, 1)" }, -- load argument
     { "pushk", "imode(0, 0, 1)" }, -- push a constant to the stack
     { "addis", "imode(1, 1, 1)" }, -- immediate signed add */
     { "addiu", "imode(1, 1, 1)" }, -- immediate unsigned add */
     { "subis", "imode(1, 1, 1)" }, -- immediate unsigned sub */
     { "subiu", "imode(1, 1, 1)" }, -- immediate unsigned sub */
     { "loadk", "imode(1, 0, 1)" }, -- load constant into register */
-    { "putb",  "imode(1, 1, 1)" }, -- put byte */
-    { "putw",  "imode(1, 1, 1)" }, -- put word */
-    { "putl",  "imode(1, 1, 1)" }, -- put long */
-    { "getb",  "imode(1, 1, 1)" }, -- get byte */
-    { "getw",  "imode(1, 1, 1)" }, -- get word */
-    { "getl",  "imode(1, 1, 1)" }, -- get long */
     { "putr",  "imode(1, 0, 0)" }, -- print register */
     { "putv",  "imode(0, 0, 1)" }, -- print value */
     { "beq",   "imode(1, 1, 1)" }, -- branch on equal */

@@ -31,17 +31,14 @@ Keep debug code in
 Turn off some safety checks for production
 
 ## In Progress / TODO ##
-- [ ] move to 32/64 bit
+- [ ] CISC -> RISC
+- [ ] move to 32 bit
 - [ ] remove lua script
 - [ ] documentation
-- [ ] embedding library
 - [ ] macro system (aliases, functions, loops)
 - [ ] typed opcode arguments
-- [ ] opcode indirections (simulated CISC)
 - [ ] string literals
 - [ ] interrupts/ports
-- [ ] memory mapped io
-- [ ] interrupt vectors
 - [ ] jit compilation
 - [x] debugger
 - [x] modules

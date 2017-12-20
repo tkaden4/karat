@@ -1,7 +1,7 @@
 MODULE_SRC=$(wildcard *.c)
 MODULE_OBJ=$(MODULE_SRC:.c=.so)
 CFLAGS=-Wall -Wextra -Werror -Wno-unused-function -std=gnu99 -DKDEBUG -I../include/
-LDFLAGS=
+LDFLAGS=-lSDL2
 
 all: $(MODULE_OBJ)
 

@@ -16,7 +16,7 @@ static inline lib_t __get_module_handle(const char *path)
 #ifdef __linux
     /* open the module */
     lib_t *handle = dlopen(path, RTLD_NOW);
-    err_on(!handle, "%s", dlerror());
+    err_on(!handle, "unable to open module: %s", dlerror());
     return handle;
 #endif
 }
@@ -49,12 +49,14 @@ int module_load(struct kmod *mod, const char *name)
     /* load the module */
     mod->handle = __get_module_handle(path);
     module_init_f init = __get_module_symbol(mod->handle, "on_module_load");
+    err_on(!init, "module init not available");
     return init(&mod->mod_data);
 }
 
 int module_unload(struct kmod *mod)
 {
     module_unload_f unload = __get_module_symbol(mod->handle, "on_module_unload");
+    err_on(!unload, "module unload not available");
     int err = unload(mod->mod_data);
     if(__unload_module_handle(mod->handle)){
         err = 1;
