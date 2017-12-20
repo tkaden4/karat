@@ -10,6 +10,7 @@
 #include<karat/mod.h>
 #include<karat/debug.h>
 #include<karat/parse/parse.h>
+#include<karat/mod.h>
 
 #define usage() \
     ({ printf("Usage: karat <file>\n"); exit(0); })
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
             puts("linted successfully");
             goto done;
         }else if(debug){
-            err = idebug(rprog, (struct vm_options){ .memory_size = 8096 });
+            err = idebug(rprog, vm_opts(8096));
             goto done;
         }else if(output){
             printf("writing to %s...\n", output);
@@ -80,7 +81,7 @@ int main(int argc, char *argv[])
         }else{
             printf("running program (%lu bytes)...\n", rprog->prog_size);
             struct vm vm;
-            vm_run(&vm, (struct vm_options){ .memory_size = 8096 }, rprog);
+            vm_run(&vm, vm_opts(8096), rprog);
         } 
     }
 

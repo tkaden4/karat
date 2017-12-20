@@ -41,9 +41,15 @@ fib_done:
 
 __start:
     addiu sp, sp, #4
-    pushk #3
+    pushk #10
     call fib
     pop r0
     pop r1
-    trap #1
+
+    loadk r0, #0
+    loadk r1, #1
+    loadk r2, #1
+    loadk r3, #xff
+    loadk r4, #xff
+    trap #0
     halt

@@ -6,9 +6,13 @@
 
 #include<karat/mod.h>
 #include<karat/vm/types.h>
+#include<karat/vm/vm.h>
+
+#define VERSION "0.0.1"
 
 MODULE(
     "karat.vga",
+    VERSION,
     "Kaden Thomas"
 );
 
@@ -30,25 +34,31 @@ MODULE(
 
 typedef k16_t color_t;
 
+enum {
+    DRAW_LINE = 0,
+    DRAW_POINT,
+};
+
 struct vga_data {
-    /* vga memory, TODO should it be in main memory? */
-    color_t *bitmap;
     SDL_Window *window;
     SDL_Renderer *renderer;
 };
 
-static inline void set_pix_s(struct vga_data *data, k16_t x, k16_t y, color_t color)
+int on_trap(struct vga_data *data, k8_t num, struct vm *vm)
 {
-    data->bitmap[(VGA_WIDTH * y) % (VGA_WIDTH * VGA_HEIGHT) + (x % VGA_WIDTH)] = color;
-}
-
-static inline void draw_rect(struct vga_data *data, k16_t x1, k16_t y1, k16_t x2, k16_t y2, color_t color)
-{
-    for(register uint_fast16_t i = y1; i < y2; ++i){
-        for(register uint_fast16_t k = x1; k < x2; ++k){
-            set_pix_s(data, k, i, color);
-        }
-    }
+    (void) num;
+    SDL_RenderClear(data->renderer);
+    switch(vm_reg(vm, 0)){
+    case DRAW_LINE:
+        SDL_SetRenderDrawColor(data->renderer, 0xff, 0x0ff, 0xff, SDL_ALPHA_OPAQUE);
+        SDL_RenderDrawLine(data->renderer, vm_reg(vm, 1), vm_reg(vm, 2), vm_reg(vm, 3), vm_reg(vm, 4));
+        break;
+    case DRAW_POINT:
+        SDL_RenderDrawPoint(data->renderer, vm_reg(vm, 1), vm_reg(vm, 2));
+        break;
+    };
+    SDL_RenderPresent(data->renderer);
+    return 0;
 }
 
 int on_module_load(struct vga_data **data)
@@ -62,8 +72,7 @@ int on_module_load(struct vga_data **data)
         sdl_error("Unable to create window or renderer");
         goto err;
     }
-    SDL_SetWindowTitle((*data)->window, "karat.vga window");
-    (*data)->bitmap = alloc(color_t[VGA_WIDTH * VGA_HEIGHT]);
+    SDL_SetWindowTitle((*data)->window, "karat.vga " VERSION);
     return 0;
 err:
     free(*data);
@@ -73,9 +82,6 @@ err:
 int on_module_unload(struct vga_data *data)
 {
     if(data){
-        if(data->bitmap){
-            free(data->bitmap);
-        }
         free(data);
     }
     if(data->renderer){

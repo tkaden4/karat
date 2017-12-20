@@ -44,7 +44,7 @@ void *smap_lookup(struct smap *map, const wchar_t *key)
     }
 }
 
-static inline struct smap_node *make_node(const wchar_t *key, void *val)
+static struct smap_node *make_node(const wchar_t *key, void *val)
 {
     struct smap_node *n = s_calloc(1, sizeof(struct smap_node));
     n->key = wcsdup(key);
@@ -65,10 +65,9 @@ void smap_insert(struct smap *map, const wchar_t *key, void *val)
     }
 }
 
-static inline void destroy_chain(struct smap *map, struct smap_node *node)
+static void destroy_chain(struct smap *map, struct smap_node *node)
 {
-    struct smap_node *save = NULL;
-    while((save = node)){
+    for(struct smap_node *save = NULL; (save = node);){
         node = node->next;
         if(map->destroy_val_f){
             map->destroy_val_f(save->value);

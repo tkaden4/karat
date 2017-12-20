@@ -15,11 +15,10 @@ end
 
 -- actual opcodes
 local opcodes = {
-    { "halt", "NO_MODE" },
-    { "ret",  "NO_MODE" },
-    { "dup",  "NO_MODE" },
-    { "popa", "NO_MODE" },
-    { "pusha","NO_MODE" },
+    { "halt", "NO_MODE" }, -- halt execution
+    { "ret",  "NO_MODE" }, -- return from a function
+    { "popa", "NO_MODE" }, -- pop all general purpose registers
+    { "pusha","NO_MODE" }, -- push all general purpose registers
     -- R opcodes
     { "adds",  "rmode(1, 1, 1, 0, 0)" }, -- signed add
     { "addu",  "rmode(1, 1, 1, 0, 0)" }, -- unsigned add
@@ -30,7 +29,7 @@ local opcodes = {
     { "divs",  "rmode(1, 1, 1, 0, 0)" }, -- divide two registers
     { "divu",  "rmode(1, 1, 1, 0, 0)" }, -- divide two registers
     { "xorr",  "rmode(1, 1, 1, 0, 0)" }, -- xor two registers
-    { "loadr", "rmode(1, 1, 0, 0, 0)" }, -- load register into register
+    { "copy",  "rmode(1, 1, 0, 0, 0)" }, -- copy value between registers
     { "modr",  "rmode(1, 1, 1, 0, 0)" }, -- get remainder
     { "push",  "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
     { "pop",   "rmode(1, 0, 0, 0, 0)" }, -- pop value into register
@@ -45,15 +44,13 @@ local opcodes = {
     { "subis", "imode(1, 1, 1)" }, -- immediate unsigned sub */
     { "subiu", "imode(1, 1, 1)" }, -- immediate unsigned sub */
     { "loadk", "imode(1, 0, 1)" }, -- load constant into register */
-    { "putr",  "imode(1, 0, 0)" }, -- print register */
-    { "putv",  "imode(0, 0, 1)" }, -- print value */
     { "beq",   "imode(1, 1, 1)" }, -- branch on equal */
     { "bne",   "imode(1, 1, 1)" }, -- branch on not equal */
     { "bgt",   "imode(1, 1, 1)" }, -- branch on not equal */
     { "blt",   "imode(1, 1, 1)" }, -- branch on not equal */
     -- B opcodes
-    { "jmp",   "bmode(1)" },       -- jump */
-    { "call",  "bmode(1)" },       -- jump */
+    { "jmp",   "bmode(1)" }, -- jump to location
+    { "call",  "bmode(1)" }, -- call a function
 
 }
 

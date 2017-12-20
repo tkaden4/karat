@@ -6,11 +6,11 @@
 #include<karat/vm/kprog.h>
 #include<karat/log.h>
 
-typedef uint32_t reg_t; /* general register datatype */
-
 #define ALL_REGS 32
 #define GENERAL_REGS (ALL_REGS - 2)
 #define BLANK_CPU (struct cpu){ .regs = {0} }
+
+typedef uint32_t reg_t; /* general register datatype */
 
 struct cpu {
     /* general registers */
