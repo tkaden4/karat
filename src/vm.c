@@ -5,14 +5,14 @@
 #include<karat/vm/cpu.h>
 
 #define rmode_bin(cpu, opcode, op) \
-    (cpu)->regs[opcode.r.A] = (cpu)->regs[opcode.r.B] op (cpu)->regs[opcode.r.C]; break
+    (cpu)->regs[opcode.r.A] = (cpu)->regs[opcode.r.B] op (cpu)->regs[opcode.r.C]
 
 #define imode_bin(cpu, opcode, op) \
-    (cpu)->regs[opcode.i.A] = (cpu)->regs[opcode.i.B] op opcode.i.Cx; break
+    (cpu)->regs[opcode.i.A] = (cpu)->regs[opcode.i.B] op opcode.i.Cx
 
 #define bmode_cmp(cpu, opcode, cmp) \
         (cpu)->pc = (cpu)->regs[opcode.i.A] cmp (cpu)->regs[opcode.i.B] \
-        ? opcode.i.Cx : (cpu)->pc; break
+        ? opcode.i.Cx : (cpu)->pc
 
 #define push(vm, value) \
     ({  \
@@ -26,32 +26,15 @@
         *(type *)((vm)->memory + (vm)->cpu.sp); \
      })
 
-/* for defining generic handlers */
-/*
-#define handler_of(type, program, ip, x, body) \
-    type *__attribute__((unused)) x = (type *)(&program[ip] + sizeof(type)); \
-    body; \
-    goto **handlers[program[(ip += sizeof(type))]];
-    */
-
-
 #define match_as(x, y) \
     typeof(y) x = y; \
     switch(x)
-
 
 #define handle(code, body) \
     case code ## _CODE: { body; } break
 
 #define default_handler(body) \
     default: body; break;
-
-#define arithmetic(body, ...) \
-    body(+); \
-    body(-); \
-    body(*); \
-    body(%); \
-    body(/)
 
 static inline void vm_step(struct vm *vm)
 {
@@ -69,17 +52,16 @@ static inline void vm_step(struct vm *vm)
         push(vm, val);
         push(vm, val);
     });
-    handle(PUSHA, {
+    handle(PUSHA,
         for(size_t i = 0; i < GENERAL_REGS; ++i){
             push(vm, cpu->regs[i]);
         }
-            
-    });
-    handle(POPA, {
+    );
+    handle(POPA,
         for(size_t i = 1; i <= GENERAL_REGS; ++i){
             cpu->regs[GENERAL_REGS - i] = pop(vm, reg_t);
         }
-    });
+    );
     /* Register-mode instructions */
     handle(READ, 
         cpu->regs[op.r.A] = *(reg_t *)&vm->memory[cpu->regs[op.r.B]]
@@ -95,7 +77,7 @@ static inline void vm_step(struct vm *vm)
     handle(JMPR,    cpu->pc = cpu->regs[op.i.A]);
     handle(PUSH,   push(vm, (reg_t)cpu->regs[op.r.A]));
     handle(POP,    cpu->regs[op.r.A] = pop(vm, reg_t));
-    handle(TRAP, {
+    handle(TRAP, { // TODO implement
         reg_t code = (reg_t)(op.r.A & 0b11111);
         printf("interrupt generated with code: %u\n", code);
         print_cpu_info(cpu);

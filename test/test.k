@@ -41,7 +41,7 @@ fib_done:
 
 __start:
     addiu sp, sp, #4
-    pushk #34
+    pushk #3
     call fib
     pop r0
     pop r1
