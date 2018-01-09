@@ -16,6 +16,7 @@ end
 -- actual opcodes
 local opcodes = {
     { "halt", "NO_MODE" }, -- halt execution
+    { "nop",  "NO_MODE" }, -- do nothing
     { "ret",  "NO_MODE" }, -- return from a function
     { "popa", "NO_MODE" }, -- pop all general purpose registers
     { "pusha","NO_MODE" }, -- push all general purpose registers
@@ -32,10 +33,13 @@ local opcodes = {
     { "copy",  "rmode(1, 1, 0, 0, 0)" }, -- copy value between registers
     { "modr",  "rmode(1, 1, 1, 0, 0)" }, -- get remainder
     { "push",  "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
+    { "pushb", "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
     { "pop",   "rmode(1, 0, 0, 0, 0)" }, -- pop value into register
     { "trap",  "rmode(1, 0, 0, 0, 0)" }, -- do trap
     { "read",  "rmode(1, 1, 0, 0, 0)" }, -- read value from memory
     { "stor",  "rmode(1, 1, 0, 0, 0)" }, -- store value into memory
+    { "inc",   "rmode(1, 0, 0, 0, 0)" }, -- increment register
+    { "dec",   "rmode(1, 0, 0, 0, 0)" }, -- decrement register
     -- I opcodes
     { "jmpr",  "imode(1, 0, 0)" }, -- jump relative to register
     { "pushk", "imode(0, 0, 1)" }, -- push a constant to the stack

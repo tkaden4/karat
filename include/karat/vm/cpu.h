@@ -1,8 +1,9 @@
 #pragma once
-/* stdlib files */
+
 #include<stdint.h>
 #include<stdio.h>
-/* karat files */
+#include<string.h>
+
 #include<karat/vm/kprog.h>
 #include<karat/log.h>
 
@@ -17,7 +18,9 @@ struct cpu {
     union {
         reg_t regs[ALL_REGS];
         struct {
+            /* padding */
             reg_t __pad[GENERAL_REGS];
+            /* aliased to regs[30] and regs[31] */
             reg_t sp;
             reg_t pc;
         };
@@ -26,13 +29,15 @@ struct cpu {
 
 static inline void cpu_init(struct cpu *cpu, reg_t pc, reg_t sp)
 {
+    ncheck(cpu);
+    memset(cpu, 0, sizeof(struct cpu));
     cpu->sp = sp;
     cpu->pc = pc;
 }
 
 static void print_cpu_info(struct cpu *cpu)
 {
-    err_on(!cpu, "cpu is NULL");
+    ncheck(cpu);
     for(size_t i = 0; i < ALL_REGS; ++i){
         switch(i){
         case 30:

@@ -76,6 +76,8 @@ static inline int lex_number(
     struct token *res,
     size_t base)
 {
+    ncheck(state);
+    ncheck(res);
     int(*test)(wint_t) = NULL;
     switch(base){
     case 0:
@@ -107,6 +109,7 @@ static inline int lex_number(
 
 static inline int is_reg(const wchar_t *lexeme)
 {
+    ncheck(lexeme);
     if(lexeme[0] != L'r') return 0;
     wchar_t next = L'\0';
     while((next = *++lexeme)){
@@ -120,6 +123,8 @@ static inline int is_reg(const wchar_t *lexeme)
 /* test id for possible other lexemes */
 static inline int check_id(struct lex_state *state, struct token *tok)
 {
+    ncheck(state);
+    ncheck(tok);
     if(tok->type != TOK_ID){
         return 1;
     }
@@ -136,7 +141,8 @@ static inline int check_id(struct lex_state *state, struct token *tok)
 
 int lex_next(struct lex_state *state, struct token *res)
 {
-    err_on(!res, "Token not allocated");
+    ncheck(state);
+    ncheck(res);
     while(la(state) == L'\t' || la(state) == L' '){
         lex_advance(state);
     }
@@ -156,20 +162,6 @@ int lex_next(struct lex_state *state, struct token *res)
 
     int err = 0;
     switch(la(state)){
-    /* TODO remove or implement fully
-    case L'.':
-        lex_advance(state);
-        if(iswalpha(la(state))){
-            res->type = TOK_DOT_CHAR;
-            res->lexeme[0] = L'.';
-            res->lexeme[1] = la(state);
-            lex_advance(state);
-            break;
-        }else{
-            lex_err(state, "expected letter after '.'");
-        }
-        break;
-    */
     case L'#':
         res->type = TOK_NUM;
         lex_advance(state);

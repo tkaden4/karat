@@ -48,9 +48,9 @@ int on_trap(struct vga_data *data, k8_t num, struct vm *vm)
 {
     (void) num;
     SDL_RenderClear(data->renderer);
+    SDL_SetRenderDrawColor(data->renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
     switch(vm_reg(vm, 0)){
     case DRAW_LINE:
-        SDL_SetRenderDrawColor(data->renderer, 0xff, 0x0ff, 0xff, SDL_ALPHA_OPAQUE);
         SDL_RenderDrawLine(data->renderer, vm_reg(vm, 1), vm_reg(vm, 2), vm_reg(vm, 3), vm_reg(vm, 4));
         break;
     case DRAW_POINT:

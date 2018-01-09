@@ -8,6 +8,11 @@
     fprintf(file,  "[ " prefix " ] " fmt " [ %s : %s : %d ]\n", \
             ##__VA_ARGS__, __FILE__, __func__, __LINE__ )
 
+/* check for null */
+
+#define ncheck_f(value, format, ...) err_on(!(value), format, ##__VA_ARGS__)
+#define ncheck(value) ncheck_f(value, "null check failed")
+
 #ifdef KDEBUG 
 #define fdebug(file, fmt, ...) \
     fprefix(file, "DEBUG", fmt, ##__VA_ARGS__)

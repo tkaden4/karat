@@ -1,11 +1,6 @@
 # Karat
 
-A simple virtual machine.
-
-This project has two major goals. The first is to write a small OS on top of Karat, 
-and the other is to write a scripting language that compiles to karat. Because
-of these goals, Karat will try to remain more like an assembly interpreter than
-a high-level bytecode interpreter (not the JVM, Python VM, etc.).
+A virtual computer for hobby development.
 
 ## Usage ##
 `man ./karat.1` for more details
@@ -18,7 +13,7 @@ a high-level bytecode interpreter (not the JVM, Python VM, etc.).
 Build entire project:
 `make`
 
-Build interpreter:
+Build VM:
 `make karat`
 
 Build default modules:

@@ -18,6 +18,7 @@
 struct token {
     wchar_t lexeme[MAX_LEXEME];
     size_t lsize;
+    /* token type */
     enum {
         TOK_ID,
         TOK_NUM,
@@ -30,15 +31,20 @@ struct token {
     } type;
     unsigned line_no;
     unsigned col_no;
-    long long data; /* for num and reg, as well as dot_char */
+    /* parsed data */
+    /* TODO move out of lexer */
+    long long data;
 };
 
 struct lex_state {
+    /* pointer to file */
     FILE *file;
+    /* buffer for lookahead chars */
     RBUFF_DECL(lex_la_buff, wchar_t, MAX_LEX_LOOK) la_chars;
     /* debugging info */
     unsigned line_no;
     unsigned col_no;
+    /* TODO remove */
     jmp_buf *err;
 };
 

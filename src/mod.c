@@ -41,6 +41,8 @@ static inline int __unload_module_handle(lib_t handle)
 
 int module_load(struct kmod *mod, const char *name)
 {
+    ncheck(mod);
+    ncheck(name);
     /* Create the new string representing the full path */
     size_t nlen = strlen(name);
     char path[nlen + sizeof(MODULE_FEXT) + 1];
@@ -61,6 +63,7 @@ int module_load(struct kmod *mod, const char *name)
 
 int module_unload(struct kmod *mod)
 {
+    ncheck(mod);
     module_unload_f unload = __get_module_symbol(mod->handle, "on_module_unload");
     err_on(!unload, "module unload not available");
     int err = unload(mod->mod_data);

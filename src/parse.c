@@ -40,6 +40,7 @@ do { \
 #define RESERVE_FUNC(name, type) \
 static size_t reserve_ ## name(struct parse_state *state) \
 { \
+    ncheck(state); \
     size_t ret = state->cur_insns; \
     kprog_append_bytes(state->prog, 0, sizeof(type)); \
     state->cur_insns += sizeof(type); \
@@ -51,6 +52,7 @@ static size_t reserve_ ## name(struct parse_state *state) \
 static void write_ ## name(struct parse_state *state, type b, size_t at) \
 { \
     /* TODO unsafe, create kprog -> insert_bytes */ \
+    ncheck(state); \
     memcpy(state->prog->program + at, &b, sizeof(type)); \
 }
 
@@ -73,6 +75,8 @@ static const struct token *parse_la(struct parse_state *state);
  * returns 1 on redefinition of label */
 static int add_label_def(struct parse_state *state, const wchar_t *str, uint16_t pos)
 {
+    ncheck(state);
+    ncheck(str);
     if(smap_lookup(state->label_defs, str)){
         return 1;
     }
@@ -89,6 +93,8 @@ static void add_label_arg(
         size_t op,  /* opcode to be changed */
         resolve_f resolver)
 {
+    ncheck(state);
+    ncheck(str);
     struct label_arg *arg = s_alloc(struct label_arg);
     arg->op_pos = op;
     arg->id = wcsdup(str);
@@ -102,6 +108,7 @@ static void add_label_arg(
  * and places them where arguments are needed */
 static void resolve_label_arguments(struct parse_state *state)
 {
+    ncheck(state);
     int err = 0;
     LIST_FREELOOP(state->label_args, each){
         struct label_def *label = smap_lookup(state->label_defs, each->id);
@@ -133,6 +140,9 @@ static void resolve_label_arguments(struct parse_state *state)
  * - Initializing label definition map */
 static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 {
+    ncheck(state);
+    ncheck(prog);
+    ncheck(f);
     tok_la_buff_init(&state->la_buff);
     lex_init(&state->lstate, f, &state->err_handler);
 
@@ -150,6 +160,7 @@ static void parse_init(struct parse_state *state, struct kprog *prog, FILE *f)
 
 static void parse_destroy(struct parse_state *state)
 {
+    ncheck(state);
     /* deal with unhandled forward definitions */
     smap_destroy(state->label_defs);
 }
@@ -157,6 +168,7 @@ static void parse_destroy(struct parse_state *state)
 /* Test n tokens ahead in the buffer */
 static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
 {
+    ncheck(state);
     if(n >= MAX_LOOK){
         parse_err(state, "exceeded maximum lookahead of %lu", n);
         return 0;
@@ -167,18 +179,21 @@ static int parse_test_n(struct parse_state *state, size_t n, unsigned tok_type)
 /* test the zeroth token */
 static inline int parse_test(struct parse_state *state, unsigned tok_type)
 {
+    ncheck(state);
     return parse_test_n(state, 0, tok_type);
 }
 
 /* test the next 2 tokens */
 static inline int parse_test_2(struct parse_state *state, unsigned tok_1, unsigned tok_2)
 {
+    ncheck(state);
     return parse_test(state, tok_1) && parse_test_n(state, 1, tok_2);
 }
 
 /* advance to next token in buffer */
 static void parse_advance(struct parse_state *state)
 {
+    ncheck(state);
     /* delete front element from buffer */
     tok_la_buff_pop_front(&state->la_buff);
     lex_next(&state->lstate, tok_la_buff_push_back(&state->la_buff));
@@ -187,12 +202,14 @@ static void parse_advance(struct parse_state *state)
 /* grab the Nth token */
 static inline const struct token *parse_la_n(struct parse_state *state, size_t n)
 {
+    ncheck(state);
     return tok_la_buff_elem_n(&state->la_buff, n);
 }
 
 /* grab the zeroth token */
 static inline const struct token *parse_la(struct parse_state *state)
 {
+    ncheck(state);
     return parse_la_n(state, 0);
 }
 
@@ -200,6 +217,7 @@ static inline const struct token *parse_la(struct parse_state *state)
  * issuing an error if it doesnt match */
 static void parse_match(struct parse_state *state, unsigned tok_type)
 {
+    ncheck(state);
     if(parse_la(state)->type != tok_type){
         parse_err(state, "couldn't match target type on \"%ls\"",
                 parse_la(state)->lexeme);
@@ -213,6 +231,7 @@ static void parse_match(struct parse_state *state, unsigned tok_type)
  * labels to be resolved later */
 static int parse_label(struct parse_state *state)
 {
+    ncheck(state);
     if(!parse_test_2(state, TOK_ID, TOK_COLON)){
         parse_err(state, "mangled label");
     }
@@ -238,6 +257,7 @@ static int parse_label(struct parse_state *state)
 /* find an opcode from a string */
 static inline const struct op_def *find_def(const wchar_t *wcs)
 {
+    ncheck(wcs);
     for(size_t i = 0; op_defs[i].mnemonic; ++i){
         if(!wcscmp(op_defs[i].mnemonic, wcs)){
             return &op_defs[i];
@@ -249,19 +269,27 @@ static inline const struct op_def *find_def(const wchar_t *wcs)
 /* these resolve functions handle labels */
 
 /* resolve an ABCx opcode */
-static inline int resolve_abcx(const struct label_def *def,
-                        struct label_arg *arg,
+static inline int resolve_abcx(
+        const struct label_def *def,
+        struct label_arg *arg,
                         struct parse_state *state)
 {
+    ncheck(def);
+    ncheck(arg);
+    ncheck(state);
     ((union opcode *)&state->prog->program[arg->op_pos])->i.Cx = def->pos;
     return 0;
 }
 
 /* resolve an Ax opcode */
-static inline int resolve_ax(const struct label_def *def,
-                      struct label_arg *arg,
-                      struct parse_state *state)
+static inline int resolve_ax(
+        const struct label_def *def,
+        struct label_arg *arg,
+        struct parse_state *state)
 {
+    ncheck(def);
+    ncheck(arg);
+    ncheck(state);
     ((union opcode *)&state->prog->program[arg->op_pos])->b.Ax = def->pos;
     return 0;
 }
@@ -269,6 +297,7 @@ static inline int resolve_ax(const struct label_def *def,
 /* TODO better error checking */
 static long long parse_arg(struct parse_state *state, uint8_t argmode, uint8_t which)
 {
+    ncheck(state);
     const struct token *tok = parse_la(state);
     if(!HAS_ARG(argmode, which)){
         return 0;
@@ -318,6 +347,7 @@ static long long parse_arg(struct parse_state *state, uint8_t argmode, uint8_t w
 
 static int parse_ins(struct parse_state *state)
 {
+    ncheck(state);
     const struct token la = *parse_la(state);
     parse_match(state, TOK_ID);
     STACK_WCSDUP(op_str, la.lexeme);
@@ -361,6 +391,7 @@ static int parse_ins(struct parse_state *state)
 /* parse a single valid line of assembly */
 static int parse_expr(struct parse_state *state)
 {
+    ncheck(state);
     switch(parse_la(state)->type){
     case TOK_ID:
         if(parse_test_n(state, 1, TOK_COLON)){
@@ -388,8 +419,8 @@ static int parse_expr(struct parse_state *state)
  * placing in the kprog specified */
 int parse_file(FILE *in_f, struct kprog *res_prog)
 {
-    err_on(!in_f, "input file not opened");
-    err_on(!res_prog, "output program not allocated");
+    ncheck(in_f);
+    ncheck(res_prog);
 
     struct parse_state state;
     parse_init(&state, res_prog, in_f);

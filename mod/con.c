@@ -21,13 +21,12 @@ int on_trap(struct con_data *data, k8_t num, struct vm *vm)
 {
     (void) data;
     (void) num;
-    (void) vm;
-    switch(vm->cpu.regs[0]){
+    switch(vm_reg(vm, 0)){
     case WRITE_STR:
-        printf((char *)&vm->memory[vm->cpu.regs[1]]);
+        puts((char *)&vm->memory[vm_reg(vm, 1)]);
         break;
     case WRITE_CHAR:
-        putchar((char)vm->memory[vm->cpu.regs[1]]);
+        putchar((char)vm->memory[vm_reg(vm, 1)]);
         break;
     default:
         return 1;

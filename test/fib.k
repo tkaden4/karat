@@ -12,7 +12,7 @@ fib:
 
     ; fib(n - 1)
     subis r1, r1, #1
-    pushk #0
+    addiu sp, sp, #4
     push r1
     call fib
     pop r1
@@ -30,15 +30,12 @@ fib:
     stor r5, r0
 
     jmp fib_done
-    ; less than 2
 fib_base_case:
     loadk r2, #1
     stor r2, r0
-    ; finished
 fib_done:
     popa
     ret
-
 __start:
     addiu sp, sp, #4
     pushk #10
@@ -46,10 +43,21 @@ __start:
     pop r0
     pop r1
 
+    copy r1, sp
+    loadk r0, #x61
+    pushb r0
+    inc r0
+    pushb r0
+    inc r0
+    pushb r0
+    inc r0
+    pushb r0
+
     loadk r0, #0
-    loadk r1, #1
-    loadk r2, #1
-    loadk r3, #xff
-    loadk r4, #xff
+    pushb r0
+
     trap #0
+
+    subis sp, sp, #5
+
     halt

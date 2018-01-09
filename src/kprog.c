@@ -16,6 +16,7 @@ struct kprog *kprog_create()
 
 void kprog_append_bytes(struct kprog *prog, uint32_t data, size_t bytes)
 {
+    ncheck(prog);
     /* fix byte count errors */
     bytes = bytes > sizeof(data) ? sizeof(data) : bytes;
     /* check for buffer overflow */
@@ -32,6 +33,7 @@ void kprog_append_bytes(struct kprog *prog, uint32_t data, size_t bytes)
 
 void kprog_finalize(struct kprog *prog)
 {
+    ncheck(prog);
     prog->prog_size = prog->__size;
     prog->program = s_realloc(prog->program, prog->__size);
     prog->__cap = prog->__size;
@@ -39,7 +41,7 @@ void kprog_finalize(struct kprog *prog)
 
 void kprog_destroy(struct kprog *prog)
 {
-    err_on(!prog, "program not allocated");
+    ncheck(prog);
     if(prog->program){
         s_free(prog->program);
     }
