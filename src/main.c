@@ -9,7 +9,6 @@
 #include<karat/vm/vm.h>
 #include<karat/mod.h>
 #include<karat/debug.h>
-#include<karat/parse/parse.h>
 #include<karat/mod.h>
 
 #define usage() \
@@ -20,17 +19,9 @@ int main(int argc, char *argv[])
     setlocale(LC_ALL, "");
 
     int c = EOF;
-    bool lint = false;
     bool debug = false;
-    const char *output = NULL;
     while((c = getopt(argc, argv, "o:ld")) != -1){
         switch(c){
-        case 'o':
-            output = optarg;
-            break;
-        case 'l':
-            lint = true;
-            break;
         case 'd':
             debug = true;
             break;
@@ -56,36 +47,16 @@ int main(int argc, char *argv[])
     err_on(!program, "could not open %s", prog);
 
     int err = 0;
-    printf("assembling \"%s\"\n", prog);
-    const time_t start = clock();
-    struct kprog *rprog = kprog_create();
-    if(!parse_file(program, rprog)){
-        printf("assembly took %lfms\n", ((double)clock()-start)/CLOCKS_PER_SEC);
-        /* Run the program */
-        if(lint){
-            puts("linted successfully");
-            goto done;
-        }else if(debug){
-            err = idebug(rprog, vm_opts(8096));
-            goto done;
-        }else if(output){
-            printf("writing to %s...\n", output);
-            FILE *out = fopen(output, "w");
-            if(!out){
-                fprintf(stderr, "unable to open output file %s\n", output);
-                err = 1;
-                goto done;
-            }
-            fwrite(rprog->program, rprog->prog_size, 1, out);
-            fclose(out);
-        }else{
-            printf("running program (%lu bytes)...\n", rprog->prog_size);
-            struct vm vm;
-            vm_run(&vm, vm_opts(8096), rprog);
-        } 
-    }
+    struct kprog *rprog = NULL;
 
-done:
+    if(debug){
+        err = idebug(rprog, vm_opts(8096));
+    }else{
+        printf("running program (%lu bytes)...\n", rprog->prog_size);
+        struct vm vm;
+        vm_run(&vm, vm_opts(8096), rprog);
+    } 
+
     kprog_destroy(rprog);
     fclose(program);
     return err;

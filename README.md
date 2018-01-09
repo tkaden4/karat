@@ -1,7 +1,5 @@
 # Karat
 
-A virtual computer for hobby development.
-
 ## Usage ##
 `man ./karat.1` for more details
 
@@ -30,9 +28,6 @@ Turn off some safety checks for production
 - [ ] move to 32 bit
 - [ ] remove lua script
 - [ ] documentation
-- [ ] macro system (aliases, functions, loops)
-- [ ] typed opcode arguments
-- [ ] string literals
 - [ ] interrupts/ports
 - [ ] jit compilation
 - [x] debugger
