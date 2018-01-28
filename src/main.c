@@ -30,10 +30,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if(optind >= argc){
-        usage();
-        return 1;
-    }else if(optind != argc - 1){
+    if(optind != argc - 1){
         usage();
         return 1;
     }

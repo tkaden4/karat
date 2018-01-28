@@ -32,7 +32,7 @@ profile:
 
 # run karat on a simple test suite
 run:
-	./$(EXECUTABLE) ./test/test.k
+	./$(EXECUTABLE)
 
 tst:
 	echo $(LS) test/*.k | col | xargs -n 1 ./$(EXECUTABLE)

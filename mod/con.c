@@ -4,44 +4,41 @@
 
 #include<stdio.h>
 
+#include<termios.h>
+#include<unistd.h>
+
 MODULE(
     "karat.con",
     "0.0.1",
     "Kaden Thomas"
 );
 
-struct con_data {};
+//TRAPS();
+//INTS();
 
-enum {
-    WRITE_STR = 0,
-    WRITE_CHAR,
+struct con_data {
+    struct termios old_attr;
+    struct termios new_attr;
 };
 
-int on_trap(struct con_data *data, k8_t num, struct vm *vm)
+static int on_module_load(struct con_data **data)
 {
-    (void) data;
-    (void) num;
-    switch(vm_reg(vm, 0)){
-    case WRITE_STR:
-        puts((char *)&vm->memory[vm_reg(vm, 1)]);
-        break;
-    case WRITE_CHAR:
-        putchar((char)vm->memory[vm_reg(vm, 1)]);
-        break;
-    default:
-        return 1;
-    };
+    struct con_data *d = malloc(sizeof(struct con_data));
+    tcgetattr(fileno(stdin), &d->old_attr);
+    d->new_attr = d->old_attr;
+    d->new_attr.c_cc[VTIME] = 0;
+    d->new_attr.c_cc[VMIN] = 0;
+    d->new_attr.c_lflag &= ~(ECHO | ICANON);
+    tcsetattr(fileno(stdin), TCSANOW, &d->new_attr);
+    *data = d;
     return 0;
 }
 
-int on_module_load(struct con_data **data)
+static int on_module_unload(struct con_data *data)
 {
-    (void) data;
+    tcsetattr(fileno(stdin), TCSANOW, &data->old_attr);
+    free(data);
     return 0;
 }
 
-int on_module_unload(struct con_data *data)
-{
-    (void) data;
-    return 0;
-}
+

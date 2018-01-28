@@ -15,11 +15,11 @@ end
 
 -- actual opcodes
 local opcodes = {
-    { "halt", "NO_MODE" }, -- halt execution
-    { "nop",  "NO_MODE" }, -- do nothing
-    { "ret",  "NO_MODE" }, -- return from a function
-    { "popa", "NO_MODE" }, -- pop all general purpose registers
-    { "pusha","NO_MODE" }, -- push all general purpose registers
+    { "halt",  "NO_MODE" }, -- halt execution
+    { "nop",   "NO_MODE" }, -- do nothing
+    { "ret",   "NO_MODE" }, -- return from a function
+    { "popa",  "NO_MODE" }, -- pop all general purpose registers
+    { "pusha", "NO_MODE" }, -- push all general purpose registers
     -- R opcodes
     { "adds",  "rmode(1, 1, 1, 0, 0)" }, -- signed add
     { "addu",  "rmode(1, 1, 1, 0, 0)" }, -- unsigned add
@@ -35,24 +35,25 @@ local opcodes = {
     { "push",  "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
     { "pushb", "rmode(1, 0, 0, 0, 0)" }, -- push register onto stack
     { "pop",   "rmode(1, 0, 0, 0, 0)" }, -- pop value into register
-    { "trap",  "rmode(1, 0, 0, 0, 0)" }, -- do trap
+    { "trap",  "rmode(1, 0, 0, 0, 0)" }, -- perform a software trap
     { "read",  "rmode(1, 1, 0, 0, 0)" }, -- read value from memory
     { "stor",  "rmode(1, 1, 0, 0, 0)" }, -- store value into memory
     { "inc",   "rmode(1, 0, 0, 0, 0)" }, -- increment register
     { "dec",   "rmode(1, 0, 0, 0, 0)" }, -- decrement register
+    { "jmpr",  "rmode(1, 0, 0, 0, 0)" }, -- jump relative to register
     -- I opcodes
-    { "jmpr",  "imode(1, 0, 0)" }, -- jump relative to register
     { "pushk", "imode(0, 0, 1)" }, -- push a constant to the stack
+    -- { "lirq",  "imode(1, 0, 1)" }, -- load an IRQ handler
     { "addis", "imode(1, 1, 1)" }, -- immediate signed add */
     { "addiu", "imode(1, 1, 1)" }, -- immediate unsigned add */
     { "subis", "imode(1, 1, 1)" }, -- immediate unsigned sub */
     { "subiu", "imode(1, 1, 1)" }, -- immediate unsigned sub */
     { "loadk", "imode(1, 0, 1)" }, -- load constant into register */
-    { "beq",   "imode(1, 1, 1)" }, -- branch on equal */
-    { "bne",   "imode(1, 1, 1)" }, -- branch on not equal */
-    { "bgt",   "imode(1, 1, 1)" }, -- branch on not equal */
-    { "blt",   "imode(1, 1, 1)" }, -- branch on not equal */
     -- B opcodes
+    { "beq",   "bmode(1)" }, -- jump on equal */
+    { "bne",   "bmode(1)" }, -- jump on not equal */
+    { "bgt",   "bmode(1)" }, -- jump on not equal */
+    { "blt",   "bmode(1)" }, -- jump on not equal */
     { "jmp",   "bmode(1)" }, -- jump to location
     { "call",  "bmode(1)" }, -- call a function
 

@@ -44,9 +44,8 @@ struct vga_data {
     SDL_Renderer *renderer;
 };
 
-int on_trap(struct vga_data *data, k8_t num, struct vm *vm)
+int on_trap(struct vga_data *data, struct vm *vm)
 {
-    (void) num;
     SDL_RenderClear(data->renderer);
     SDL_SetRenderDrawColor(data->renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
     switch(vm_reg(vm, 0)){

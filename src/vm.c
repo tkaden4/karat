@@ -39,7 +39,7 @@
 #define default_handler(body) \
     default: { body; } break
 
-const char *default_modules[] = {
+static const char *default_modules[] = {
     "mod/vga",
     "mod/con",
     NULL
@@ -80,12 +80,6 @@ static inline void vm_step(struct vm *vm, const prog_t prog)
     handle(PUSH,    push(vm, (reg_t)cpu->regs[op.r.A]));
     handle(PUSHB,   push(vm, (uint8_t)cpu->regs[op.r.A]));
     handle(POP,     cpu->regs[op.r.A] = pop(vm, reg_t));
-    handle(TRAP, { 
-        reg_t code = (reg_t)(op.r.A & 0b11111);
-        struct kmod *mod = vm->mods[code];
-        err_on(!mod, "no module for code %u", code);
-        mod->on_trap(mod->mod_data, code, vm);
-    });
     /* Intermediate-mode instructions */
     handle(ADDIU,   imode_bin(cpu, op, +));
     handle(SUBIS,   imode_bin(cpu, op, -));
@@ -121,8 +115,7 @@ void vm_run(struct vm *vm, const struct vm_options opts, const prog_t prog)
 
     for(size_t i = 0; default_modules[i]; ++i){
         vm->mods[i] = s_alloc(struct kmod);
-        struct load_data data = { i };
-        module_load(vm->mods[i], default_modules[i], &data);
+        module_load(vm->mods[i], default_modules[i]);
     }
 
     vm->cpu.pc = prog_entry(prog);
