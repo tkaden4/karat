@@ -39,7 +39,7 @@ static inline int __unload_module_handle(lib_t handle)
 #endif
 }
 
-int module_load(struct kmod *mod, const char *name)
+int module_load(struct kmod *mod, const char *name, struct load_data *ldata)
 {
     ncheck(mod);
     ncheck(name);
@@ -52,7 +52,7 @@ int module_load(struct kmod *mod, const char *name)
     mod->handle = __get_module_handle(path);
     module_init_f init = __get_module_symbol(mod->handle, "on_module_load");
     err_on(!init, "module init not available");
-    int err = init(&mod->mod_data);
+    int err = init(&mod->mod_data, ldata);
     if(err){
         return err;
     }

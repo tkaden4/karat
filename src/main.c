@@ -9,10 +9,9 @@
 #include<karat/vm/vm.h>
 #include<karat/mod.h>
 #include<karat/debug.h>
-#include<karat/mod.h>
 
 #define usage() \
-    ({ printf("Usage: karat <file>\n"); exit(0); })
+    ({ printf("usage: karat [-d] <file>\n"); exit(0); })
 
 int main(int argc, char *argv[])
 {
@@ -32,11 +31,9 @@ int main(int argc, char *argv[])
     }
 
     if(optind >= argc){
-        fputs("expected a file argument\n", stderr);
         usage();
         return 1;
     }else if(optind != argc - 1){
-        fputs("too many arguments\n", stderr);
         usage();
         return 1;
     }
@@ -47,17 +44,14 @@ int main(int argc, char *argv[])
     err_on(!program, "could not open %s", prog);
 
     int err = 0;
-    struct kprog *rprog = NULL;
 
     if(debug){
-        err = idebug(rprog, vm_opts(8096));
+        err = idebug(NULL, vm_opts(8096));
     }else{
-        printf("running program (%lu bytes)...\n", rprog->prog_size);
         struct vm vm;
-        vm_run(&vm, vm_opts(8096), rprog);
+        vm_run(&vm, vm_opts(8096), NULL);
     } 
 
-    kprog_destroy(rprog);
     fclose(program);
     return err;
 }

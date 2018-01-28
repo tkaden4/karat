@@ -28,7 +28,7 @@ Turn off some safety checks for production
 - [ ] move to 32 bit
 - [ ] remove lua script
 - [ ] documentation
-- [ ] interrupts/ports
+- [ ] interrupts
 - [ ] jit compilation
 - [x] debugger
 - [x] modules

@@ -9,21 +9,17 @@
 #error "modules only supported on linux"
 #endif
 
+/* module description */
 #define MODULE(name, author, version) \
-    const char *mod_name = name; \
-    const char *mod_author = author; \
-    const char *mod_version = version
+    static const char *__mod_name = name; \
+    static const char *__mod_author = author; \
+    static const char *__mod_version = version
 
 typedef void* lib_t;
 
-typedef int(*module_init_f)(void **);
+typedef int(*module_init_f)(void **, struct load_data *);
 typedef int(*module_unload_f)(void *);
 typedef int(*module_on_trap_f)(void *, k8_t, struct vm *);
-
-struct int_list {
-    SLINK(struct int_list);
-    int code;
-};
 
 struct kmod {
     /* handle to library */
@@ -32,11 +28,11 @@ struct kmod {
     const char * name;
     /* handler for trap instruction */
     module_on_trap_f on_trap;
-    /* list of pending interrupts */
-    struct int_list *pending;
     /* module's data */
     void *mod_data;
 };
 
-int module_load(struct kmod *, const char *);
+struct load_data;
+
+int module_load(struct kmod *, const char *, struct load_data *);
 int module_unload(struct kmod *);

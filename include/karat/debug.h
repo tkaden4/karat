@@ -1,7 +1,7 @@
 #pragma once
 
 #include<karat/vm/vm.h>
-#include<karat/vm/kprog.h>
+#include<karat/vm/types.h>
 
 /* start interactive debugger */
-int idebug(const struct kprog *prog, struct vm_options opts);
+int idebug(const prog_t prog, struct vm_options opts);

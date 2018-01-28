@@ -45,16 +45,15 @@ const char *default_modules[] = {
     NULL
 };
 
-static inline void vm_step(struct vm *vm)
+static inline void vm_step(struct vm *vm, const prog_t prog)
 {
     struct cpu *cpu = &vm->cpu;
-    const struct kprog *prog = vm->prog;
-    union opcode op = *(union opcode *)&prog->program[cpu->pc];
+    union opcode op = *(union opcode *)prog_loc(prog, cpu->pc);
     cpu->pc += sizeof(union opcode);
 
     match_as(code, (uint8_t)op.I) {
     /* No-mode instructions */
-    handle(HALT,    cpu->pc = prog->prog_size);
+    handle(HALT,    cpu->pc = prog_size(prog));
     handle(NOP, {});
     handle(RET,     cpu->pc = pop(vm, reg_t));
     handle(PUSHA,
@@ -68,20 +67,20 @@ static inline void vm_step(struct vm *vm)
         }
     );
     /* Register-mode instructions */
-    handle(READ, cpu->regs[op.r.A] = *(reg_t *)&vm->memory[cpu->regs[op.r.B]]);
-    handle(STOR, *(reg_t *)&vm->memory[cpu->regs[op.r.B]] = cpu->regs[op.r.A]);
-    handle(INC, ++cpu->regs[op.r.A]);
-    handle(DEC, --cpu->regs[op.r.A]);
+    handle(READ,    cpu->regs[op.r.A] = *(reg_t *)&vm->memory[cpu->regs[op.r.B]]);
+    handle(STOR,    *(reg_t *)&vm->memory[cpu->regs[op.r.B]] = cpu->regs[op.r.A]);
+    handle(INC,     ++cpu->regs[op.r.A]);
+    handle(DEC,     --cpu->regs[op.r.A]);
     handle(ADDS,    rmode_bin(cpu, op, +));
     handle(MODR,    rmode_bin(cpu, op, %));
     handle(XORR,    rmode_bin(cpu, op, ^));
     handle(SUBS,    rmode_bin(cpu, op, -));
     handle(MULS,    rmode_bin(cpu, op, *));
     handle(JMPR,    cpu->pc = cpu->regs[op.i.A]);
-    handle(PUSH,   push(vm, (reg_t)cpu->regs[op.r.A]));
-    handle(PUSHB,  push(vm, (uint8_t)cpu->regs[op.r.A]));
-    handle(POP,    cpu->regs[op.r.A] = pop(vm, reg_t));
-    handle(TRAP, { // TODO implement
+    handle(PUSH,    push(vm, (reg_t)cpu->regs[op.r.A]));
+    handle(PUSHB,   push(vm, (uint8_t)cpu->regs[op.r.A]));
+    handle(POP,     cpu->regs[op.r.A] = pop(vm, reg_t));
+    handle(TRAP, { 
         reg_t code = (reg_t)(op.r.A & 0b11111);
         struct kmod *mod = vm->mods[code];
         err_on(!mod, "no module for code %u", code);
@@ -113,22 +112,22 @@ static inline void vm_step(struct vm *vm)
     };
 }
 
-void vm_run(struct vm *vm, const struct vm_options opts, const struct kprog *prog)
+void vm_run(struct vm *vm, const struct vm_options opts, const prog_t prog)
 {
     memset(vm, 0, sizeof(*vm));
-    vm->prog = prog;
     vm->memory = s_malloc(opts.memory_size); 
     memset(vm->memory, 0, opts.memory_size);
     memset(vm->mods, 0, MAX_MODS * sizeof(struct kmod *));
 
     for(size_t i = 0; default_modules[i]; ++i){
         vm->mods[i] = s_alloc(struct kmod);
-        module_load(vm->mods[i], default_modules[i]);
+        struct load_data data = { i };
+        module_load(vm->mods[i], default_modules[i], &data);
     }
 
-    vm->cpu.pc = prog->entry_point;
-    while(vm->cpu.pc < prog->prog_size){
-        vm_step(vm);
+    vm->cpu.pc = prog_entry(prog);
+    while(vm->cpu.pc < prog_size(prog)){
+        vm_step(vm, prog);
     }
 
     for(size_t i = 0; default_modules[i]; ++i){

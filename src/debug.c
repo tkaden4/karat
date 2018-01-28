@@ -14,6 +14,7 @@
 
 struct debug_ctx {
     struct vm vm;
+    const prog_t prog;
 };
 
 static char *trim(char *str, char c)
@@ -25,7 +26,7 @@ static char *trim(char *str, char c)
     return str;
 }
 
-#define opcode_at(prog, i) ((union opcode *)(&(prog)->program[i]))
+#define opcode_at(prog, i) ((union opcode *)prog_loc(prog, i))
 
 static inline const struct op_def *find_op_by_code(const union opcode *op)
 {
@@ -68,9 +69,9 @@ static inline void dis_opcode(const union opcode *op)
 /* disassemble */
 static inline void dis(struct debug_ctx *d)
 {
-    for(size_t i = 0; i < d->vm.prog->prog_size; i += sizeof(union opcode)){
+    for(size_t i = 0; i < prog_size(d->prog); i += sizeof(union opcode)){
         printf("$%08lX ", i);
-        dis_opcode(opcode_at(d->vm.prog, i));
+        dis_opcode(opcode_at(d->prog, i));
         puts("");
     }
 }
@@ -95,11 +96,10 @@ static inline void longcmd(const char *str, struct debug_ctx *d)
     printf("kdb: unrecognized command \'%s\'\n", str);
 }
 
-int idebug(const struct kprog *prog, struct vm_options opts)
+int idebug(const prog_t prog, struct vm_options opts)
 {
-    struct debug_ctx d;
-    cpu_init(&d.vm.cpu, prog->entry_point, 0);
-    d.vm.prog = prog;
+    struct debug_ctx d = { .prog = prog };
+    cpu_init(&d.vm.cpu, prog_entry(prog), 0);
     d.vm.memory = s_calloc(1, opts.memory_size);
 
     char *line = NULL;

@@ -4,7 +4,6 @@
 #include<stdio.h>
 #include<string.h>
 
-#include<karat/vm/kprog.h>
 #include<karat/log.h>
 
 #define ALL_REGS 32
