@@ -16,7 +16,7 @@ endif
 all: opcodes $(EXECUTABLE) modules
 
 opcodes:
-	lua gen.lua > include/karat/opcodes.inc
+	lua gen.lua > include/karat/opcodes.inc.h
 
 $(EXECUTABLE) : $(OBJECTS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)

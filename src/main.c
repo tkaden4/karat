@@ -43,9 +43,11 @@ int main(int argc, char *argv[])
     int err = 0;
 
     if(debug){
+	// XXX NULL
         err = idebug(NULL, vm_opts(8096));
     }else{
         struct vm vm;
+	// XXX NULL
         vm_run(&vm, vm_opts(8096), NULL);
     } 
 

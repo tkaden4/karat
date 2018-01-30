@@ -127,4 +127,4 @@ union opcode {
     };
 };
 
-#include<karat/opcodes.inc>
+#include<karat/opcodes.inc.h>
