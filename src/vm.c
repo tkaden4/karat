@@ -40,12 +40,12 @@
     default: { body; } break
 
 static const char *default_modules[] = {
-    "mod/vga",
     "mod/con",
+    "mod/vga",
     NULL
 };
 
-static inline void vm_step(struct vm *vm, const prog_t prog)
+static inline void vm_step(struct vm *vm, const struct prog_t *prog)
 {
     struct cpu *cpu = &vm->cpu;
     union opcode op = *(union opcode *)prog_loc(prog, cpu->pc);
@@ -80,6 +80,11 @@ static inline void vm_step(struct vm *vm, const prog_t prog)
     handle(PUSH,    push(vm, (reg_t)cpu->regs[op.r.A]));
     handle(PUSHB,   push(vm, (uint8_t)cpu->regs[op.r.A]));
     handle(POP,     cpu->regs[op.r.A] = pop(vm, reg_t));
+    handle(PUT, ({
+        reg_t which_mod = cpu->regs[op.r.A];
+        struct kmod *mod = vm->mods[which_mod];
+        mod->on_port_write(mod->mod_data, cpu->regs[op.r.B], cpu->regs[op.r.C]);
+    }));
     /* Intermediate-mode instructions */
     handle(ADDIU,   imode_bin(cpu, op, +));
     handle(SUBIS,   imode_bin(cpu, op, -));
@@ -106,7 +111,7 @@ static inline void vm_step(struct vm *vm, const prog_t prog)
     };
 }
 
-void vm_run(struct vm *vm, const struct vm_options opts, const prog_t prog)
+void vm_run(struct vm *vm, const struct vm_options opts, const struct prog_t *prog)
 {
     memset(vm, 0, sizeof(*vm));
     vm->memory = s_malloc(opts.memory_size); 

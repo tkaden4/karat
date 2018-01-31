@@ -1,9 +1,9 @@
 SOURCES=$(wildcard ./src/*.c)
 OBJECTS=$(SOURCES:.c=.o)
-CFLAGS=-Wall -Wextra -Werror -pipe -O2 -Wno-unused-function -std=gnu99 -DKDEBUG -I./include/
+CFLAGS=-Wall -Wextra -Werror -pipe -O2 -Wno-unused-variable -Wno-unused-function -std=gnu99 -DKDEBUG -I./include/
 LDFLAGS=-ldl -lreadline
 EXECUTABLE=karat
-DISCARD=$(OBJECTS) $(EXECUTABLE) include/karat/opcodes.inc
+DISCARD=$(OBJECTS) $(EXECUTABLE) include/karat/opcodes.inc.h
 
 # check and see if we have ccache
 HAS_CCACHE := $(shell command -v ccache 2> /dev/null)

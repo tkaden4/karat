@@ -9,9 +9,13 @@
 #include<karat/vm/vm.h>
 #include<karat/mod.h>
 #include<karat/debug.h>
+#include<karat/vm/opcode.h>
 
 #define usage() \
     ({ printf("usage: karat [-d] <file>\n"); exit(0); })
+
+
+#include<karat/test_data.h>
 
 int main(int argc, char *argv[])
 {
@@ -30,27 +34,23 @@ int main(int argc, char *argv[])
         }
     }
 
+    /*
     if(optind != argc - 1){
         usage();
         return 1;
     }
+    */
 
-    const char *prog = argv[optind];
-
-    FILE *program = fopen(prog, "r");
-    err_on(!program, "could not open %s", prog);
+    struct prog_t prog = test_prog(write_port);
 
     int err = 0;
-
     if(debug){
 	// XXX NULL
-        err = idebug(NULL, vm_opts(8096));
+        err = idebug(&prog, vm_opts(8096));
     }else{
         struct vm vm;
 	// XXX NULL
-        vm_run(&vm, vm_opts(8096), NULL);
+        vm_run(&vm, vm_opts(8096), &prog);
     } 
-
-    fclose(program);
     return err;
 }

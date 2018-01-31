@@ -41,6 +41,8 @@ local opcodes = {
     { "inc",   "rmode(1, 0, 0, 0, 0)" }, -- increment register
     { "dec",   "rmode(1, 0, 0, 0, 0)" }, -- decrement register
     { "jmpr",  "rmode(1, 0, 0, 0, 0)" }, -- jump relative to register
+    { "put",   "rmode(1, 1, 1, 0, 0)" }, -- push a value to a port
+    { "get",   "rmode(1, 1, 1, 0, 0)" }, -- read a value from a port
     -- I opcodes
     { "pushk", "imode(0, 0, 1)" }, -- push a constant to the stack
     -- { "lirq",  "imode(1, 0, 1)" }, -- load an IRQ handler

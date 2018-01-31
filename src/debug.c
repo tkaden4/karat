@@ -14,7 +14,7 @@
 
 struct debug_ctx {
     struct vm vm;
-    const prog_t prog;
+    const struct prog_t *prog;
 };
 
 static char *trim(char *str, char c)
@@ -96,7 +96,7 @@ static inline void longcmd(const char *str, struct debug_ctx *d)
     printf("kdb: unrecognized command \'%s\'\n", str);
 }
 
-int idebug(const prog_t prog, struct vm_options opts)
+int idebug(const struct prog_t *prog, struct vm_options opts)
 {
     struct debug_ctx d = { .prog = prog };
     cpu_init(&d.vm.cpu, prog_entry(prog), 0);

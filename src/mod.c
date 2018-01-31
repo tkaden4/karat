@@ -23,7 +23,6 @@ static inline void *__get_module_symbol(lib_t handle, const char *sym_name)
 {
     /* initialize the module */
     void *symbol = dlsym(handle, sym_name);
-    err_on(!symbol, "loading symbol \"%s\" : %s", sym_name, dlerror());
     return symbol;
 }
 
@@ -46,11 +45,14 @@ int module_load(struct kmod *mod, const char *name)
     /* load the module */
     mod->handle = __get_module_handle(path);
     module_init_f init = __get_module_symbol(mod->handle, "on_module_load");
-    err_on(!init, "module init not available");
+    err_on(!init, "module init not available for %s", name);
     int err = init(&mod->mod_data);
     if(err){
         return err;
     }
+    module_write_f writer = __get_module_symbol(mod->handle, "on_port_write");
+    err_on(!writer, "module writer not available for %s", name);
+    mod->on_port_write = writer;
     return 0;
 }
 

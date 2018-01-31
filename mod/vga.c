@@ -39,6 +39,14 @@ enum {
     DRAW_POINT,
 };
 
+int on_port_write(void *_, unsigned n, k32_t data)
+{
+    (void)_;
+    (void)n;
+    (void)data;
+    return 0;
+}
+
 struct vga_data {
     SDL_Window *window;
     SDL_Renderer *renderer;

@@ -13,15 +13,35 @@ MODULE(
     "Kaden Thomas"
 );
 
-//TRAPS();
-//INTS();
+
+enum {
+    PORT_READ = 0,
+    PORT_WRITE,
+    PORT_AVAIL,
+    N_PORTS
+};
+
+PORTS(N_PORTS);
 
 struct con_data {
     struct termios old_attr;
     struct termios new_attr;
 };
 
-static int on_module_load(struct con_data **data)
+int on_port_write(void *_, unsigned port, k32_t data)
+{
+    (void)_;
+    switch(port){
+    case PORT_WRITE:
+        printf("%c", (char)data);
+        break;
+    default:
+        return 1;
+    }
+    return 0;
+}
+
+int on_module_load(struct con_data **data)
 {
     struct con_data *d = malloc(sizeof(struct con_data));
     tcgetattr(fileno(stdin), &d->old_attr);
@@ -34,11 +54,9 @@ static int on_module_load(struct con_data **data)
     return 0;
 }
 
-static int on_module_unload(struct con_data *data)
+int on_module_unload(struct con_data *data)
 {
     tcsetattr(fileno(stdin), TCSANOW, &data->old_attr);
     free(data);
     return 0;
 }
-
-

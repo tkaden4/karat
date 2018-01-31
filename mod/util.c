@@ -7,3 +7,5 @@ MODULE(
     "0.0.1",
     "Kaden Thomas"
 );
+
+PORTS(8);
