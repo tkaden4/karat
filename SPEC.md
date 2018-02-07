@@ -1,7 +1,7 @@
 # Karat Virtual Machine Specification
 
 This specification is a *work in progress*, and more information
-will be added and changed as time goes on and features changed.
+will be added and changed as time goes on and features are added.
 
 ## Endianness
 Karat uses little-endian storage and addressing, meaning
@@ -17,7 +17,7 @@ would be stored in memory location `0x0000` as such:
 ```
 
 ## Address Space
-The address space of Karat extends a 16-bitf range, from
+The address space of Karat extends a 16-bit range, from
 0x0000 to 0xffff. Eventually this may be extended to cover
 a larger range, such as 32-bits. In order to not overwork 
 the memory capabilities of the system being run on, paging
