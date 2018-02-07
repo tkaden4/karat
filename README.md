@@ -7,15 +7,11 @@
 - Big Endian
 - Multi-word instruction set
 
-### Building ###
-Build entire project:
-`make`
+### Installation ###
+`make vm ; make install`
 
-Build VM:
-`make karat`
-
-Build default modules:
-`make modules`
+With default modules
+`make all ; make install`
 
 ### Preprocessor Flags ###
 #### KDEBUG ####
