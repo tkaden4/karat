@@ -1,5 +1,7 @@
 # Karat
 
+See SPEC.md for a system specification
+
 ## Usage ##
 `man ./karat.1` for more details
 
