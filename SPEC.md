@@ -9,10 +9,12 @@ that the least-significant bytes are placed first and a
 memory  addresss. For example, the 32-bit value `0xDEADBEEF`
 would be stored in memory location `0x0000` as such:
 
-`0x0000 : 0xEF`
-`0x0001 : 0xBE`
-`0x0002 : 0xAD`
-`0x0003 : 0xDE`
+```
+0x0000 : 0xEF
+0x0001 : 0xBE
+0x0002 : 0xAD
+0x0003 : 0xDE
+```
 
 ## Address Space
 The address space of Karat extends a 16-bitf range, from
