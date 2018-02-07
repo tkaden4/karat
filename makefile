@@ -1,6 +1,7 @@
 SOURCES=$(wildcard ./src/*.c)
 OBJECTS=$(SOURCES:.c=.o)
-CFLAGS=-Wall -Wextra -Werror -pipe -O2 -Wno-unused-variable -Wno-unused-function -std=gnu99 -DKDEBUG -I./include/
+CFLAGS=-Wall -Wextra -Werror -pipe -O2 -Wno-unused-variable \
+	-Wno-unused-function -std=gnu99 -DKDEBUG -I./include/
 LDFLAGS=-ldl -lreadline
 EXECUTABLE=karat
 DISCARD=$(OBJECTS) $(EXECUTABLE) include/karat/opcodes.inc.h
@@ -13,7 +14,11 @@ else
 	CC := $(CC)
 endif
 
-all: opcodes $(EXECUTABLE) modules
+.PHONY: clean tst run install profile
+
+all: opcodes vm modules
+
+vm: $(EXECUTABLE)
 
 opcodes:
 	lua gen.lua > include/karat/opcodes.inc.h
@@ -29,6 +34,10 @@ modules:
 profile:
 	$(MAKE) clean CFLAGS='$(CFLAGS) -pg -O2'
 	$(MAKE) CFLAGS='$(CFLAGS) -pg -O2'
+
+install:
+	install -s karat /usr/local/bin/karat
+	cp karat.1 /usr/local/man/man1/
 
 # run karat on a simple test suite
 run:
