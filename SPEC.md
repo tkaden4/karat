@@ -27,6 +27,8 @@ and virtual memory must first be implemented. The lack of
 these features is the basis for the 16-bit address range.
 By "overwork", I mean using more RAM than necessary. A
 32 bit address space requires 4GB of virtual memory, and
+it would cause severe thrashing to allocate that much
+memory directly.
 
 ## I/O Ports and Plugins
 I/O ports act as the connecting bridge between the central
